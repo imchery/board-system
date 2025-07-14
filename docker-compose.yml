@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # MongoDB - 모든 서비스가 공유하는 데이터베이스
+  mongodb:
+    image: mongo:7.0
+    container_name: msa-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: board-system
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - msa-network
+
+  # Zookeeper - Kafka 의존성
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: msa-zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - msa-network
+
+  # Kafka - 서비스 간 메시지 통신
+  Kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: msa-kafka
+    restart: always
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - msa-network
+
+  # Redis - 캐시 및 세션 저장소
+  redis:
+    image: redis:7.0-alpine
+    container_name: msa-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - msa-network
+
+  # Kafka UI - 개발 편의용 (메시지 확인)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: msa-kafka-ui
+    restart: always
+    ports:
+      - "8090:8080"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: msa-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - msa-network
+
+
+# 데이터 영구 저장용 볼륨
+volumes:
+  mongodb_data:
+  redis_data:
+
+
+# MSA 서비스들이 사용할 네트워크
+networks:
+  msa-network:
+    driver: bridge
+
+
+
