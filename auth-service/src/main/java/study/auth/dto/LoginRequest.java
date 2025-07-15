@@ -1,4 +1,4 @@
-package study.authservice.dto;
+package study.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

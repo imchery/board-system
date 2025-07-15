@@ -1,4 +1,4 @@
-package study.authservice.service;
+package study.auth.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

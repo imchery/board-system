@@ -1,14 +1,14 @@
-package study.authservice.service;
+package study.auth.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import study.authservice.dto.LoginRequest;
-import study.authservice.dto.LoginResponse;
+import study.auth.dto.LoginRequest;
+import study.auth.dto.LoginResponse;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class AuthService {
 
@@ -57,7 +57,7 @@ public class AuthService {
      * @return
      */
     public boolean validateToken(String token) {
-        return jwtTokenService.validateToken(token) && jwtTokenService.isTokenExpired(token);
+        return jwtTokenService.validateToken(token) && !jwtTokenService.isTokenExpired(token);
     }
 
     /**

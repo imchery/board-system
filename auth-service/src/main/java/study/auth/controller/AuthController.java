@@ -1,13 +1,13 @@
-package study.authservice.controller;
+package study.auth.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import study.authservice.dto.LoginRequest;
-import study.authservice.dto.LoginResponse;
-import study.authservice.service.AuthService;
+import study.auth.dto.LoginRequest;
+import study.auth.dto.LoginResponse;
+import study.auth.service.AuthService;
 
 @Slf4j
 @RestController

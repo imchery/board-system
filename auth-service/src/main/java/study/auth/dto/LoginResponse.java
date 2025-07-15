@@ -1,4 +1,4 @@
-package study.authservice.dto;
+package study.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
