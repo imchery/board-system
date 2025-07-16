@@ -1,1 +1,5 @@
 rootProject.name = 'board-system'
+
+include 'common-lib'
+include 'auth-service'
+include 'content-service'

@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import study.content.dto.PageResponse;
+import study.common.lib.response.PageResponse;
 import study.content.dto.PostRequest;
 import study.content.dto.PostResponse;
 import study.content.entity.Post;
@@ -56,11 +56,11 @@ public class PostService {
      * @param size
      * @return
      */
-    public PageResponse<PostResponse> getPosts(int page, int size) {
-        log.info("Fetching posts - page: {}, size: {}", page, size);
-
-        return getPostsWithPaging(page, size, postRepository::findAllActivePosts);
-    }
+//    public PageResponse<PostResponse> getPosts(int page, int size) {
+//        log.info("Fetching posts - page: {}, size: {}", page, size);
+//
+//        return getPostsWithPaging(page, size, postRepository::findAllActivePosts);
+//    }
 
     /**
      * 게시글 상세 조회(조회수 증가)

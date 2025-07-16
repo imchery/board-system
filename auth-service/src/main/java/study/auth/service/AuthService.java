@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import study.auth.dto.LoginRequest;
 import study.auth.dto.LoginResponse;
+import study.common.lib.config.JwtTokenService;
 
 @Slf4j
 @Service
