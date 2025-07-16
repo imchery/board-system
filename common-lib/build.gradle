@@ -1,0 +1,65 @@
+plugins {
+    id 'java-library'
+    id 'org.springframework.boot' version '3.5.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'study'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot 기본 (다른 모듈에서 사용할 수 있도록 api로 설정)
+    api 'org.springframework.boot:spring-boot-starter-web'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+
+    // 🎯 JPA 대신 spring-data-commons만 사용 (Page 인터페이스를 위해)
+    api 'org.springframework.data:spring-data-commons'
+
+    // JWT 관련 (공통 라이브러리로 제공)
+    api 'io.jsonwebtoken:jjwt-api:0.12.6'
+    api 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    api 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+    // Jackson (JSON 처리)
+    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'com.fasterxml.jackson.core:jackson-annotations'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// 라이브러리로 사용할 때 필요한 설정
+jar {
+    enabled = true
+    archiveClassifier = ''
+}
+
+// Spring Boot fat jar 생성 비활성화 (라이브러리이므로)
+tasks.named('bootJar') {
+    enabled = false
+}
