@@ -1,4 +1,4 @@
-package study.content.dto;
+package study.content.dto.post;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

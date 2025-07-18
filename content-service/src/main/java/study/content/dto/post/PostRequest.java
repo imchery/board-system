@@ -1,4 +1,4 @@
-package study.content.dto;
+package study.content.dto.post;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

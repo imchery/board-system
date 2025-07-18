@@ -9,8 +9,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.common.lib.response.PageResponse;
-import study.content.dto.PostRequest;
-import study.content.dto.PostResponse;
+import study.content.dto.post.PostRequest;
+import study.content.dto.post.PostResponse;
 import study.content.entity.Post;
 import study.content.repository.PostRepository;
 

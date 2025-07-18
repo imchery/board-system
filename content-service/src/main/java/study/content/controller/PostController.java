@@ -7,8 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import study.common.lib.response.PageResponse;
 import study.common.lib.response.ResponseVO;
-import study.content.dto.PostRequest;
-import study.content.dto.PostResponse;
+import study.content.dto.post.PostRequest;
+import study.content.dto.post.PostResponse;
 import study.content.service.PostService;
 
 import java.util.List;
