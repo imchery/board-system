@@ -25,7 +25,7 @@ public class CommentResponse {
      * 댓글 타입(최상위 댓글인지 대댓글인지)
      * 참조형이므로 null
      */
-    private Boolean isReply;
+    private boolean isReply;
 
     public static CommentResponse form(Comment comment) {
         return CommentResponse.builder()

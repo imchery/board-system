@@ -36,7 +36,7 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
      * 특정 게시글의 특정 댓글에 달린 대댓글들 조회(페이징)
      */
     @Query("{'postId': ?0, 'parentCommentId': ?1, 'status': 'ACTIVE'}")
-    Page<Comment> findRepliesByParentId(String postId, String parentCommentId);
+    Page<Comment> findRepliesByParentId(String postId, String parentCommentId, Pageable pageable);
 
     /**
      * 특정 게시글의 특정 댓글에 달린 대댓글들 조회(전체 or 미리보기용)
@@ -81,7 +81,7 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
      * @return
      */
     @Query(value = "{'postId': ?0, 'status': 'ACTIVE'}", count = true)
-    long conuntByPostId(String postId);
+    long countByPostId(String postId);
 
     /**
      * 특정 게시글의 최상위 댓글 개수 (대댓글 제외)
