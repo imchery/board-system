@@ -67,11 +67,13 @@ public class PostController {
      * @return
      */
     @GetMapping("/{id}")
-    public ResponseVO getPost(@PathVariable String id) {
+    public ResponseVO getPost(@PathVariable String id, HttpServletRequest httpRequest) {
+        String username = (String) httpRequest.getAttribute("username");
+
         log.info("게시글 상세 조회: {}", id);
 
         try {
-            PostResponse post = postService.getPost(id);
+            PostResponse post = postService.getPost(id, username);
             return ResponseVO.ok(post);
         } catch (Exception e) {
             return ResponseVO.noData();
@@ -199,6 +201,58 @@ public class PostController {
 
         PageResponse<PostResponse> posts = postService.getPostsByCategory(category, page, size);
         return ResponseVO.ok(posts);
+    }
+
+    /**
+     * 게시글 좋아요 토글 (좋아요/취소)
+     *
+     * @param postId
+     * @param httpRequest
+     * @return
+     */
+    @PutMapping("/{postId}/toggle-like")
+    public ResponseVO toggleLike(@PathVariable String postId,
+                                 HttpServletRequest httpRequest) {
+        String username = (String) httpRequest.getAttribute("username");
+        if (username == null) {
+            return ResponseVO.authFail();
+        }
+
+        log.info("게시글 좋아요 토글 요청: postId: {}, username: {}", postId, username);
+
+        try {
+            PostResponse post = postService.toggleLike(postId, username);
+            return ResponseVO.updateOk(post);
+        } catch (RuntimeException e) {
+            log.info("좋아요 토글 실패: {}", e.getMessage());
+            return ResponseVO.error("좋아요 처리에 실패했습니다.");
+        }
+    }
+
+    /**
+     * 게시글 좋아요 여부 확인
+     *
+     * @param postId
+     * @param httpRequest
+     * @return
+     */
+    @GetMapping("/{postId}/like-status")
+    public ResponseVO getLikeStatus(@PathVariable String postId,
+                                    HttpServletRequest httpRequest) {
+        String username = (String) httpRequest.getAttribute("username");
+        if (username == null) {
+            return ResponseVO.authFail();
+        }
+
+        log.info("게시글 좋아요 상태 확인: postId: {}, username: {}", postId, username);
+
+        try {
+            boolean isLiked = postService.getLikeStatus(postId, username);
+            return ResponseVO.ok(isLiked);
+        } catch (RuntimeException e) {
+            return ResponseVO.error("좋아요 상태 확인에 실패했습니다.");
+        }
+
     }
 
 }

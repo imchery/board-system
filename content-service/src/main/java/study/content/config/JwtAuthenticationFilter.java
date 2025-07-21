@@ -76,6 +76,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String method = request.getMethod();
         String path = request.getRequestURI();
 
+        if ("GET".equals(method) && (
+                path.contains("/like-status")   // 좋아요 상태 확인
+        )) {
+            return false;
+        }
+
         // GET 요청은 JWT 검증 스킵
         if ("GET".equals(method)) {
             return true;

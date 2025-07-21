@@ -10,6 +10,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -30,6 +32,8 @@ public class Post {
     private Integer viewCount;
 
     private Integer likeCount;
+
+    private List<String> likedUsers; // 좋아요한 사람들 목록
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -52,6 +56,7 @@ public class Post {
         return new PostBuilder()
                 .viewCount(0)
                 .likeCount(0)
+                .likedUsers(new ArrayList<>()) // 빈 리스트로 초기화
                 .status(PostStatus.ACTIVE);
     }
 
@@ -80,21 +85,38 @@ public class Post {
     }
 
     /**
-     * 좋아요 증가
+     * 좋아요 추가
+     *
+     * @param username
      */
-    public void incrementLikeCount() {
-        this.likeCount++;
-        this.updatedAt = LocalDateTime.now();
+    public void addLike(String username) {
+        if (!this.likedUsers.contains(username)) {
+            this.likedUsers.add(username);
+            this.likeCount++;
+            this.updatedAt = LocalDateTime.now();
+        }
     }
 
     /**
-     * 좋아요 감소
+     * 좋아요 제거
+     *
+     * @param username
      */
-    public void decreaseLikeCount() {
-        if (this.likeCount > 0) {
+    public void removeLike(String username) {
+        if (this.likedUsers.remove(username)) { // remove는 성공 시 true 반환
             this.likeCount--;
             this.updatedAt = LocalDateTime.now();
         }
+    }
+
+    /**
+     * 좋아요 여부 확인
+     *
+     * @param username
+     * @return
+     */
+    public boolean isLikeBy(String username) {
+        return this.likedUsers.contains(username);
     }
 
     /**

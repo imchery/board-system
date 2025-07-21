@@ -187,21 +187,6 @@ public class CommentService {
     }
 
     /**
-     * 메인페이지
-     * 인기 댓글 Top 10 조회 (좋아요 순)
-     *
-     * @return
-     */
-    public List<CommentResponse> getPopularComments() {
-        log.info("Fetching popular comments");
-
-        List<Comment> popularComments = commentRepository.findTop10ByOrderByLikeCountDesc();
-        return popularComments.stream()
-                .map(CommentResponse::form)
-                .toList();
-    }
-
-    /**
      * 신고페이지
      * 특정 게시글의 모든 댓글 조회 (관리자용 - 삭제된 것 포함)
      *
@@ -266,7 +251,7 @@ public class CommentService {
      */
     private void validatePostExists(String postId) {
         if (postRepository.findActivePostById(postId)
-                .isPresent()) {
+                .isEmpty()) {
             throw new BaseException(ErrorCode.POST_NOT_FOUND);
         }
     }

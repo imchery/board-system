@@ -37,11 +37,6 @@ public class Comment {
     private String author;
 
     /**
-     * 좋아요 수
-     */
-    private Integer likeCount;
-
-    /**
      * 생성일시
      */
     @CreatedDate
@@ -70,7 +65,6 @@ public class Comment {
     // 빌더 패턴용 기본값 설정
     public static CommentBuilder builder() {
         return new CommentBuilder()
-                .likeCount(0)
                 .status(CommentStatus.ACTIVE);
     }
 
@@ -83,22 +77,6 @@ public class Comment {
      */
     public void updateContent(String content) {
         this.content = content;
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    /**
-     * 좋아요 증가
-     */
-    public void increaseLikeCount() {
-        this.likeCount++;
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    /**
-     * 좋아요 감소
-     */
-    public void decreaseLikeCount() {
-        this.likeCount--;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -143,7 +121,7 @@ public class Comment {
      *
      * @return
      */
-    public boolean isReply() {
+    public Boolean isReply() {
         return this.parentCommentId != null;
     }
 

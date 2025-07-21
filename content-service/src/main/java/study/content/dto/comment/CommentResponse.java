@@ -16,7 +16,6 @@ public class CommentResponse {
     private String postId;
     private String content;
     private String author;
-    private Integer likeCount;
     private String createdAt;
     private String updatedAt;
     private String parentCommentId;
@@ -25,7 +24,7 @@ public class CommentResponse {
      * 댓글 타입(최상위 댓글인지 대댓글인지)
      * 참조형이므로 null
      */
-    private boolean isReply;
+    private Boolean isReply;
 
     // Entity -> DTO 변환
     public static CommentResponse form(Comment comment) {
@@ -34,11 +33,10 @@ public class CommentResponse {
                 .postId(comment.getPostId())
                 .content(comment.getContent())
                 .author(comment.getAuthor())
-                .likeCount(comment.getLikeCount())
                 .createdAt(comment.getCreatedAt().toString())
                 .updatedAt(comment.getUpdatedAt().toString())
                 .parentCommentId(comment.getParentCommentId())
-                .isReply(comment.isReply())
+                .isReply(comment.getParentCommentId() != null ? true : null)
                 .build();
     }
 }

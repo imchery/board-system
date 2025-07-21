@@ -66,14 +66,6 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     @Query("{'author': ?0, 'status': 'ACTIVE'}")
     Page<Comment> findByAuthor(String author, Pageable pageable);
 
-    /**
-     * 좋아요 수 기준 인기 댓글 조회
-     *
-     * @return
-     */
-    @Query("{'status': 'ACTIVE'}")
-    List<Comment> findTop10ByOrderByLikeCountDesc();
-
     // ======================= 통계용 쿼리 조회 =======================
 
     /**
