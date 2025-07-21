@@ -11,7 +11,6 @@ import study.common.lib.exception.ErrorCode;
 import study.common.lib.response.PageResponse;
 import study.content.dto.comment.CommentRequest;
 import study.content.dto.comment.CommentResponse;
-import study.content.dto.comment.CommentStatsResponse;
 import study.content.dto.comment.CommentUpdateRequest;
 import study.content.entity.Comment;
 import study.content.repository.CommentRepository;
@@ -110,6 +109,10 @@ public class CommentService {
         log.info("Comment soft deleted - id: {}", commentId);
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  조회
+    // -----------------------------------------------------------------------------------------------------------------
+
     /**
      * 특정 게시글의 최상위 댓글 목록 조회 (페이징)
      *
@@ -128,6 +131,25 @@ public class CommentService {
     }
 
     /**
+     * 특정 댓글의 대댓글 미리보기 (처음 3개만 보여주기)
+     *
+     * @param postId
+     * @param parentCommentId
+     * @return
+     */
+    public List<CommentResponse> getReplyPreview(String postId, String parentCommentId) {
+        log.info("Fetching reply preview for post: {} - parentCommentId: {}", postId, parentCommentId);
+
+        // 게시글 존재 및 부모 댓글 존재 확인
+        validateParentCommentExists(postId, parentCommentId);
+
+        List<Comment> replies = commentRepository.findTop3RepliesByPostIdAndParentId(postId, parentCommentId);
+        return replies.stream()
+                .map(CommentResponse::form)
+                .toList();
+    }
+
+    /**
      * 특정 댓글의 대댓글 목록 조회 (페이징)
      *
      * @param postId
@@ -139,65 +161,18 @@ public class CommentService {
     public PageResponse<CommentResponse> getReplies(String postId, String parentCommentId, int page, int size) {
         log.info("Fetching replies for post: {} - parentCommentId: {}, page: {}, size: {}", postId, parentCommentId, page, size);
 
-        // 게시글 존재 여부 확인
+        // 게시글 존재 및 부모 댓글 존재 확인
         validateParentCommentExists(postId, parentCommentId);
 
         return getCommentsWithPaging(page, size, pageable -> commentRepository.findRepliesByParentId(postId, parentCommentId, pageable));
     }
 
-    /**
-     * 특정 댓글의 대댓글 미리보기 (처음 3개만)
-     *
-     * @param postId
-     * @param parentCommentId
-     * @return
-     */
-    public List<CommentResponse> getReplyPreview(String postId, String parentCommentId) {
-        log.info("Fetching reply preview for post: {} - parentCommentId: {}", postId, parentCommentId);
-
-        // 특정 게시글의 부모 댓글 조회
-        validateParentCommentExists(postId, parentCommentId);
-        List<Comment> replies = commentRepository.findTop3RepliesByPostIdAndParentId(postId, parentCommentId);
-        return replies.stream()
-                .map(CommentResponse::form)
-                .toList();
-    }
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                 기타 조회용
+    // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * 특정 게시글의 댓글 통계 정보 조회
-     *
-     * @param postId
-     * @return
-     */
-    public CommentStatsResponse getCommentStats(String postId) {
-        log.info("Fetching comment stats for post: {}", postId);
-        validatePostExists(postId);
-
-        long totalComments = commentRepository.countByPostId(postId);
-
-        return CommentStatsResponse.builder()
-                .totalComments(totalComments)
-                .build();
-    }
-
-    /**
-     * 특정 게시글 + 특정 댓글의 대댓글 개수 조회
-     *
-     * @param postId
-     * @param parentCommentId
-     * @return
-     */
-    public CommentStatsResponse getReplyCount(String postId, String parentCommentId) {
-        log.info("Fetching reply count for post: {} - parentCommentId: {}", postId, parentCommentId);
-        validatePostExists(postId);
-
-        long totalComment = commentRepository.countRepliesByPostIdAndParentId(postId, parentCommentId);
-        return CommentStatsResponse.builder()
-                .totalComments(totalComment)
-                .build();
-    }
-
-    /**
+     * 마이페이지
      * 작성자별 댓글 조회
      *
      * @param author
@@ -212,12 +187,14 @@ public class CommentService {
     }
 
     /**
+     * 메인페이지
      * 인기 댓글 Top 10 조회 (좋아요 순)
      *
      * @return
      */
     public List<CommentResponse> getPopularComments() {
         log.info("Fetching popular comments");
+
         List<Comment> popularComments = commentRepository.findTop10ByOrderByLikeCountDesc();
         return popularComments.stream()
                 .map(CommentResponse::form)
@@ -225,6 +202,7 @@ public class CommentService {
     }
 
     /**
+     * 신고페이지
      * 특정 게시글의 모든 댓글 조회 (관리자용 - 삭제된 것 포함)
      *
      * @param postId
@@ -232,15 +210,54 @@ public class CommentService {
      */
     public List<CommentResponse> getAllCommentsForAdmin(String postId) {
         log.info("Fetching all comments for post: {}", postId);
+
+        // 게시글 존재 여부 확인
         validatePostExists(postId);
+
         List<Comment> allComments = commentRepository.findAllCommentsByPostIdIncludingDeleted(postId);
         return allComments.stream()
                 .map(CommentResponse::form)
                 .toList();
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  통계
+    // -----------------------------------------------------------------------------------------------------------------
 
-    // ================================================ 프라이빗 헬퍼 메서드 ================================================
+    /**
+     * 특정 게시글의 모든 댓글 개수 조회
+     *
+     * @param postId
+     * @return
+     */
+    public long getCommentStats(String postId) {
+        log.info("Fetching comment stats for post: {}", postId);
+
+        // 게시글 존재 여부 확인
+        validatePostExists(postId);
+
+        return commentRepository.countByPostId(postId);
+    }
+
+    /**
+     * 특정 게시글 + 특정 댓글의 대댓글 개수 조회
+     *
+     * @param postId
+     * @param parentCommentId
+     * @return
+     */
+    public long getReplyCount(String postId, String parentCommentId) {
+        log.info("Fetching reply count for post: {} - parentCommentId: {}", postId, parentCommentId);
+
+        // 게시글 존재 및 부모 댓글 존재 확인
+        validateParentCommentExists(postId, parentCommentId);
+
+        return commentRepository.countRepliesByPostIdAndParentId(postId, parentCommentId);
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                             프라이빗 헬퍼 메서드
+    // -----------------------------------------------------------------------------------------------------------------
 
     /**
      * 게시글 존재 여부 확인

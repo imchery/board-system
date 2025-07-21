@@ -27,12 +27,6 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     Page<Comment> findRootCommentByPostId(String postId, Pageable pageable);
 
     /**
-     * 특정 게시글의 모든 활성 댓글 조회 (대댓글 포함)
-     */
-    @Query("{'postId':  ?0, 'status': 'ACTIVE'}")
-    Page<Comment> findAllCommentsByPostId(String postId, Pageable pageable);
-
-    /**
      * 특정 게시글의 특정 댓글에 달린 대댓글들 조회(페이징)
      */
     @Query("{'postId': ?0, 'parentCommentId': ?1, 'status': 'ACTIVE'}")
@@ -60,7 +54,7 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     @Query("{'_id': ?0, 'status':  'ACTIVE'}")
     Optional<Comment> findActiveCommentById(String id);
 
-    // ======================= 작성자별 조회 =======================
+    // ======================= 기타 조회 =======================
 
     /**
      * 작성자별 댓글 조회 (활성상태만)
@@ -72,6 +66,14 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     @Query("{'author': ?0, 'status': 'ACTIVE'}")
     Page<Comment> findByAuthor(String author, Pageable pageable);
 
+    /**
+     * 좋아요 수 기준 인기 댓글 조회
+     *
+     * @return
+     */
+    @Query("{'status': 'ACTIVE'}")
+    List<Comment> findTop10ByOrderByLikeCountDesc();
+
     // ======================= 통계용 쿼리 조회 =======================
 
     /**
@@ -82,15 +84,6 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
      */
     @Query(value = "{'postId': ?0, 'status': 'ACTIVE'}", count = true)
     long countByPostId(String postId);
-
-    /**
-     * 특정 게시글의 최상위 댓글 개수 (대댓글 제외)
-     *
-     * @param postId
-     * @return
-     */
-    @Query(value = "{'postId': ?0, 'status': 'ACTIVE', 'parentCommentId': null}", count = true)
-    long countRootCommentsByPostId(String postId);
 
     /**
      * 특정 게시글의 특정 댓글에 달린 대댓글 개수
@@ -112,12 +105,4 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
      */
     @Query("{'postId': ?0}")
     List<Comment> findAllCommentsByPostIdIncludingDeleted(String postId);
-
-    /**
-     * 좋아요 수 기준 인기 댓글 조회
-     *
-     * @return
-     */
-    @Query("{'status': 'ACTIVE'}")
-    List<Comment> findTop10ByOrderByLikeCountDesc();
 }

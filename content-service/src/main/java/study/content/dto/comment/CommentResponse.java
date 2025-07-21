@@ -27,6 +27,7 @@ public class CommentResponse {
      */
     private boolean isReply;
 
+    // Entity -> DTO 변환
     public static CommentResponse form(Comment comment) {
         return CommentResponse.builder()
                 .id(comment.getId())
