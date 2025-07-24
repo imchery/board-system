@@ -33,15 +33,15 @@ export default defineConfig({
         },
     },
     server: {
-        port: 8000, // 개발 서버 포트
+        port: 8080, // 개발 서버 포트 (3000 → 8080)
         proxy: {
             // 백엔드 API 프록시 설정
             '/api': {
-                target: 'http://localhost:9082', // content-service
+                target: 'http://localhost:9082', // content-service (8082 → 9082)
                 changeOrigin: true,
             },
             '/auth': {
-                target: 'http://localhost:9081', // auth-service
+                target: 'http://localhost:9081', // auth-service (8081 → 9081)
                 changeOrigin: true,
             },
         },
