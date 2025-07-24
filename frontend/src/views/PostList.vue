@@ -100,16 +100,18 @@ import {onMounted, ref} from 'vue'
 import {useRouter} from "vue-router"
 import {ElMessage} from "element-plus";
 import {postApi} from "@/api/post.ts";
+import type {ApiError, PostResponse} from "@/types/api.ts";
+import {Edit, Search} from "@element-plus/icons-vue";
 
 // 반응형 데이터
-const posts = ref([])
-const loading = ref(false)
-const searchKeyword = ref('')
+const posts = ref<PostResponse[]>([])
+const loading = ref<boolean>(false)
+const searchKeyword = ref<string>('')
 
 // 페이징 관련
-const currentPage = ref(1)
-const pageSize = ref(10)
-const totalElements = ref(0)
+const currentPage = ref<number>(1)
+const pageSize = ref<number>(10)
+const totalElements = ref<number>(0)
 
 // Vue Router
 const router = useRouter()
@@ -123,35 +125,34 @@ onMounted(() => {
 const fetchPosts = async () => {
   loading.value = true
   try {
-    let response
+    // 하나의 API 호출로 통일
+    const response = await postApi.getPosts(
+        currentPage.value - 1,
+        pageSize.value,
+        searchKeyword.value.trim()
+    )
 
-    // 검색어가 있으면 검색 API, 없으면 일반 목록 API
-    if (searchKeyword.value.trim()) {
-      response = await postApi.getPosts(currentPage.value - 1, pageSize.value, searchKeyword.value)
-    } else {
-      response = await postApi.getPosts(currentPage.value - 1, pageSize.value)
-    }
+    console.log('API 응답:', response) // 디버깅용
 
     // 백엔드 ResponseVO 구조에 맞게 데이터 추출
-
-    console.log('API 응답: ', response)
-
-    if (response && (response as any).result) {
+    if (response && response.result) {
       posts.value = response.data.content || []
       totalElements.value = response.data.totalElements || 0
     } else {
-      ElMessage.error((response as any)?.message || '게시글을 불러오는데 실패했습니다')
+      ElMessage.error(response.message || '게시글을 불러오는데 실패했습니다')
       posts.value = []
       totalElements.value = 0
     }
   } catch (error) {
     console.error('게시글 조회 실패:', error)
 
+    const apiError = error as ApiError
+
     // 에러 타입별 처리
-    if (error?.response?.status === 401) {
+    if (apiError.response?.status === 401) {
       ElMessage.error('로그인이 필요합니다')
       router.push('/login')
-    } else if (error?.response?.status === 500) {
+    } else if (apiError.response?.status === 500) {
       ElMessage.error('서버 오류가 발생했습니다')
     } else {
       ElMessage.error('게시글을 불러오는데 실패했습니다')

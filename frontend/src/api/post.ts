@@ -1,4 +1,5 @@
 import axios from "axios";
+import {PageResponse, PostResponse, ResponseVO} from "@/types/api.ts";
 
 // 백엔드 API 기본 설정
 const API_BASE_URL = 'http://localhost:9082'
@@ -40,7 +41,7 @@ apiClient.interceptors.response.use(
 // 게시글 관련 API 함수들
 export const postApi = {
     // 게시글 목록 조회 (페이징)
-    getPosts: async (page = 0, size = 10, keyword = '') => {
+    getPosts: async (page = 0, size = 10, keyword = ''): Promise<ResponseVO<PageResponse<PostResponse>>> => {
         const params: any = {page, size}
         if (keyword) {
             return await apiClient.get('/api/posts/search', {params: {...params, keyword}})
@@ -49,32 +50,40 @@ export const postApi = {
     },
 
     // 게시글 상세 조회
-    getPost: async (id: string) => {
+    getPost: async (id: string): Promise<ResponseVO<PostResponse>> => {
         return await apiClient.get(`/api/posts/${id}`)
     },
 
     // 게시글 생성
-    createPost: async (postData: { title: string; content: string; category?: string }) => {
+    createPost: async (postData: {
+        title: string;
+        content: string;
+        category?: string
+    }): Promise<ResponseVO<PostResponse>> => {
         return await apiClient.post('/api/posts', postData)
     },
 
     // 게시글 수정
-    updatePost: async (id: string, postData: { title: string; content: string; category?: string }) => {
+    updatePost: async (id: string, postData: {
+        title: string;
+        content: string;
+        category?: string
+    }): Promise<ResponseVO<PostResponse>> => {
         return await apiClient.put(`/api/posts/${id}`, postData)
     },
 
     // 게시글 삭제
-    deletePost: async (id: string) => {
+    deletePost: async (id: string): Promise<ResponseVO<void>> => {
         return await apiClient.delete(`/api/posts/${id}`)
     },
 
     // 게시글 좋아요 토글
-    toggleLike: async (id: string) => {
+    toggleLike: async (id: string): Promise<ResponseVO<PostResponse>> => {
         return await apiClient.put(`/api/posts/${id}/toggle-like`)
     },
 
     // 인기 게시글 조회
-    getPopularPosts: async () => {
+    getPopularPosts: async (): Promise<ResponseVO<PostResponse[]>> => {
         return await apiClient.get('/api/posts/popular')
     },
 }
