@@ -9,7 +9,7 @@ public class LoginResponse {
 
     private String token;
     private String username;
-    private String messge;
+    private String message;
 
     public static LoginResponse success(String token, String username) {
         return new LoginResponse(token, username, "로그인 성공");

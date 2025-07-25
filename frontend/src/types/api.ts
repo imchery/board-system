@@ -41,3 +41,16 @@ export interface ApiError {
     }
     message: string
 }
+
+// 로그인 요청 타입
+export interface LoginRequest{
+    username: string
+    password: string
+}
+
+// 로그인 응답 타입
+export interface LoginResponse {
+    token: string | null
+    username: string | null
+    message: string
+}
