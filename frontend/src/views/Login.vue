@@ -9,7 +9,12 @@
             <p>로그인하여 게시판을 이용해보세요</p>
           </div>
 
-          <!-- 로그인 폼 -->
+          <!--
+            ** 로그인 폼 **
+            ref: JavaScript 연결용
+            :model: 데이터 바인딩
+            :rules: 검증규칙
+          -->
           <el-form
               ref="loginFormRef"
               :model="loginForm"
@@ -17,7 +22,12 @@
               class="login-form"
               @submit.prevent="handleLogin"
           >
-            <!-- 사용자명 입력 -->
+
+            <!--
+              ** 사용자명 입력 **
+              prop: 폼 아이템에서 prop 지정
+              v-model: 양방향 데이터 바인딩
+            -->
             <el-form-item prop="username">
               <el-input
                   v-model="loginForm.username"
@@ -46,11 +56,11 @@
               <el-button
                   type="primary"
                   size="large"
-                  :loading="loading"
+                  :loading="authStore.isLoading"
                   @click="handleLogin"
                   class="login-button"
               >
-                {{ loading ? '로그인 중...' : '로그인' }}
+                {{ authStore.isLoading ? '로그인 중...' : '로그인' }}
               </el-button>
             </el-form-item>
           </el-form>
@@ -76,18 +86,17 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, reactive, ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {ElMessage, type FormInstance, type FormRules} from 'element-plus'
-import {Lock, User} from '@element-plus/icons-vue'
-import {authApi} from '@/api/auth'
-import type {ApiError} from '@/types/api'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { User, Lock } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/stores/auth'
 
-// Vue Router
+// Vue Router & Auth Store
 const router = useRouter()
+const authStore = useAuthStore()
 
 // 반응형 데이터
-const loading = ref<boolean>(false)
 const loginFormRef = ref<FormInstance>()
 
 // 로그인 폼 데이터
@@ -99,12 +108,12 @@ const loginForm = reactive({
 // 폼 검증 규칙
 const loginRules: FormRules = {
   username: [
-    {required: true, message: '사용자명을 입력해주세요', trigger: 'blur'},
-    {min: 2, max: 20, message: '사용자명은 2-20자 사이여야 합니다', trigger: 'blur'}
+    { required: true, message: '사용자명을 입력해주세요', trigger: 'blur' },
+    { min: 2, max: 20, message: '사용자명은 2-20자 사이여야 합니다', trigger: 'blur' }
   ],
   password: [
-    {required: true, message: '비밀번호를 입력해주세요', trigger: 'blur'},
-    {min: 6, max: 20, message: '비밀번호는 6-20자 사이여야 합니다', trigger: 'blur'}
+    { required: true, message: '비밀번호를 입력해주세요', trigger: 'blur' },
+    { min: 6, max: 20, message: '비밀번호는 6-20자 사이여야 합니다', trigger: 'blur' }
   ]
 }
 
@@ -116,53 +125,31 @@ const handleLogin = async () => {
   const isValid = await loginFormRef.value.validate().catch(() => false)
   if (!isValid) return
 
-  loading.value = true
-
   try {
-    // 로그인 API 호출
-    const response = await authApi.login({
+    // 스토어를 통한 로그인
+    const result = await authStore.login({
       username: loginForm.username,
       password: loginForm.password
     })
 
-    console.log('로그인 응답:', response)
-
-    // 로그인 성공 처리
-    if (response.token && response.username) {
-      // JWT 토큰을 localStorage에 저장
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('username', response.username)
-
-      ElMessage.success(response.message || '로그인 성공!')
+    if (result.success) {
+      ElMessage.success(result.message || '로그인 성공!')
 
       // 게시글 목록으로 이동
       router.push('/posts')
     } else {
-      ElMessage.error(response.message || '로그인에 실패했습니다')
+      ElMessage.error(result.message || '로그인에 실패했습니다')
     }
 
   } catch (error) {
     console.error('로그인 에러:', error)
-
-    const apiError = error as ApiError
-
-    // 에러 타입별 처리
-    if (apiError.response?.status === 401) {
-      ElMessage.error('아이디 또는 비밀번호가 틀렸습니다')
-    } else if (apiError.response?.status === 500) {
-      ElMessage.error('서버 오류가 발생했습니다')
-    } else {
-      ElMessage.error('로그인 중 오류가 발생했습니다')
-    }
-  } finally {
-    loading.value = false
+    ElMessage.error('로그인 중 오류가 발생했습니다')
   }
 }
 
 // 컴포넌트가 마운트될 때 이미 로그인된 상태면 리다이렉트
 onMounted(() => {
-  const token = localStorage.getItem('token')
-  if (token) {
+  if (authStore.isLoggedIn) {
     router.push('/posts')
   }
 })

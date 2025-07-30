@@ -1,5 +1,5 @@
 <template>
-  <div class="post-list">
+  <div class="post-list page-container">
     <!-- 헤더 영역 -->
     <el-card class="header-card">
       <div class="header-content">
@@ -131,8 +131,6 @@ const fetchPosts = async () => {
         pageSize.value,
         searchKeyword.value.trim()
     )
-
-    console.log('API 응답:', response) // 디버깅용
 
     // 백엔드 ResponseVO 구조에 맞게 데이터 추출
     if (response && response.result) {
