@@ -5,7 +5,7 @@
         <!--    로고/브랜드 영역    -->
         <div class="brand-section">
           <router-link to="/" class="brand-link">
-            <div class="brand-content" v-if="authStore.isLoggedIn">
+            <div class="brand-content">
               <span class="brand-icon">📝</span>
               <span class="brand-text">Board System</span>
             </div>

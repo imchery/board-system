@@ -14,7 +14,6 @@
         <!-- 메인 타이틀 -->
         <div class="title-section">
           <h1 class="main-title">
-            <span class="title-line">Modern</span>
             <span class="title-line gradient-text">Board System</span>
           </h1>
           <p class="subtitle">
@@ -69,11 +68,6 @@
             <span class="cta-text">지금 시작하기</span>
             <span class="cta-arrow">→</span>
           </button>
-
-          <button v-if="!authStore.isLoggedIn" class="cta-secondary" @click="goToLogin">
-            <span class="cta-icon">👋</span>
-            <span>로그인</span>
-          </button>
         </div>
 
         <!-- 통계 정보 -->
@@ -105,10 +99,6 @@ const authStore = useAuthStore()
 
 const goToPostList = () => {
   router.push('/posts')
-}
-
-const goToLogin = () => {
-  router.push('/login')
 }
 
 // 카드 호버 효과

@@ -10,11 +10,11 @@
 
     <!--  메인 앱  -->
     <div v-else class="app-layout">
-      <!--   헤더(로그인 페이지가 아닐 때만 표시)   -->
-      <Header v-if="!isLoginPage"/>
+      <!--   헤더(홈, 로그인 페이지가 아닐 때만 표시)   -->
+      <Header v-if="!isSpecialPage"/>
 
       <!--   메인 콘텐츠   -->
-      <main class="main-content" :class="{'no-header': isLoginPage}">
+      <main class="main-content" :class="{'no-header': isSpecialPage}">
         <router-view/>
       </main>
     </div>
@@ -33,8 +33,8 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 // 로그인 페이지인지 확인
-const isLoginPage = computed(() => {
-  return route.path === '/login'
+const isSpecialPage = computed(() => {
+  return route.path === '/login' || route.path === '/'
 })
 
 // 앱 시작 시 인증 상태 초기화
