@@ -6,7 +6,6 @@
         <div class="brand-section">
           <router-link to="/" class="brand-link">
             <div class="brand-content">
-              <span class="brand-icon">📝</span>
               <span class="brand-text">Board System</span>
             </div>
           </router-link>
@@ -146,8 +145,8 @@ const handleLoggout = async () => {
 
       ElMessage.success('로그아웃되었습니다')
 
-      // 로그인 페이지로 이동
-      router.push({path: '/login'})
+      // 홈으로 이동
+      router.push({path: '/'})
     }
   } catch (error) {
     // 취소를 누른 경우(에러X)
@@ -313,6 +312,9 @@ const goToLogin = () => {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 850px; /* 충분한 너비 확보 */
+  justify-content: flex-end;
+  margin-left: 50px; /* 네비게이션과의 간격 */
 }
 
 .user-info {
