@@ -1,0 +1,173 @@
+/*
+ * CSS 커스텀 속성 (CSS Variables)
+ * 전역적으로 사용할 색상, 간격, 폰트 등을 정의
+ */
+
+:root {
+    /* ===== 컬러 시스템 ===== */
+    /* Primary Colors - 브랜드 메인 컬러 */
+    --color-primary: #6366f1;
+    --color-primary-dark: #4f46e5;
+    --color-primary-light: #8b5cf6;
+    --color-primary-alpha-10: rgba(99, 102, 241, 0.1);
+    --color-primary-alpha-25: rgba(99, 102, 241, 0.25);
+    --color-primary-alpha-35: rgba(99, 102, 241, 0.35);
+
+    /* Secondary Colors - 보조 컬러 */
+    --color-secondary: #10b981;
+    --color-secondary-dark: #059669;
+
+    /* Accent Colors - 강조 컬러 */
+    --color-accent-red: #f59e0b;
+    --color-accent-orange: #f97316;
+    --color-accent-pink: #ec4899;
+
+    /* Neutral Colors - 회색 계열 */
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-300: #d1d5db;
+    --color-gray-400: #9ca3af;
+    --color-gray-500: #6b7280;
+    --color-gray-600: #4b5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1f2937;
+    --color-gray-900: #111827;
+
+    /* Semantic Colors - 의미적 컬러 */
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+    --color-info: #3b82f6;
+
+    /* Background Colors - 배경 컬러 */
+    --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --bg-gradient-purple: linear-gradient(135deg, #667eea, #764ba2);
+    --bg-gradient-blue: linear-gradient(135deg, #4facfe, #00f2fe);
+    --bg-gradient-sunset: linear-gradient(135deg, #fa709a, #fee140);
+
+    /* Glass Effect - 글래스모피즘 */
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-bg-light: rgba(255, 255, 255, 0.15);
+    --glass-bg-heavy: rgba(255, 255, 255, 0.25);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-border-light: rgba(255, 255, 255, 0.1);
+
+    /* ===== 타이포그래피 ===== */
+    /* Font Family */
+    --font-primary: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+    /* Font Sizes */
+    --text-xs: 0.75rem;    /* 12px */
+    --text-sm: 0.875rem;   /* 14px */
+    --text-base: 1rem;     /* 16px */
+    --text-lg: 1.125rem;   /* 18px */
+    --text-xl: 1.25rem;    /* 20px */
+    --text-2xl: 1.5rem;    /* 24px */
+    --text-3xl: 1.875rem;  /* 30px */
+    --text-4xl: 2.25rem;   /* 36px */
+
+    /* Font Weights */
+    --font-light: 300;
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+    --font-extrabold: 800;
+
+    /* Line Heights */
+    --leading-tight: 1.25;
+    --leading-snug: 1.375;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+    --leading-loose: 2;
+
+    /* Letter Spacing */
+    --tracking-tighter: -0.02em;
+    --tracking-tight: -0.01em;
+    --tracking-normal: 0em;
+    --tracking-wide: 0.01em;
+
+    /* ===== 간격 시스템 ===== */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    --space-8: 2rem;      /* 32px */
+    --space-10: 2.5rem;   /* 40px */
+    --space-12: 3rem;     /* 48px */
+    --space-16: 4rem;     /* 64px */
+    --space-20: 5rem;     /* 80px */
+
+    /* ===== 둥글기 (Border Radius) ===== */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 20px;
+    --radius-3xl: 24px;
+    --radius-full: 9999px;
+
+    /* ===== 그림자 (Box Shadow) ===== */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+    /* Colored Shadows */
+    --shadow-primary: 0 10px 30px rgba(99, 102, 241, 0.3);
+    --shadow-success: 0 10px 30px rgba(16, 185, 129, 0.3);
+    --shadow-warning: 0 10px 30px rgba(245, 158, 11, 0.3);
+    --shadow-error: 0 10px 30px rgba(239, 68, 68, 0.3);
+
+    /* ===== 트랜지션 ===== */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    --transition-bounce: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-elastic: 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* ===== 애니메이션 지속시간 ===== */
+    --duration-fast: 150ms;
+    --duration-normal: 300ms;
+    --duration-slow: 500ms;
+    --duration-very-slow: 1000ms;
+
+    /* ===== Z-Index 계층 ===== */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    --z-toast: 1080;
+
+    /* ===== 반응형 브레이크포인트 ===== */
+    --bp-mobile: 640px;
+    --bp-tablet: 768px;
+    --bp-laptop: 1024px;
+    --bp-desktop: 1280px;
+    --bp-wide: 1536px;
+}
+
+/* 다크 모드 지원 (추후 구현용) */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-gray-50: #1f2937;
+        --color-gray-100: #374151;
+        --color-gray-800: #f9fafb;
+        --color-gray-900: #ffffff;
+
+        --glass-bg: rgba(0, 0, 0, 0.1);
+        --glass-bg-light: rgba(0, 0, 0, 0.15);
+        --glass-bg-heavy: rgba(0, 0, 0, 0.25);
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
+}
