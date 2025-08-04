@@ -498,3 +498,39 @@
         font-size: var(--text-lg);
     }
 }
+/* 하트 아이콘 애니메이션 효과 */
+.like-btn .custom-heart {
+    transition: all 0.3s ease;
+    color: inherit;
+}
+
+/* 좋아요 상태일 때 빨간색 하트 */
+.like-btn.el-button--danger .custom-heart {
+    color: #f56565 !important;
+    animation: heartBeat 0.6s ease;
+}
+
+/* 좋아요 안한 상태일 때 회색 하트 */
+.like-btn.el-button--default .custom-heart {
+    color: #9ca3af;
+}
+
+/* 호버 효과 */
+.like-btn:hover .custom-heart {
+    transform: scale(1.1);
+}
+
+/* 하트 뛰는 애니메이션 */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.2); }
+    50% { transform: scale(1.1); }
+    75% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+/* 클릭 시 애니메이션 */
+.like-btn:active .custom-heart {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
