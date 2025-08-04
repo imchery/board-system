@@ -25,12 +25,20 @@ export interface PostResponse {
     title: string
     content: string
     category: string
-    createdDate: string
-    updatedDate: string
-    author: {
-        id: string
-        username: string
-    }
+    createdAt: string
+    updatedAt: string
+    author: string
+    viewCount?: number
+    likeCount?: number
+    commentCount?: number
+}
+
+export interface CommentResponse {
+    id: string
+    content: string
+    author: string
+    createdAt: string
+    updatedAt: string
 }
 
 // Axios 에러 타입

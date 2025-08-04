@@ -36,7 +36,7 @@
                 <span class="post-date">{{ formatDate(post.createdAt) }}</span>
                 <span class="stat-item">
                   <el-icon><View/></el-icon>
-                  {{ post.viewCount }}
+                  {{ post.viewCount || 0 }}
                 </span>
                 <span class="stat-item">
                   <el-icon><ChatLineRound/></el-icon>
@@ -50,7 +50,7 @@
           <div class="post-actions">
             <el-button
                 :type="isLiked ? 'danger' : 'default'"
-                :icon="Heart"
+                :icon="StarFilled"
                 @click="toggleLike"
                 :loading="likeLoading"
                 class="like-btn"
@@ -96,7 +96,7 @@
         <!-- 댓글 작성 폼 (로그인한 경우만) -->
         <div v-if="authStore.isLoggedIn" class="comment-form">
           <el-input
-              v-model="submitComment"
+              v-model="newComment"
               type="textarea"
               :rows="3"
               placeholder="댓글을 입력하세요..."
@@ -109,7 +109,7 @@
                 type="primary"
                 @click="submitComment"
                 :loading="commentLoading"
-                :disabled="!submitComment.trim()"
+                :disabled="!newComment.trim()"
             >
               댓글 작성
             </el-button>
@@ -198,20 +198,13 @@
 </template>
 
 <script setup lang="ts">
-import {
-  User,
-  View,
-  ChatLineRound,
-  Heart,
-  Edit,
-  Delete,
-  ArrowLeft
-} from '@element-plus/icons-vue'
-import {useAuthStore} from "@/stores/auth.js";
-import {useRouter} from "vue-router";
-import {computed, onMounted, ref} from "vue";
-import {postApi} from "@/api/post.ts";
-import {ElMessage, ElMessageBox} from "element-plus";
+import {computed, onMounted, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {ArrowLeft, ChatLineRound, Delete, Edit, StarFilled, User, View} from '@element-plus/icons-vue'
+import {useAuthStore} from '@/stores/auth'
+import {postApi} from '@/api/post'
+import type {CommentResponse, PostResponse} from '@/types/api'
 
 // Props (라우터에서 전달)
 const props = defineProps<{
@@ -222,23 +215,23 @@ const props = defineProps<{
 const router = useRouter()
 const authStore = useAuthStore()
 
-// 반응형 데이터
-const loading = ref(true)
-const post = ref(null)
-const comments = ref([])
-const newCommewnt = ref('')
-const isLiked = ref(false)
-const likeLoading = ref(false)
-const commentLoading = ref(false)
-const deleteLoading = ref(false)
+// 반응형 데이터 (타입 명시)
+const loading = ref<boolean>(true)
+const post = ref<PostResponse | null>(null)
+const comments = ref<CommentResponse[]>([])
+const newComment = ref<string>('')
+const isLiked = ref<boolean>(false)
+const likeLoading = ref<boolean>(false)
+const commentLoading = ref<boolean>(false)
+const deleteLoading = ref<boolean>(false)
 
 // 계산된 속성
 const isAuthor = computed(() => {
-  return authStore.isLoggedIn &&
-      authStore.currentUser === post.value?.author
+  if (!authStore.isLoggedIn || !post.value) return false
+  return authStore.currentUser === post.value.author
 })
 
-// 게시글 목록 조회
+// 게시글 상세 조회
 const fetchPost = async () => {
   try {
     loading.value = true
@@ -298,19 +291,22 @@ const toggleLike = async () => {
 
 // 댓글 작성
 const submitComment = async () => {
-  if (!newCommewnt.value.trim()) {
+  if (!newComment.value.trim()) {
     ElMessage.warning('댓글 내용을 입력해주세요')
+    return
   }
 
   try {
     commentLoading.value = true
-    // TODO 댓글 API 연동
+
+    // TODO: 댓글 API 연동
     // const response = await commentApi.createComment(props.id, newComment.value)
 
-    // 임시처리
+    // 임시 처리
     ElMessage.success('댓글이 작성되었습니다')
-    newCommewnt.value = ''
+    newComment.value = ''
     // fetchPost() // 댓글 목록 새로고침
+
   } catch (error) {
     console.error('댓글 작성 실패:', error)
     ElMessage.error('댓글 작성에 실패했습니다')
@@ -328,13 +324,14 @@ const deleteComment = async (commentId: string) => {
         {
           confirmButtonText: '삭제',
           cancelButtonText: '취소',
-          type: 'warning'
+          type: 'warning',
         }
     )
 
-    // TODO 댓글 삭제 API 연동
+    // TODO: 댓글 삭제 API 연동
     ElMessage.success('댓글이 삭제되었습니다')
     // fetchPost() // 댓글 목록 새로고침
+
   } catch (error) {
     if (error !== 'cancel') {
       console.error('댓글 삭제 실패:', error)
@@ -347,7 +344,7 @@ const deleteComment = async (commentId: string) => {
 const handleDelete = async () => {
   try {
     await ElMessageBox.confirm(
-        '게시글을 삭제하시겠습니까? 삭제된 게시글은 복수할 수 없습니다.',
+        '게시글을 삭제하시겠습니까? 삭제된 게시글은 복구할 수 없습니다.',
         '게시글 삭제',
         {
           confirmButtonText: '삭제',
@@ -355,9 +352,11 @@ const handleDelete = async () => {
           type: 'warning',
         }
     )
+
     deleteLoading.value = true
 
     const response = await postApi.deletePost(props.id)
+
     if (response.result) {
       ElMessage.success('게시글이 삭제되었습니다')
       router.push('/posts')
@@ -366,7 +365,7 @@ const handleDelete = async () => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.log('게시글 삭제 실패:', error)
+      console.error('게시글 삭제 실패:', error)
       ElMessage.error('게시글 삭제 중 오류가 발생했습니다')
     }
   } finally {
@@ -376,31 +375,31 @@ const handleDelete = async () => {
 
 // 네비게이션 메서드들
 const goBack = () => {
-  router.push({path: '/posts'})
+  router.push('/posts')
 }
 
 const goToEdit = () => {
-  router.push({path: `/posts/${props.id}/edit`})
+  router.push(`/posts/${props.id}/edit`)
 }
 
 const goToCreate = () => {
-  router.push({path: '/posts/create'})
+  router.push('/posts/create')
 }
 
 const goToLogin = () => {
-  router.push({path: '/login'})
+  router.push('/login')
 }
 
-// 날짜 포맷팅
+// 날짜 포맷팅 (PostList와 동일한 로직)
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
   const now = new Date()
-  const diff = date.getTime() - now.getTime()
+  const diff = now.getTime() - date.getTime()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
 
   if (days === 0) {
     return '오늘'
-  } else if (days >= 1) {
+  } else if (days === 1) {
     return '어제'
   } else if (days < 7) {
     return `${days}일 전`
@@ -408,7 +407,7 @@ const formatDate = (dateString: string) => {
     return date.toLocaleDateString('ko-KR', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric',
+      day: 'numeric'
     })
   }
 }
@@ -417,9 +416,9 @@ const formatDate = (dateString: string) => {
 onMounted(() => {
   fetchPost()
 })
-
-
 </script>
+
 <style scoped>
-@import "@/assets/styles/components/post-detail.css";
+/* 외부 CSS 파일 import */
+@import '@/assets/styles/components/post-detail.css';
 </style>

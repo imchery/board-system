@@ -11,30 +11,6 @@
           </router-link>
         </div>
 
-        <!--    네비게이션 메뉴    -->
-<!--        <nav class="nav-section">-->
-<!--          <el-menu-->
-<!--              mode="horizontal"-->
-<!--              :default-active="activeIndex"-->
-<!--              class="nav-menu"-->
-<!--              @select="handleMenuSelect"-->
-<!--          >-->
-<!--            <el-menu-item index="/posts">-->
-<!--              <el-icon>-->
-<!--                <Document/>-->
-<!--              </el-icon>-->
-<!--              게시글-->
-<!--            </el-menu-item>-->
-
-<!--            <el-menu-item index="/posts/create" v-if="authStore.isLoggedIn">-->
-<!--              <el-icon>-->
-<!--                <Edit/>-->
-<!--              </el-icon>-->
-<!--              글쓰기-->
-<!--            </el-menu-item>-->
-<!--          </el-menu>-->
-<!--        </nav>-->
-
         <!--    사용자 영역    -->
         <div class="user-section">
           <!--     로그인된 상태     -->
@@ -89,29 +65,14 @@
 </template>
 
 <script setup lang="ts">
-import {ArrowDown, Document, Edit, SwitchButton, User, UserFilled} from "@element-plus/icons-vue";
-import {useRoute, useRouter} from "vue-router";
+import {ArrowDown, SwitchButton, User, UserFilled} from "@element-plus/icons-vue";
+import {useRouter} from "vue-router";
 import {useAuthStore} from "@/stores/auth.ts";
-import {computed} from "vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 
 // Router & Auth Store
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
-
-console.log("router =====================", router)
-console.log("route =====================", route)
-
-// 현재 활성 메뉴 인덱스
-const activeIndex = computed(() => {
-  return route.path
-})
-
-// 메뉴 선택 처리
-const handleMenuSelect = (index: string) => {
-  return router.push(index)
-}
 
 // 사용자 드롭다운 명령 처리
 const handleUserCommand = async (command: string) => {

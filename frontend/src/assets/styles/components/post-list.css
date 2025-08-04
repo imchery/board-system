@@ -437,3 +437,40 @@
         padding: var(--space-3);
     }
 }
+
+/* 연번 스타일 */
+.row-number {
+    font-weight: var(--font-semibold);
+    color: var(--color-gray-600);
+    background: linear-gradient(135deg, var(--color-gray-100), var(--color-gray-50));
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+}
+/* 작성자 스타일 */
+.author-name {
+    font-weight: var(--font-medium);
+    color: var(--color-gray-700);
+}
+/* 조회수, 좋아요 스타일 */
+.view-count, .like-count {
+    font-weight: var(--font-medium);
+    color: var(--color-gray-600);
+}
+.like-count {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    justify-content: center;
+}
+.heart-icon {
+    color: var(--color-error);
+    font-size: var(--text-sm);
+}
+
+/* 날짜 스타일 */
+.post-date {
+    font-size: var(--text-sm);
+    color: var(--color-gray-500);
+    font-weight: var(--font-medium);
+}

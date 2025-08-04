@@ -51,30 +51,57 @@
           v-loading="loading"
           @row-click="goToDetail"
           style="width: 100%"
+          empty-text="게시글이 없습니다"
       >
-        <el-table-column prop="id" label="번호" width="120"/>
-        <el-table-column prop="title" label="제목" min-width="200">
-          <template #default="{ row }">
-            <span class="post-title">{{ row.title }}</span>
-            <!-- 댓글 수 표시 (나중에 추가) -->
-            <span class="comment-count" v-if="row.commentCount">
-              [{{ row.commentCount }}]
+        <!--    연번 컬럼(ID 대신)    -->
+        <el-table-column prop="id" label="번호" width="80" align="center">
+          <template #default="{$index}">
+            <span class="row-number">{{ getRowNumber($index) }}</span>
+          </template>
+        </el-table-column>
+
+        <!--    제목 컬럼    -->
+        <el-table-column prop="title" label="제목" min-width="300">
+          <template #default="scope">
+            <div class="post-title">
+              {{ scope.row.title }}
+              <span v-if="scope.row.commentCount > 0" class="comment-count">
+                [{{ scope.row.commentCount }}]
+              </span>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!--    작성자 컬럼    -->
+        <el-table-column prop="author" label="작성자" width="120" align="center">
+          <template #default="scope">
+            <span class="author-name">
+              {{ typeof scope.row.author === 'string' ? scope.row.author : scope.row.author.username }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="author" label="작성자" width="120"/>
-        <el-table-column prop="viewCount" label="조회수" width="120"/>
-        <el-table-column prop="likeCount" label="좋아요" width="120">
-          <template #default="{ row }">
-            <span style="color: #f56c6c">
-              <el-icon><Heart/></el-icon>
-              {{ row.likeCount }}
+
+        <!--    조회수 컬럼    -->
+        <el-table-column prop="viewCount" label="조회" width="80" align="center">
+          <template #default="scope">
+            <span class="view-count">{{ scope.row.viewCount || 0 }}</span>
+          </template>
+        </el-table-column>
+
+        <!--    좋아요 컬럼    -->
+        <el-table-column prop="likeCount" label="좋아요" width="100" align="center">
+          <template #default="scope">
+            <span class="like-count">
+              <el-icon class="heart-icon"><StarFilled/></el-icon>
+              {{ scope.row.likeCount || 0 }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="작성일" width="180">
-          <template #default="{ row }">
-            {{ formatDate(row.createdAt) }}
+
+        <!--    작성일 컬럼    -->
+        <el-table-column prop="createdAt" label="작성일" width="120" align="center">
+          <template #default="scope">
+            <span class="post-date">{{ formatDate(scope.row.createdAt) }}</span>
           </template>
         </el-table-column>
       </el-table>
@@ -101,7 +128,7 @@ import {useRouter} from "vue-router"
 import {ElMessage} from "element-plus";
 import {postApi} from "@/api/post.ts";
 import type {ApiError, PostResponse} from "@/types/api.ts";
-import {Edit, Search} from "@element-plus/icons-vue";
+import {Edit, Search, StarFilled} from "@element-plus/icons-vue";
 
 // 반응형 데이터
 const posts = ref<PostResponse[]>([])
@@ -145,6 +172,7 @@ const fetchPosts = async () => {
     console.error('게시글 조회 실패:', error)
 
     const apiError = error as ApiError
+    console.log("=========================", apiError)
 
     // 에러 타입별 처리
     if (apiError.response?.status === 401) {
@@ -216,6 +244,14 @@ const formatDate = (dateString: string) => {
   } else {
     return date.toLocaleDateString('ko-KR')
   }
+}
+
+// 연번 계산 함수
+const getRowNumber = (index: number) => {
+  // 전체 게시글 수에서 현재 위치를 빼서 역순 번호 계산
+  // 예: 총 50개, 1페이지(10개), 첫 번째 = 50 - 0 = 50
+  // 예: 총 50개, 2페이지(10개), 첫 번째 = 50 - 10 - 0 = 40
+  return totalElements.value - (currentPage.value - 1) * pageSize.value - index
 }
 </script>
 
