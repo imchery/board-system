@@ -29,6 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String token = extractTokenFromRequest(request);
+        String method = request.getMethod();
+        String path = request.getRequestURI();
 
         if (token != null && jwtTokenService.validateToken(token)) {
             try {
@@ -38,11 +40,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 요청에 사용자 정보 추가 (PostController에서 사용할 수 있게)
                 request.setAttribute("username", username);
 
-                log.debug("JWT token validated for user: {}", username);
+                log.debug("JWT 인증 성공: {} {} by {}", method, path, username);
             } catch (Exception e) {
-                log.error("JWT token validation failed: {}", e.getMessage());
+                log.error("JWT 토큰 파싱 실패: {}", e.getMessage());
                 // 토큰이 유효하지 않아도 요청은 계속 진행(에러 처리는 컨트롤러에서)
             }
+        } else {
+            log.debug("JWT 토큰 없음: {} {} (비로그인 사용자)", method, path);
         }
         filterChain.doFilter(request, response);
     }
@@ -73,22 +77,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String method = request.getMethod();
         String path = request.getRequestURI();
 
-        if ("GET".equals(method) && (
-                path.contains("/like-status")   // 좋아요 상태 확인
-        )) {
-            return false;
-        }
-
-        // GET 요청은 JWT 검증 스킵
-        if ("GET".equals(method)) {
-            return true;
-        }
-
         // 특정 경로는 JWT 검증 스킵(필요시 추가)
-        if (path.startsWith("/actuator") || path.startsWith("/health")) {
+        if (path.startsWith("/actuator") ||
+                path.startsWith("/health") ||
+                path.startsWith("/swagger") ||
+                path.startsWith("/api-docs")) {
             return true;
         }
         return false;

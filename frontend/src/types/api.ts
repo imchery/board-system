@@ -31,6 +31,7 @@ export interface PostResponse {
     viewCount?: number
     likeCount?: number
     commentCount?: number
+    isLikedByCurrentUser?:boolean
 }
 
 export interface CommentResponse {

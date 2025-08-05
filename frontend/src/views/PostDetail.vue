@@ -13,10 +13,13 @@
       </el-skeleton>
     </div>
 
-    <!-- 게시글 내용 -->
+    <!-- 게시글 내용 - 통합 카드 -->
     <div v-else-if="post" class="post-detail">
-      <el-card class="post-header-card">
-        <div class="post-header">
+      <!-- 하나의 통합된 카드 -->
+      <el-card class="unified-post-card">
+
+        <!-- 1. 헤더 섹션 -->
+        <div class="post-header-section">
           <div class="post-meta">
             <el-tag v-if="post.category" class="category-tag" type="primary">
               {{ post.category }}
@@ -86,100 +89,105 @@
             </div>
           </div>
         </div>
-      </el-card>
 
-      <!-- 본문 카드 -->
-      <el-card class="post-content-card">
-        <div class="post-content" v-html="post.content"></div>
-      </el-card>
+        <!-- 구분선 -->
+        <el-divider/>
 
-      <!-- 댓글 섹션 -->
-      <el-card class="comments-card">
-        <template #header>
+        <!-- 2. 본문 섹션 -->
+        <div class="post-content-section">
+          <!-- v-html 대신 일반 텍스트로 (보안상 더 안전) -->
+          <div class="post-content">{{ post.content }}</div>
+        </div>
+
+        <!-- 구분선 -->
+        <el-divider/>
+
+        <!-- 3. 댓글 섹션 -->
+        <div class="comments-section">
           <div class="comments-header">
             <h3>댓글 {{ post.commentCount || 0 }}개</h3>
           </div>
-        </template>
 
-        <!-- 댓글 작성 폼 (로그인한 경우만) -->
-        <div v-if="authStore.isLoggedIn" class="comment-form">
-          <el-input
-              v-model="newComment"
-              type="textarea"
-              :rows="3"
-              placeholder="댓글을 입력하세요..."
-              maxlength="500"
-              show-word-limit
-              class="comment-input"
-          />
-          <div class="comment-form-actions">
-            <el-button
-                type="primary"
-                @click="submitComment"
-                :loading="commentLoading"
-                :disabled="!newComment.trim()"
-            >
-              댓글 작성
-            </el-button>
-          </div>
-        </div>
-
-        <!-- 로그인 안내 -->
-        <div v-else class="login-prompt">
-          <el-alert
-              title="댓글을 작성하려면 로그인이 필요합니다"
-              type="info"
-              :closable="false"
-              show-icon
-          >
-            <template #default>
-              <el-button type="primary" size="small" @click="goToLogin">
-                로그인하기
+          <!-- 댓글 작성 폼 (로그인한 경우만) -->
+          <div v-if="authStore.isLoggedIn" class="comment-form">
+            <el-input
+                v-model="newComment"
+                type="textarea"
+                :rows="3"
+                placeholder="댓글을 입력하세요..."
+                maxlength="500"
+                show-word-limit
+                class="comment-input"
+            />
+            <div class="comment-form-actions">
+              <el-button
+                  type="primary"
+                  @click="submitComment"
+                  :loading="commentLoading"
+                  :disabled="!newComment.trim()"
+              >
+                댓글 작성
               </el-button>
-            </template>
-          </el-alert>
-        </div>
-
-        <!-- 댓글 목록 -->
-        <div class="comments-list">
-          <div v-if="comments.length === 0" class="no-comments">
-            <el-empty description="첫 번째 댓글을 작성해보세요!"/>
+            </div>
           </div>
 
-          <div v-else>
-            <div
-                v-for="comment in comments"
-                :key="comment.id"
-                class="comment-item"
+          <!-- 로그인 안내 -->
+          <div v-else class="login-prompt">
+            <el-alert
+                title="댓글을 작성하려면 로그인이 필요합니다"
+                type="info"
+                :closable="false"
+                show-icon
             >
-              <div class="comment-header">
-                <div class="comment-author">
-                  <el-avatar :size="24">
-                    <el-icon>
-                      <User/>
-                    </el-icon>
-                  </el-avatar>
-                  <span class="comment-author-name">{{ comment.author }}</span>
-                  <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
-                </div>
+              <template #default>
+                <el-button type="primary" size="small" @click="goToLogin">
+                  로그인하기
+                </el-button>
+              </template>
+            </el-alert>
+          </div>
 
-                <!-- 댓글 작성자만 보이는 삭제 버튼 -->
-                <el-button
-                    v-if="comment.author === authStore.currentUser"
-                    size="small"
-                    type="danger"
-                    text
-                    :icon="Delete"
-                    @click="deleteComment(comment.id)"
-                />
+          <!-- 댓글 목록 -->
+          <div class="comments-list">
+            <div v-if="comments.length === 0" class="no-comments">
+              <el-empty description="첫 번째 댓글을 작성해보세요!"/>
+            </div>
+
+            <div v-else>
+              <div
+                  v-for="comment in comments"
+                  :key="comment.id"
+                  class="comment-item"
+              >
+                <div class="comment-header">
+                  <div class="comment-author">
+                    <el-avatar :size="24">
+                      <el-icon>
+                        <User/>
+                      </el-icon>
+                    </el-avatar>
+                    <span class="comment-author-name">{{ comment.author }}</span>
+                    <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                  </div>
+
+                  <!-- 댓글 작성자만 보이는 삭제 버튼 -->
+                  <el-button
+                      v-if="comment.author === authStore.currentUser"
+                      size="small"
+                      type="danger"
+                      text
+                      :icon="Delete"
+                      @click="deleteComment(comment.id)"
+                  />
+                </div>
+                <div class="comment-content">{{ comment.content }}</div>
               </div>
-              <div class="comment-content">{{ comment.content }}</div>
             </div>
           </div>
         </div>
       </el-card>
 
-      <!-- 하단 네비게이션 -->
+      <!-- 하단 네비게이션 (카드 밖에) -->
       <div class="bottom-navigation">
         <el-button @click="goBack" :icon="ArrowLeft">
           목록으로
@@ -248,6 +256,15 @@ const fetchPost = async () => {
 
     if (response.result) {
       post.value = response.data
+
+      if (response.data.isLikedByCurrentUser !== undefined) {
+        isLiked.value = response.data.isLikedByCurrentUser
+      } else {
+        isLiked.value = false
+      }
+
+      console.log(`게시글 ${props.id} 좋아요 상태:`, isLiked.value)
+
       // TODO: 댓글 목록도 함께 조회
       // comments.value = response.data.comments || []
     } else {
@@ -283,8 +300,15 @@ const toggleLike = async () => {
     const response = await postApi.toggleLike(props.id)
 
     if (response.result) {
+      // 서버 응답으로 게시글 데이터와 좋아요 상태 모두 업데이트
       post.value = response.data
-      isLiked.value = !isLiked.value
+
+      // 백엔드에서 계산된 정확한 좋아요 상태 사용
+      if (response.data.isLikedByCurrentUser !== undefined) {
+        isLiked.value = response.data.isLikedByCurrentUser
+      }
+
+      console.log(`좋아요 토글 후 상태:`, isLiked.value)
       ElMessage.success(isLiked.value ? '좋아요!' : '좋아요 취소')
     } else {
       ElMessage.error(response.message || '좋아요 처리에 실패했습니다')

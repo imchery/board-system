@@ -176,7 +176,6 @@ const fetchPosts = async () => {
     console.error('게시글 조회 실패:', error)
 
     const apiError = error as ApiError
-    console.log("=========================", apiError)
 
     // 에러 타입별 처리
     if (apiError.response?.status === 401) {

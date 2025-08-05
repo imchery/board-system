@@ -70,7 +70,7 @@ public class PostController {
     public ResponseVO getPost(@PathVariable String id, HttpServletRequest httpRequest) {
         String username = (String) httpRequest.getAttribute("username");
 
-        log.info("게시글 상세 조회: {}", id);
+        log.info("게시글 상세 조회: {} by {}", id, username != null ? username : "비로그인");
 
         try {
             PostResponse post = postService.getPost(id, username);
