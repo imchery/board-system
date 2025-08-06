@@ -36,10 +36,29 @@ export interface PostResponse {
 
 export interface CommentResponse {
     id: string
+    postId: string
     content: string
     author: string
     createdAt: string
     updatedAt: string
+    parentCommentId?: string // null 가능
+    isReply?: boolean // 대댓글 여부
+}
+
+export interface CommentRequest {
+    postId: string
+    content: string
+    parentCommentId?: string // 대댓글용 (null이면 최상위 댓글)
+}
+
+export interface CommentUpdateRequest {
+    content: string
+}
+
+export interface CommentStatsResponse {
+    totalComments: number
+    rootComments: number
+    replies: number
 }
 
 // Axios 에러 타입
