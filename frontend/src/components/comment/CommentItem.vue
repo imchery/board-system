@@ -176,17 +176,19 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 
 // 반응형 데이터
-const showReplyForm = ref(false)
-const isEditing = ref(false)
-const editText = ref('')
-const editLoading = ref(false)
-const showReplies = ref(false)
-const replyPreview = ref<CommentResponse[]>([])
-const replies = ref<CommentResponse[]>([])
-const replyCount = ref(0)
-const repliesLoading = ref(false)
-const hasMoreReplies = ref(false)
-const currentReplyPage = ref(0)
+const showReplyForm = ref(false) // 댓글 작성 폼 보임/숨김
+const isEditing = ref(false) // 댓글 수정 모드 on/off
+const showReplies = ref(false) // 답글 목록 펼침/접기
+
+const editText = ref('') // 수정할 댓글 내용
+const editLoading = ref(false) // 수정 버튼 로딩 상태
+
+const replyPreview = ref<CommentResponse[]>([]) // 답글 미리보기(3개)
+const replies = ref<CommentResponse[]>([]) // 전체 답글 목록
+const replyCount = ref(0) // 답글 개수
+const repliesLoading = ref(false) // 답글 로딩 상태
+const hasMoreReplies = ref(false) // 더 불러올 답글 있는지 확인
+const currentReplyPage = ref(0) // 현재 답글 페이지
 
 // 계산된 속성
 const isAuthor = computed(() => {
