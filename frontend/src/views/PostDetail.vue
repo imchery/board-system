@@ -43,6 +43,36 @@
               </button>
             </div>
 
+            <!-- 작성자 전용 드롭다운 메뉴 -->
+            <div v-if="isAuthor" class="post-actions">
+              <el-dropdown trigger="click" placement="bottom-end">
+                <el-button text circle>
+                  <el-icon class="more-icon">
+                    <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                          d="M176 511a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0z"/>
+                    </svg>
+                  </el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="goToEdit">
+                      <el-icon>
+                        <Edit/>
+                      </el-icon>
+                      수정
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="handleDelete" divided>
+                      <el-icon>
+                        <Delete/>
+                      </el-icon>
+                      삭제
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
+
             <div class="post-info">
               <div class="author-info">
                 <el-avatar :size="32" class="author-avatar">
@@ -64,36 +94,6 @@
                 </span>
               </div>
             </div>
-          </div>
-
-          <!-- 작성자 전용 드롭다운 메뉴 -->
-          <div v-if="isAuthor" class="post-actions">
-            <el-dropdown trigger="click" placement="bottom-end">
-              <el-button text circle>
-                <el-icon class="more-icon">
-                  <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M176 511a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0z"/>
-                  </svg>
-                </el-icon>
-              </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item @click="goToEdit">
-                    <el-icon>
-                      <Edit/>
-                    </el-icon>
-                    수정
-                  </el-dropdown-item>
-                  <el-dropdown-item @click="handleDelete" divided>
-                    <el-icon>
-                      <Delete/>
-                    </el-icon>
-                    삭제
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
           </div>
         </div>
 
@@ -167,26 +167,86 @@
               >
                 <div class="comment-header">
                   <div class="comment-author">
-                    <el-avatar :size="24">
-                      <el-icon>
-                        <User/>
-                      </el-icon>
-                    </el-avatar>
-                    <span class="comment-author-name">{{ comment.author }}</span>
-                    <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                    <div class="comment-avatar">
+                      <el-icon><User/></el-icon>
+                    </div>
+                    <div class="comment-info">
+                      <span class="comment-author-name">{{ comment.author }}</span>
+                      <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+                    </div>
                   </div>
 
-                  <!-- 댓글 작성자만 보이는 삭제 버튼 -->
-                  <el-button
-                      v-if="comment.author === authStore.currentUser"
-                      size="small"
-                      type="danger"
-                      text
-                      :icon="Delete"
-                      @click="deleteComment(comment.id)"
-                  />
+                  <!-- 댓글 작성자만 보이는 액션 메뉴 -->
+                  <div v-if="comment.author === authStore.currentUser" class="comment-actions">
+                    <el-dropdown trigger="click" placement="bottom-end">
+                      <el-button text circle size="small" class="comment-more-btn">
+                        <el-icon style="font-size: 12px;">
+                          <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M176 511a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0z"/>
+                          </svg>
+                        </el-icon>
+                      </el-button>
+                      <template #dropdown>
+                        <el-dropdown-menu>
+                          <el-dropdown-item @click="startEditComment(comment)">
+                            <el-icon><Edit/></el-icon>
+                            수정
+                          </el-dropdown-item>
+                          <el-dropdown-item @click="deleteComment(comment.id)" divided>
+                            <el-icon><Delete/></el-icon>
+                            삭제
+                          </el-dropdown-item>
+                        </el-dropdown-menu>
+                      </template>
+                    </el-dropdown>
+                  </div>
                 </div>
-                <div class="comment-content">{{ comment.content }}</div>
+
+                <!-- 댓글 내용 (수정 모드와 일반 모드) -->
+                <div class="comment-content">
+                  <!-- 수정 모드 -->
+                  <div v-if="editingCommentId === comment.id" class="comment-edit-form">
+                    <el-input
+                        v-model="editingContent"
+                        type="textarea"
+                        :rows="3"
+                        placeholder="댓글을 입력하세요..."
+                        maxlength="500"
+                        show-word-limit
+                        class="edit-textarea"
+                    />
+                    <div class="comment-edit-actions">
+                      <el-button size="small" @click="cancelEditComment">취소</el-button>
+                      <el-button
+                          type="primary"
+                          size="small"
+                          @click="saveEditComment(comment.id)"
+                          :loading="editLoading"
+                          :disabled="!editingContent.trim()"
+                      >
+                        저장
+                      </el-button>
+                    </div>
+                  </div>
+
+                  <!-- 일반 모드 -->
+                  <div v-else class="comment-text">
+                    {{ comment.content }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 댓글 페이지네이션 -->
+              <div v-if="totalCommentsPages > 1" class="comments-pagination">
+                <el-pagination
+                    v-model:current-page="currentCommentsPage"
+                    :page-size="commentsPageSize"
+                    :total="totalComments"
+                    layout="prev, pager, next"
+                    @current-change="handleCommentsPageChange"
+                    small
+                    background
+                />
               </div>
             </div>
           </div>
@@ -441,12 +501,12 @@ const deleteComment = async (commentId: string) => {
         }
     )
 
-    const response = await commentApi.deleteComment(commentId)
+    const response =  await commentApi.deleteComment(commentId)
 
-    if (response.result) {
+    if(response.result) {
       ElMessage.success('댓글이 삭제되었습니다')
       await fetchComments() // 댓글 목록 새로고침
-    } else {
+    }else{
       ElMessage.error(response.message || '댓글 삭제에 실패했습니다')
     }
   } catch (error) {
