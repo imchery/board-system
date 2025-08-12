@@ -90,7 +90,7 @@
                 </span>
                 <span class="stat-item">
                   <el-icon><ChatLineRound/></el-icon>
-                  {{ post.commentCount || 0 }}
+                  {{ commentCount || 0 }}
                 </span>
               </div>
             </div>
@@ -111,7 +111,7 @@
         <!-- 3. 댓글 섹션 -->
         <div class="comments-section">
           <div class="comments-header">
-            <h3>댓글 {{ post.commentCount || 0 }}개</h3>
+            <h3>댓글 {{ commentCount || 0 }}개</h3>
           </div>
 
           <!-- 댓글 작성 폼 (로그인한 경우만) -->
@@ -316,6 +316,7 @@ const totalComments = ref<number>(0)
 const currentCommentsPage = ref<number>(1)
 const commentsPageSize = ref<number>(10)
 const totalCommentsPages = ref<number>(0)
+const commentCount = ref<number>(0)
 
 // 댓글 수정 관련
 const editingCommentId = ref<string | null>(null)
@@ -373,6 +374,7 @@ const fetchComments = async () => {
 
     if (response.result) {
       comments.value = response.data.content
+      commentCount.value = response.data.content.length
       totalComments.value = response.data.totalElements
       totalCommentsPages.value = response.data.totalPages
     } else {
