@@ -12,6 +12,7 @@ import study.common.lib.response.PageResponse;
 import study.content.dto.post.PostRequest;
 import study.content.dto.post.PostResponse;
 import study.content.entity.Post;
+import study.content.repository.CommentRepository;
 import study.content.repository.PostRepository;
 
 import java.util.List;
@@ -24,6 +25,8 @@ import java.util.function.Function;
 public class PostService {
 
     private final PostRepository postRepository;
+
+    private final CommentRepository commentRepository;
 
     /**
      * 게시글 생성
@@ -80,7 +83,13 @@ public class PostService {
 
         log.info("Post viewed - id: {}, new view count: {}", id, post.getViewCount());
 
-        return PostResponse.from(post, currentUser);
+        PostResponse response = PostResponse.from(post, currentUser);
+
+        // 댓글 수 별도 조회
+        long commentCount = commentRepository.countByPostId(id);
+        response.setCommentCount(commentCount);
+
+        return response;
     }
 
     /**

@@ -1,9 +1,6 @@
 package study.content.dto.post;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import study.content.entity.Post;
 
 @Data
@@ -22,6 +19,7 @@ public class PostResponse {
     private String category;
     private String createdAt;
     private String updatedAt;
+    private Long commentCount;
 
     // Entity -> DTO 변환 메서드
     public static PostResponse from(Post post, String currentUser) {
@@ -45,4 +43,5 @@ public class PostResponse {
     public static PostResponse from(Post post) {
         return from(post, null);
     }
+
 }

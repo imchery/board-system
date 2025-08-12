@@ -1355,3 +1355,20 @@
         font-size: 16px;
     }
 }
+.title-with-like {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.post-title {
+    flex: 1;
+    margin: 0 !important;
+}
+
+.like-button {
+    /* 기존 좋아요 버튼 스타일 */
+    flex-shrink: 0;
+}

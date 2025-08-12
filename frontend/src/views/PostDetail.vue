@@ -15,7 +15,6 @@
 
     <!-- 게시글 내용 -->
     <div v-else-if="post" class="post-detail">
-      <!-- 하나의 통합된 카드 -->
       <el-card class="unified-post-card">
 
         <!-- 1. 헤더 섹션 -->
@@ -25,13 +24,14 @@
               {{ post.category }}
             </el-tag>
 
-            <!-- 제목과 좋아요를 같은 줄에 배치 -->
+            <!-- 제목과 좋아요를 한 줄에 배치 -->
             <div class="title-with-like">
               <h1 class="post-title">{{ post.title }}</h1>
               <button
                   class="like-button"
                   :class="{ active: isLiked }"
                   @click="toggleLike"
+                  :disabled="likeLoading"
               >
                 <el-icon class="heart-icon">
                   <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
@@ -41,36 +41,6 @@
                 </el-icon>
                 <span class="like-count">{{ post.likeCount || 0 }}</span>
               </button>
-            </div>
-
-            <!-- 작성자 전용 드롭다운 메뉴 -->
-            <div v-if="isAuthor" class="post-actions">
-              <el-dropdown trigger="click" placement="bottom-end">
-                <el-button text circle>
-                  <el-icon class="more-icon">
-                    <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                          d="M176 511a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0z"/>
-                    </svg>
-                  </el-icon>
-                </el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item @click="goToEdit">
-                      <el-icon>
-                        <Edit/>
-                      </el-icon>
-                      수정
-                    </el-dropdown-item>
-                    <el-dropdown-item @click="handleDelete" divided>
-                      <el-icon>
-                        <Delete/>
-                      </el-icon>
-                      삭제
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
             </div>
 
             <div class="post-info">
@@ -90,10 +60,40 @@
                 </span>
                 <span class="stat-item">
                   <el-icon><ChatLineRound/></el-icon>
-                  {{ commentCount || 0 }}
+                  {{ post.commentCount || 0 }}
                 </span>
               </div>
             </div>
+          </div>
+
+          <!-- 작성자 전용 드롭다운 메뉴 -->
+          <div v-if="isAuthor" class="post-actions">
+            <el-dropdown trigger="click" placement="bottom-end">
+              <button class="more-button">
+                <el-icon class="more-icon">
+                  <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M176 511a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0z"/>
+                  </svg>
+                </el-icon>
+              </button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item @click="goToEdit">
+                    <el-icon>
+                      <Edit/>
+                    </el-icon>
+                    수정
+                  </el-dropdown-item>
+                  <el-dropdown-item @click="handleDelete" divided>
+                    <el-icon>
+                      <Delete/>
+                    </el-icon>
+                    삭제
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </div>
 
@@ -108,148 +108,9 @@
         <!-- 구분선 -->
         <el-divider/>
 
-        <!-- 3. 댓글 섹션 -->
+        <!-- 3. 댓글 섹션 - CommentList 컴포넌트로 교체 -->
         <div class="comments-section">
-          <div class="comments-header">
-            <h3>댓글 {{ commentCount || 0 }}개</h3>
-          </div>
-
-          <!-- 댓글 작성 폼 (로그인한 경우만) -->
-          <div v-if="authStore.isLoggedIn" class="comment-form">
-            <el-input
-                v-model="newComment"
-                type="textarea"
-                :rows="3"
-                placeholder="댓글을 입력하세요..."
-                maxlength="500"
-                show-word-limit
-                class="comment-input"
-            />
-            <div class="comment-form-actions">
-              <el-button
-                  type="primary"
-                  @click="submitComment"
-                  :loading="commentLoading"
-                  :disabled="!newComment.trim()"
-              >
-                댓글 작성
-              </el-button>
-            </div>
-          </div>
-
-          <!-- 로그인 안내 -->
-          <div v-else class="login-prompt">
-            <el-alert
-                title="댓글을 작성하려면 로그인이 필요합니다"
-                type="info"
-                :closable="false"
-                show-icon
-            >
-              <template #default>
-                <el-button type="primary" size="small" @click="goToLogin">
-                  로그인하기
-                </el-button>
-              </template>
-            </el-alert>
-          </div>
-
-          <!-- 댓글 목록 -->
-          <div class="comments-list">
-            <div v-if="comments.length === 0" class="no-comments">
-              <el-empty description="첫 번째 댓글을 작성해보세요!"/>
-            </div>
-
-            <div v-else>
-              <div
-                  v-for="comment in comments"
-                  :key="comment.id"
-                  class="comment-item"
-              >
-                <div class="comment-header">
-                  <div class="comment-author">
-                    <div class="comment-avatar">
-                      <el-icon><User/></el-icon>
-                    </div>
-                    <div class="comment-info">
-                      <span class="comment-author-name">{{ comment.author }}</span>
-                      <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
-                    </div>
-                  </div>
-
-                  <!-- 댓글 작성자만 보이는 액션 메뉴 -->
-                  <div v-if="comment.author === authStore.currentUser" class="comment-actions">
-                    <el-dropdown trigger="click" placement="bottom-end">
-                      <el-button text circle size="small" class="comment-more-btn">
-                        <el-icon style="font-size: 12px;">
-                          <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M176 511a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0z"/>
-                          </svg>
-                        </el-icon>
-                      </el-button>
-                      <template #dropdown>
-                        <el-dropdown-menu>
-                          <el-dropdown-item @click="startEditComment(comment)">
-                            <el-icon><Edit/></el-icon>
-                            수정
-                          </el-dropdown-item>
-                          <el-dropdown-item @click="deleteComment(comment.id)" divided>
-                            <el-icon><Delete/></el-icon>
-                            삭제
-                          </el-dropdown-item>
-                        </el-dropdown-menu>
-                      </template>
-                    </el-dropdown>
-                  </div>
-                </div>
-
-                <!-- 댓글 내용 (수정 모드와 일반 모드) -->
-                <div class="comment-content">
-                  <!-- 수정 모드 -->
-                  <div v-if="editingCommentId === comment.id" class="comment-edit-form">
-                    <el-input
-                        v-model="editingContent"
-                        type="textarea"
-                        :rows="3"
-                        placeholder="댓글을 입력하세요..."
-                        maxlength="500"
-                        show-word-limit
-                        class="edit-textarea"
-                    />
-                    <div class="comment-edit-actions">
-                      <el-button size="small" @click="cancelEditComment">취소</el-button>
-                      <el-button
-                          type="primary"
-                          size="small"
-                          @click="saveEditComment(comment.id)"
-                          :loading="editLoading"
-                          :disabled="!editingContent.trim()"
-                      >
-                        저장
-                      </el-button>
-                    </div>
-                  </div>
-
-                  <!-- 일반 모드 -->
-                  <div v-else class="comment-text">
-                    {{ comment.content }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- 댓글 페이지네이션 -->
-              <div v-if="totalCommentsPages > 1" class="comments-pagination">
-                <el-pagination
-                    v-model:current-page="currentCommentsPage"
-                    :page-size="commentsPageSize"
-                    :total="totalComments"
-                    layout="prev, pager, next"
-                    @current-change="handleCommentsPageChange"
-                    small
-                    background
-                />
-              </div>
-            </div>
-          </div>
+          <CommentList :post-id="props.id"/>
         </div>
       </el-card>
 
@@ -286,8 +147,8 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 import {ArrowLeft, ChatLineRound, Delete, Edit, EditPen, User, View} from '@element-plus/icons-vue'
 import {postApi} from '@/api/post'
 import {useAuthStore} from '@/stores/auth'
-import type {CommentResponse, PostResponse} from '@/types/api'
-import {commentApi} from "@/api/comment.ts";
+import type {PostResponse} from '@/types/api'
+import CommentList from "@/components/comment/CommentList.vue";
 
 // Props
 interface Props {
@@ -306,22 +167,6 @@ const post = ref<PostResponse | null>(null)
 const isLiked = ref<boolean>(false)
 const likeLoading = ref<boolean>(false)
 const deleteLoading = ref<boolean>(false)
-
-// 댓글 관련 반응형 데이터
-const comments = ref<CommentResponse[]>([])
-const commentsLoading = ref<boolean>(false)
-const newComment = ref<string>('')
-const commentLoading = ref<boolean>(false)
-const totalComments = ref<number>(0)
-const currentCommentsPage = ref<number>(1)
-const commentsPageSize = ref<number>(10)
-const totalCommentsPages = ref<number>(0)
-const commentCount = ref<number>(0)
-
-// 댓글 수정 관련
-const editingCommentId = ref<string | null>(null)
-const editingContent = ref<string>('')
-const editLoading = ref<boolean>(false)
 
 // 계산된 속성
 const isAuthor = computed(() => {
@@ -342,7 +187,6 @@ const fetchPost = async () => {
       } else {
         isLiked.value = false
       }
-      console.log(`게시글 ${props.id} 좋아요 상태:`, isLiked.value)
     } else {
       ElMessage.error(response.message || '게시글을 불러오는데 실패했습니다')
     }
@@ -361,33 +205,6 @@ const fetchPost = async () => {
     loading.value = false
   }
 }
-
-// 댓글 목록 조회
-const fetchComments = async () => {
-  try {
-    commentsLoading.value = true
-    const response = await commentApi.getRootComments(
-        props.id,
-        currentCommentsPage.value - 1, // 백엔드는 0부터 시작
-        commentsPageSize.value
-    )
-
-    if (response.result) {
-      comments.value = response.data.content
-      commentCount.value = response.data.content.length
-      totalComments.value = response.data.totalElements
-      totalCommentsPages.value = response.data.totalPages
-    } else {
-      ElMessage.error(response.message || '댓글을 불러오는데 실패했습니다')
-    }
-  } catch (error) {
-    console.error('댓글 조회 실패:', error)
-    ElMessage.error('댓글을 불러오는 중 오류가 발생했습니다')
-  } finally {
-    commentsLoading.value = false
-  }
-}
-
 
 // 좋아요 토글
 const toggleLike = async () => {
@@ -415,114 +232,6 @@ const toggleLike = async () => {
   } finally {
     likeLoading.value = false
   }
-}
-
-// 댓글 작성
-const submitComment = async () => {
-  if (!newComment.value.trim()) return
-
-  try {
-    commentLoading.value = true
-    const request = {
-      postId: props.id,
-      content: newComment.value.trim(),
-    }
-
-    const response = await commentApi.createComment(props.id, request)
-
-    if (response.result) {
-      ElMessage.success('댓글이 작성되었습니다')
-      newComment.value = ''
-      // 첫 페이지로 이동해서 새 댓글 확인
-      currentCommentsPage.value = 1
-      await fetchComments()
-    } else {
-      ElMessage.error(response.message || '댓글 작성에 실패했습니다')
-    }
-  } catch (error) {
-    console.error('댓글 작성 실패:', error)
-    ElMessage.error('댓글 작성에 실패했습니다')
-  } finally {
-    commentLoading.value = false
-  }
-}
-
-// 댓글 수정 시작
-const startEditComment = (comment: CommentResponse) => {
-  editingCommentId.value = comment.id
-  editingContent.value = comment.content
-}
-
-// 댓글 수정 취소
-const cancelEditComment = () => {
-  editingCommentId.value = null
-  editingContent.value = ''
-}
-
-// 댓글 수정 저장
-const saveEditComment = async (commentId: string) => {
-  if (!editingContent.value.trim()) {
-    ElMessage.warning('댓글 내용을 입력해주세요')
-    return
-  }
-
-  try {
-    editLoading.value = true
-    const request = {
-      content: editingContent.value.trim(),
-    }
-
-    const response = await commentApi.updateComment(commentId, request)
-
-    if (response.result) {
-      ElMessage.success('댓글이 수정되었습니다')
-      editingCommentId.value = null
-      editingContent.value = ''
-      await fetchComments() // 댓글 목록 새로고침
-    } else {
-      ElMessage.error(response.message || '댓글 수정에 실패했습니다')
-    }
-  } catch (error) {
-    console.error('댓글 수정 실패:', error)
-    ElMessage.error('댓글 수정 중 오류가 발생했습니다')
-  } finally {
-    editLoading.value = false
-  }
-}
-
-// 댓글 삭제
-const deleteComment = async (commentId: string) => {
-  try {
-    await ElMessageBox.confirm(
-        '댓글을 삭제하시겠습니까?',
-        '댓글 삭제',
-        {
-          confirmButtonText: '삭제',
-          cancelButtonText: '취소',
-          type: 'warning',
-        }
-    )
-
-    const response =  await commentApi.deleteComment(commentId)
-
-    if(response.result) {
-      ElMessage.success('댓글이 삭제되었습니다')
-      await fetchComments() // 댓글 목록 새로고침
-    }else{
-      ElMessage.error(response.message || '댓글 삭제에 실패했습니다')
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('댓글 삭제 실패:', error)
-      ElMessage.error('댓글 삭제에 실패했습니다')
-    }
-  }
-}
-
-// 댓글 페이지 변경
-const handleCommentsPageChange = (page: number) => {
-  currentCommentsPage.value = page
-  fetchComments()
 }
 
 // 게시글 삭제
@@ -570,10 +279,6 @@ const goToCreate = () => {
   router.push('/posts/create')
 }
 
-const goToLogin = () => {
-  router.push('/login')
-}
-
 // 날짜 포맷팅
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -595,7 +300,6 @@ const formatDate = (dateString: string) => {
 // 컴포넌트 마운트 시 데이터 로드
 onMounted(() => {
   fetchPost()
-  fetchComments()
 })
 </script>
 

@@ -238,3 +238,123 @@
     background: #d1d5db;
     cursor: not-allowed;
 }
+/* ===== 댓글 작성 폼 섹션 ===== */
+.comment-form-section {
+    margin-bottom: 24px;
+}
+
+/* ===== 로그인 안내 섹션 ===== */
+.login-prompt-section {
+    margin-bottom: 32px; /* 댓글 헤더와 충분한 간격 */
+}
+
+/* ===== 댓글 헤더 개선 ===== */
+.comments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.comments-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* ===== 정렬 옵션 우측 정렬 ===== */
+.sort-options {
+    margin-left: auto; /* 우측으로 밀어냄 */
+}
+
+.sort-options .el-radio-group {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 2px;
+}
+
+.sort-options .el-radio-button__inner {
+    background: transparent !important;
+    border: none !important;
+    color: #6b7280 !important;
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+}
+
+.sort-options .el-radio-button__original-radio:checked + .el-radio-button__inner {
+    background: #3b82f6 !important;
+    color: white !important;
+    box-shadow: none !important;
+}
+
+.sort-options .el-radio-button:hover .el-radio-button__inner {
+    background: #e5e7eb !important;
+    color: #374151 !important;
+}
+
+.sort-options .el-radio-button__original-radio:checked:hover + .el-radio-button__inner {
+    background: #2563eb !important;
+    color: white !important;
+}
+
+/* ===== 댓글 컨텐츠 영역 ===== */
+.comments-content {
+    margin-top: 16px;
+}
+
+/* ===== 로딩 상태 ===== */
+.comments-loading {
+    margin-top: 20px;
+    padding: 20px 0;
+}
+
+.comment-skeleton {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+/* ===== 댓글 없음 상태 ===== */
+.no-comments {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+/* ===== 페이지네이션 ===== */
+.comments-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #f3f4f6;
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 768px) {
+    .comments-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .sort-options {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .sort-options .el-radio-group {
+        width: 100%;
+        display: flex;
+    }
+
+    .sort-options .el-radio-button {
+        flex: 1;
+    }
+}

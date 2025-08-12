@@ -2,7 +2,7 @@
   <div class="comment-list">
     <!--  댓글 작성 폼 (로그인한 경우만)  -->
     <div v-if="authStore.isLoggedIn" class="comment-form-actions">
-      <CommentForm post-id="postId" parent-comment-id="parentCommentId" @succes="handleCommentSuccess"/>
+      <CommentForm :post-id="props.postId" @succes="handleCommentSuccess" parent-comment-id=""/>
     </div>
 
     <!--  로그인 안내 (비로그인 사용자)  -->
