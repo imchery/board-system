@@ -391,7 +391,7 @@ const formatDate = (dateString: string) => {
 // 컴포넌트 마운트 시 답글 미리보기 로드
 onMounted(() => {
   if (!props.comment.isReply) {
-    // loadReplyPreview()
+    loadReplyPreview()
   }
 })
 </script>

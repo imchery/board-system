@@ -64,7 +64,7 @@ export const commentApi = {
 
     // 특정 댓글의 대댓글 미리보기 (처음 3개)
     getReplyPreview: async (postId: string, commentId: string): Promise<ResponseVO<CommentResponse[]>> => {
-        return await apiClient.get(`/api/${postId}/comments/${commentId}/preview`)
+        return await apiClient.get(`/api/posts/${postId}/comments/${commentId}/preview`)
     },
 
     // 특정 댓글의 대댓글 목록 조회(페이징)
