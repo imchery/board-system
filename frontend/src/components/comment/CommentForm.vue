@@ -1,9 +1,9 @@
 <template>
   <div class="comment-form">
-    <div class="form-header">
-      <h4>{{ isReply ? '답글 작성' : '댓글 작성' }}</h4>
+    <!--  답글일 때만 헤더 표시  -->
+    <div v-if="isReply" class="form-header">
+      <span class="reply-indicator">답글 작성</span>
       <el-button
-          v-if="isReply"
           size="small"
           text
           @click="cancelReply"
@@ -13,26 +13,31 @@
       </el-button>
     </div>
 
-    <el-input
-        v-model="commentText"
-        type="textarea"
-        :row="isReply ? 2 : 3"
-        :placeholder="isReply ? '답글을 입력하세요...' : '댓글을 입력하세요...'"
-        maxlength="1000"
-        show-word-limit
-        class="comment-textarea"
-    />
+    <!--  댓글 입력 영역  -->
+    <div class="form-content">
+      <el-input
+          v-model="commentText"
+          type="textarea"
+          :row="isReply ? 2 : 3"
+          :placeholder="isReply ? '답글을 입력하세요...' : '댓글을 입력하세요...'"
+          maxlength="1000"
+          show-word-limit
+          class="comment-textarea"
+          @keydown.ctrl.enter="submitComment"
+          @keydown.meta.enter="submitComment"
+      />
 
-    <div class="form-actions">
-      <el-button
-          type="primary"
-          @click="submitComment"
-          :loading="loading"
-          :disabled="!commentText.trim()"
-          size="small"
-      >
-        {{ isReply ? '답글 등록' : '댓글 등록' }}
-      </el-button>
+      <div class="form-actions">
+        <el-button
+            type="primary"
+            @click="submitComment"
+            :loading="loading"
+            :disabled="!commentText.trim()"
+            size="small"
+        >
+          {{ isReply ? '답글 등록' : '댓글 등록' }}
+        </el-button>
+      </div>
     </div>
   </div>
 </template>

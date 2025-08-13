@@ -1,60 +1,52 @@
 <template>
   <div class="comment-wrapper" :class="{'is-reply': comment.isReply}">
 
-    <!--  대댓글 연결선  -->
-    <div v-if="comment.isReply" class="reply-connector"></div>
-
     <div class="comment-item">
-      <!-- 댓글 헤더 -->
+      <!-- 댓글 헤더: 프로필(왼쪽) + 액션버튼(오른쪽 상단) -->
       <div class="comment-header">
-        <div class="comment-author-info">
-          <el-avatar :size="comment.isReply ? 28 : 32" class="author-avatar">
-            <el-icon>
-              <User/>
-            </el-icon>
+        <div class="comment-author">
+          <el-avatar :size="comment.isReply ? 24 : 28" class="comment-avatar">
+            <el-icon><User/></el-icon>
           </el-avatar>
-          <div class="author-details">
-            <span class="author-name">{{ comment.author }}</span>
-            <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+          <div class="comment-info">
+            <span class="comment-author-name">{{ comment.author }}</span>
           </div>
         </div>
 
-        <!-- 액션 버튼들 (호버 시 표시) -->
-        <div class="comment-actions">
-          <!-- 수정 버튼 (작성자만) -->
-          <button
-              v-if="isAuthor"
-              class="action-btn edit-btn"
-              @click="toggleEditMode"
-              :class="{ active: isEditing }"
-          >
-            <el-icon>
-              <Edit/>
-            </el-icon>
-          </button>
+        <div class="comment-meta">
+          <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
 
-          <!-- 삭제 버튼 (작성자만) -->
-          <button
-              v-if="isAuthor"
-              class="action-btn delete-btn"
-              @click="handleDelete"
-          >
-            <el-icon>
-              <Delete/>
-            </el-icon>
-          </button>
+          <!-- 수정/삭제 드롭다운 (오른쪽 상단) -->
+          <div class="comment-actions" v-if="isAuthor && !isEditing">
+            <el-dropdown trigger="click" @command="handleCommand">
+              <el-button
+                  size="small"
+                  text
+                  circle
+                  class="comment-more-btn"
+              >
+                <el-icon><MoreFilled/></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="edit" :icon="Edit">수정</el-dropdown-item>
+                  <el-dropdown-item command="delete" :icon="Delete">삭제</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </div>
       </div>
 
       <!-- 댓글 내용 -->
       <div class="comment-content">
         <!-- 일반 모드 -->
-        <div v-if="!isEditing" class="content-text">
+        <div v-if="!isEditing" class="comment-text">
           {{ comment.content }}
         </div>
 
         <!-- 수정 모드 -->
-        <div v-else class="content-edit">
+        <div v-else class="comment-edit-form">
           <el-input
               v-model="editText"
               type="textarea"
@@ -63,109 +55,104 @@
               show-word-limit
               class="edit-textarea"
           />
-          <div class="edit-actions">
-            <button class="cancel-btn" @click="cancelEdit">취소</button>
-            <button
-                class="save-btn"
+          <div class="comment-edit-actions">
+            <el-button size="small" @click="cancelEdit">취소</el-button>
+            <el-button
+                size="small"
+                type="primary"
                 @click="saveEdit"
-                :disabled="editLoading || !editText.trim()"
+                :loading="editLoading"
+                :disabled="!editText.trim()"
             >
-              <span v-if="editLoading">저장 중...</span>
-              <span v-else>저장</span>
-            </button>
+              저장
+            </el-button>
           </div>
         </div>
       </div>
 
-      <!-- 댓글 하단 액션바 -->
-      <div v-if="!isEditing" class="comment-footer">
-        <!-- 답글 버튼 (최상위 댓글만) -->
-        <button
-            v-if="!comment.isReply && authStore.isLoggedIn"
-            class="reply-btn"
+      <!-- 답글 버튼 (최상위 댓글만) -->
+      <div v-if="!comment.isReply && !isEditing && authStore.isLoggedIn" class="comment-footer">
+        <el-button
+            size="small"
+            text
             @click="toggleReplyForm"
+            :icon="ChatLineRound"
+            class="reply-btn"
         >
-          <el-icon>
-            <ChatLineRound/>
-          </el-icon>
           답글
-        </button>
-
-        <!-- 답글 개수 표시 -->
-        <div v-if="!comment.isReply && replyCount > 0" class="reply-summary">
-          <span class="reply-count">답글 {{ replyCount }}개</span>
-        </div>
+        </el-button>
       </div>
 
       <!-- 답글 작성 폼 -->
-      <div v-if="showReplyForm" class="reply-form-container">
-        <div class="reply-form-header">
-          <span class="reply-to">{{ comment.author }}님에게 답글</span>
-          <button class="close-btn" @click="hideReplyForm">
-            <el-icon>×</el-icon>
-          </button>
-        </div>
+      <div v-if="showReplyForm" class="reply-form">
         <CommentForm
             :post-id="comment.postId"
             :parent-comment-id="comment.id"
             :is-reply="true"
+            :comment="comment"
             @success="handleReplySuccess"
             @cancel="hideReplyForm"
         />
       </div>
     </div>
 
-    <!--  대댓글 목록  -->
-    <div v-if="!comment.isReply && (replyPreview.length > 0 || showReplies)" class="reply-preview">
-      <!--    답글 미리보기 또는 전체 목록    -->
-      <div v-if="!showReplies && replyPreview.length > 0" class="preview-replies">
-        <button class="show-replies-btn" @click="toggleReplies">
-          <el-icon>
-            <ArrowDown/>
-          </el-icon>
-          답글 {{ replyCount }}개 보기
-        </button>
+    <!-- 답글 보기/숨기기 토글 -->
+    <div v-if="!comment.isReply && replyCount > 0" class="replies-toggle-section">
+      <el-button
+          v-if="!showReplies"
+          size="small"
+          text
+          @click="toggleReplies"
+          class="replies-toggle-btn"
+      >
+        <el-icon><ArrowDown/></el-icon>
+        답글 {{ replyCount }}개 보기
+      </el-button>
 
-        <!--    첫 번째 답글만 미리보기    -->
+      <el-button
+          v-else
+          size="small"
+          text
+          @click="toggleReplies"
+          class="replies-toggle-btn"
+      >
+        <el-icon><ArrowUp/></el-icon>
+        답글 숨기기
+      </el-button>
+    </div>
+
+    <!-- 답글 목록 (세련된 디자인) -->
+    <div v-if="!comment.isReply" class="replies-container">
+      <!-- 전체 답글 목록 -->
+      <div v-if="showReplies && replies.length > 0" class="replies-list">
         <CommentItem
-            v-if="replyPreview[0]"
-            :key="replyPreview[0].id"
+            v-for="reply in replies"
+            :key="reply.id"
+            :comment="reply"
+            @updated="$emit('updated')"
+            @deleted="$emit('deleted')"
+        />
+
+        <!-- 답글 더보기 -->
+        <div v-if="hasMoreReplies" class="load-more-section">
+          <el-button
+              size="small"
+              text
+              @click="loadMoreReplies"
+              :loading="repliesLoading"
+          >
+            더 많은 답글 보기
+          </el-button>
+        </div>
+      </div>
+
+      <!-- 답글 미리보기 -->
+      <div v-else-if="!showReplies && replyPreview.length > 0" class="replies-preview">
+        <CommentItem
             :comment="replyPreview[0]"
             @updated="$emit('updated')"
             @deleted="$emit('deleted')"
         />
-      </div>
-
-      <!--   전체 답글 목록   -->
-      <div v-else-if="showReplies" class="full-replies">
-        <button class="hide-replies-btn" @click="toggleReplies">
-          <el-icon>
-            <ArrowUp/>
-          </el-icon>
-          답글 숨기기
-        </button>
-
-        <div class="replies-list">
-          <CommentItem
-              v-for="reply in replies"
-              :key="reply.id"
-              :comment="reply"
-              @updated="$emit('updated')"
-              @deleted="$emit('deleted')"
-          />
-        </div>
-
-        <!--   답글 더보기    -->
-        <div v-if="hasMoreReplies" class="load-more-replies">
-          <button
-              class="load-more-btn"
-              @click="loadMoreReplies"
-              :disabled="repliesLoading"
-          >
-            <span v-if="repliesLoading">로딩 중...</span>
-            <span v-else>답글 더보기</span>
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -175,7 +162,7 @@
 import {CommentResponse, CommentUpdateRequest} from "@/types/api.ts";
 import {useAuthStore} from "@/stores/auth.ts";
 import {computed, onMounted, ref} from "vue";
-import {ArrowDown, ArrowUp, ChatLineRound, Delete, Edit, User} from "@element-plus/icons-vue";
+import {ArrowDown, ArrowUp, ChatLineRound, Delete, Edit, User, MoreFilled} from "@element-plus/icons-vue";
 import CommentForm from "@/components/comment/CommentForm.vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {commentApi} from "@/api/comment.ts";
@@ -197,24 +184,33 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 
 // 반응형 데이터
-const showReplyForm = ref(false) // 댓글 작성 폼 보임/숨김
-const isEditing = ref(false) // 댓글 수정 모드 on/off
-const showReplies = ref(false) // 답글 목록 펼침/접기
+const showReplyForm = ref(false)
+const isEditing = ref(false)
+const showReplies = ref(false)
 
-const editText = ref('') // 수정할 댓글 내용
-const editLoading = ref(false) // 수정 버튼 로딩 상태
+const editText = ref('')
+const editLoading = ref(false)
 
-const replyPreview = ref<CommentResponse[]>([]) // 답글 미리보기(3개)
-const replies = ref<CommentResponse[]>([]) // 전체 답글 목록
-const replyCount = ref(0) // 답글 개수
-const repliesLoading = ref(false) // 답글 로딩 상태
-const hasMoreReplies = ref(false) // 더 불러올 답글 있는지 확인
-const currentReplyPage = ref(0) // 현재 답글 페이지
+const replyPreview = ref<CommentResponse[]>([])
+const replies = ref<CommentResponse[]>([])
+const replyCount = ref(0)
+const repliesLoading = ref(false)
+const hasMoreReplies = ref(false)
+const currentReplyPage = ref(0)
 
 // 계산된 속성
 const isAuthor = computed(() => {
   return authStore.isLoggedIn && authStore.currentUser === props.comment.author
 })
+
+// 드롭다운 명령 처리
+const handleCommand = (command: string) => {
+  if (command === 'edit') {
+    toggleEditMode()
+  } else if (command === 'delete') {
+    handleDelete()
+  }
+}
 
 // 답글 폼 토글
 const toggleReplyForm = () => {
@@ -300,14 +296,21 @@ const handleDelete = async () => {
 // 답글 성공 처리
 const handleReplySuccess = () => {
   hideReplyForm()
-  loadReplyPreview() // 답글 미리보기 새로고침
+  loadReplyPreview()
   emit('updated')
 }
 
-// 답글 토글
+// 답글 토글 (수정된 부분)
 const toggleReplies = () => {
+  console.log('toggleReplies 호출됨', {
+    showReplies: showReplies.value,
+    repliesLength: replies.value.length
+  })
+
   showReplies.value = !showReplies.value
+
   if (showReplies.value && replies.value.length === 0) {
+    console.log('전체 답글 로드 시작')
     loadReplies()
   }
 }
@@ -317,11 +320,13 @@ const loadReplyPreview = async () => {
   if (props.comment.isReply) return
 
   try {
+    console.log('답글 미리보기 로드:', props.comment.id)
     const response = await commentApi.getReplyPreview(props.comment.postId, props.comment.id)
 
     if (response.result) {
       replyPreview.value = response.data
       replyCount.value = response.data.length
+      console.log('답글 미리보기 로드 성공:', response.data)
     }
   } catch (error) {
     console.error('답글 미리보기 로드 실패:', error)
@@ -331,6 +336,7 @@ const loadReplyPreview = async () => {
 // 전체 답글 로드
 const loadReplies = async () => {
   try {
+    console.log('전체 답글 로드 시작')
     repliesLoading.value = true
     currentReplyPage.value = 0
 
@@ -339,6 +345,7 @@ const loadReplies = async () => {
     if (response.result) {
       replies.value = response.data.content
       hasMoreReplies.value = !response.data.last
+      console.log('전체 답글 로드 성공:', response.data.content)
     }
   } catch (error) {
     console.error('답글 로드 실패:', error)
