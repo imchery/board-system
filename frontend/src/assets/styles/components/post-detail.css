@@ -739,6 +739,29 @@
     align-self: flex-start;
 }
 
+.post-actions .more-button {
+    padding: 8px;
+    border: none !important; /* 박스 선 완전 제거 */
+    background: transparent !important;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    outline: none; /* 포커스 아웃라인도 제거 */
+}
+
+.post-actions .more-button:hover {
+    background: #f5f5f5 !important;
+}
+
+.post-actions .more-button:focus {
+    background: #f5f5f5 !important;
+    box-shadow: none !important; /* 포커스 시 그림자도 제거 */
+}
+
+.post-actions .more-button:active {
+    background: #e8e8e8 !important;
+}
+
 .more-icon {
     width: 20px;
     height: 20px;

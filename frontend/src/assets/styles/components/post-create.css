@@ -1,0 +1,328 @@
+/* post-create.css - 게시글 작성 화면 전용 스타일 */
+
+.post-create-container {
+    min-height: calc(100vh - 70px);
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+    padding: 20px;
+}
+
+.post-create {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* 카드 스타일 */
+.create-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+/* 헤더 */
+.create-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.create-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: -0.025em;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.header-actions .el-button {
+    color: #64748b !important;
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+}
+
+.header-actions .el-button:hover {
+    color: #409eff !important;
+    background: #f1f5f9 !important;
+}
+
+/* 폼 스타일 */
+.post-form {
+    margin-top: 0;
+}
+
+.post-form .el-form-item {
+    margin-bottom: 24px;
+}
+
+.post-form .el-form-item__label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+/* 카테고리 선택 */
+.category-select {
+    width: 200px;
+}
+
+.category-select .el-input__wrapper {
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.category-select .el-input__wrapper:hover {
+    border-color: #cbd5e1;
+}
+
+.category-select .el-input__wrapper.is-focus {
+    border-color: #409eff;
+    box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
+}
+
+/* 제목 입력 */
+.title-input .el-input__wrapper {
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s ease;
+    padding: 12px 16px;
+}
+
+.title-input .el-input__wrapper:hover {
+    border-color: #cbd5e1;
+}
+
+.title-input .el-input__wrapper.is-focus {
+    border-color: #409eff;
+    box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
+}
+
+.title-input .el-input__inner {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.title-input .el-input__inner::placeholder {
+    color: #94a3b8;
+}
+
+/* 내용 입력 */
+.content-textarea .el-textarea__inner {
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.2s ease;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    resize: vertical;
+    min-height: 400px;
+}
+
+.content-textarea .el-textarea__inner:hover {
+    border-color: #cbd5e1;
+}
+
+.content-textarea .el-textarea__inner:focus {
+    border-color: #409eff;
+    box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
+}
+
+.content-textarea .el-textarea__inner::placeholder {
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+/* 하단 액션 */
+.create-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0;
+}
+
+.action-left,
+.action-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.action-right .el-button {
+    min-width: 100px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+.action-right .el-button[type="primary"] {
+    background: linear-gradient(135deg, #409eff, #2563eb);
+    border: none;
+    box-shadow: 0 4px 14px rgba(64, 158, 255, 0.25);
+    transition: all 0.2s ease;
+}
+
+.action-right .el-button[type="primary"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(64, 158, 255, 0.35);
+}
+
+.action-right .el-button[type="primary"]:active {
+    transform: translateY(0);
+}
+
+.action-left .el-button {
+    color: #64748b;
+    border-color: #e2e8f0;
+    background: white;
+}
+
+.action-left .el-button:hover {
+    color: #409eff;
+    border-color: #409eff;
+    background: #f8fafc;
+}
+
+/* 미리보기 다이얼로그 */
+.preview-dialog .el-dialog__body {
+    padding: 0;
+}
+
+.preview-content {
+    padding: 24px;
+    background: white;
+    border-radius: 8px;
+    min-height: 400px;
+}
+
+.preview-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.preview-author {
+    font-weight: 500;
+    color: #374151;
+}
+
+.preview-date {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.preview-title {
+    margin: 0 0 24px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.3;
+}
+
+.preview-body {
+    font-size: 15px;
+    line-height: 1.7;
+    color: #374151;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.preview-body strong {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.preview-body em {
+    font-style: italic;
+    color: #64748b;
+}
+
+.preview-body code {
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 13px;
+    color: #dc2626;
+}
+
+.preview-body a {
+    color: #409eff;
+    text-decoration: none;
+}
+
+.preview-body a:hover {
+    text-decoration: underline;
+}
+
+/* 글자 수 표시 개선 */
+.el-input__count {
+    color: #94a3b8 !important;
+    font-size: 12px !important;
+}
+
+.el-textarea__count {
+    color: #94a3b8 !important;
+    font-size: 12px !important;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .post-create-container {
+        padding: 12px;
+    }
+
+    .create-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .create-title {
+        font-size: 20px;
+    }
+
+    .category-select {
+        width: 100%;
+    }
+
+    .create-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .action-left,
+    .action-right {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .content-textarea .el-textarea__inner {
+        min-height: 300px;
+        font-size: 16px; /* iOS 확대 방지 */
+    }
+
+    .preview-dialog {
+        width: 95% !important;
+        margin: 20px auto !important;
+    }
+}

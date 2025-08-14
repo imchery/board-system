@@ -79,7 +79,7 @@
             :icon="ChatLineRound"
             class="reply-btn"
         >
-          답글
+          답글등록
         </el-button>
       </div>
 
@@ -121,10 +121,10 @@
       </el-button>
     </div>
 
-    <!-- 답글 목록 (세련된 디자인) -->
-    <div v-if="!comment.isReply" class="replies-container">
-      <!-- 전체 답글 목록 -->
-      <div v-if="showReplies && replies.length > 0" class="replies-list">
+    <!-- 답글 목록 -->
+    <div v-if="!comment.isReply && showReplies" class="replies-container">
+      <!-- 전체 답글 목록만 표시 -->
+      <div v-if="replies.length > 0" class="replies-list">
         <CommentItem
             v-for="reply in replies"
             :key="reply.id"
@@ -144,15 +144,6 @@
             더 많은 답글 보기
           </el-button>
         </div>
-      </div>
-
-      <!-- 답글 미리보기 -->
-      <div v-else-if="!showReplies && replyPreview.length > 0" class="replies-preview">
-        <CommentItem
-            :comment="replyPreview[0]"
-            @updated="$emit('updated')"
-            @deleted="$emit('deleted')"
-        />
       </div>
     </div>
   </div>
