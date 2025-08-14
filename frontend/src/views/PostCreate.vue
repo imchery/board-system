@@ -7,10 +7,12 @@
         <div class="create-header">
           <h1 class="create-title">게시글 작성</h1>
           <div class="header-actions">
+            <el-button @click="saveDraft" :loading="draftLoading" text>
+              <el-icon><Document/></el-icon>
+              임시저장
+            </el-button>
             <el-button @click="showPreview" :disabled="!canPreview" text>
-              <el-icon>
-                <View/>
-              </el-icon>
+              <el-icon><View/></el-icon>
               미리보기
             </el-button>
           </div>
@@ -48,23 +50,24 @@
                 maxlength="100"
                 show-word-limit
                 class="title-input"
+                @input="onTitleChange"
             />
           </el-form-item>
 
           <!-- 내용 입력 -->
           <el-form-item label="내용" prop="content">
-            <div class="quill-wrapper">
-              <quill-editor
-                  v-model:content="postForm.content"
-                  content-type="html"
-                  :options="editorOptions"
-                  class="quill-editor"
-                  @textChange="onContentChange"
-              />
-            </div>
-            <div class="content-counter">
-              {{ getTextLength(postForm.content) }} / 10000 글자
-            </div>
+            <el-input
+                v-model="postForm.content"
+                type="textarea"
+                placeholder="내용을 입력하세요&#10;&#10;마크다운 문법을 지원합니다:&#10;**굵게**, *기울임*, `코드`, [링크](URL)&#10;&#10;Ctrl+Enter로 빠른 등록이 가능합니다"
+                :rows="15"
+                maxlength="10000"
+                show-word-limit
+                class="content-textarea"
+                @input="onContentChange"
+                @keydown.ctrl.enter="handleSubmit"
+                @keydown.meta.enter="handleSubmit"
+            />
           </el-form-item>
         </el-form>
 
@@ -112,7 +115,7 @@
 
         <h1 class="preview-title">{{ postForm.title || '제목 없음' }}</h1>
 
-        <div class="preview-body" v-html="postForm.content"></div>
+        <div class="preview-body" v-html="formatContent(postForm.content)"></div>
       </div>
 
       <template #footer>
@@ -126,14 +129,18 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
-import {useRouter} from 'vue-router'
-import {ElMessage, ElMessageBox, type FormInstance, type FormRules} from 'element-plus'
-import {ArrowLeft, EditPen, RefreshRight, View} from '@element-plus/icons-vue'
-import {postApi} from '@/api/post'
-import {useAuthStore} from '@/stores/auth'
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import {
+  ArrowLeft,
+  EditPen,
+  Document,
+  View,
+  RefreshRight
+} from '@element-plus/icons-vue'
+import { postApi } from '@/api/post'
+import { useAuthStore } from '@/stores/auth'
 
 // Router & Auth Store
 const router = useRouter()
@@ -142,6 +149,7 @@ const authStore = useAuthStore()
 // 반응형 데이터
 const postFormRef = ref<FormInstance>()
 const submitLoading = ref(false)
+const draftLoading = ref(false)
 const previewVisible = ref(false)
 
 // 게시글 폼 데이터
@@ -154,73 +162,81 @@ const postForm = reactive({
 // 폼 검증 규칙
 const postRules: FormRules = {
   category: [
-    {required: true, message: '카테고리를 선택해주세요', trigger: 'change'}
+    { required: true, message: '카테고리를 선택해주세요', trigger: 'change' }
   ],
   title: [
-    {required: true, message: '제목을 입력해주세요', trigger: 'blur'},
-    {min: 2, max: 100, message: '제목은 2-100자 사이여야 합니다', trigger: 'blur'}
+    { required: true, message: '제목을 입력해주세요', trigger: 'blur' },
+    { min: 2, max: 100, message: '제목은 2-100자 사이여야 합니다', trigger: 'blur' }
   ],
   content: [
-    {required: true, message: '내용을 입력해주세요', trigger: 'blur'},
-    {
-      validator: (rule, value, callback) => {
-        const textLength = getTextLength(value)
-        if (textLength < 10) {
-          callback(new Error('내용은 최소 10자 이상이어야 합니다'))
-        } else if (textLength < 10000) {
-          callback(new Error('내용은 최대 10,000자까지 가능합니다'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
+    { required: true, message: '내용을 입력해주세요', trigger: 'blur' },
+    { min: 10, max: 10000, message: '내용은 10-10000자 사이여야 합니다', trigger: 'blur' }
   ]
-}
-
-// Quill 에디터 옵션
-const editorOptions = {
-  theme: 'snow',
-  placeholder: '내용을 입력하세요...',
-  modules: {
-    toolbar: [
-      [{'header': [1, 2, 3, false]}],          // 제목 크기
-      ['bold', 'italic', 'underline', 'strike'], // 굵기, 기울임, 밑줄, 취소선
-      [{'color': []}, {'background': []}],   // 글자색, 배경색
-      [{'align': []}],                         // 정렬
-      [{'list': 'ordered'}, {'list': 'bullet'}], // 순서/무순서 목록
-      ['link', 'image'],                         // 링크, 이미지
-      ['clean']                                  // 포맷 제거
-    ]
-  }
 }
 
 // 계산된 속성
 const canSubmit = computed(() => {
-  const textLength = getTextLength(postForm.content)
   return postForm.title.trim().length >= 2 &&
-      textLength >= 10 && textLength <= 10000 &&
+      postForm.content.trim().length >= 10 &&
       postForm.category.length > 0
 })
 
 const canPreview = computed(() => {
-  return postForm.title.trim().length > 0 || getTextLength(postForm.content) > 0
+  return postForm.title.trim().length > 0 || postForm.content.trim().length > 0
 })
 
-// HTML에서 텍스트 길이 추출
-const getTextLength = (htmlContent: string) => {
-  if (!htmlContent) return 0
-  const div = document.createElement('div')
-  div.innerHTML = htmlContent
-  return div.textContent?.length || 0
+// 제목 변경 시 실시간 저장
+const onTitleChange = () => {
+  saveToDraft()
 }
 
-// 내용 변경 시
+// 내용 변경 시 실시간 저장 (디바운싱)
+let contentSaveTimer: NodeJS.Timeout
 const onContentChange = () => {
-  // 글자 수 제한 체크
-  const textLength = getTextLength(postForm.content)
-  if (textLength > 10000) {
-    ElMessage.warning('내용은 10,000자를 초과할 수 없습니다')
+  clearTimeout(contentSaveTimer)
+  contentSaveTimer = setTimeout(() => {
+    saveToDraft()
+  }, 1000) // 1초 후 저장
+}
+
+// 임시저장 (로컬스토리지)
+const saveToDraft = () => {
+  const draftData = {
+    title: postForm.title,
+    content: postForm.content,
+    category: postForm.category,
+    savedAt: new Date().toISOString()
+  }
+  localStorage.setItem('post_draft', JSON.stringify(draftData))
+}
+
+// 임시저장 불러오기
+const loadFromDraft = () => {
+  const draftStr = localStorage.getItem('post_draft')
+  if (draftStr) {
+    try {
+      const draftData = JSON.parse(draftStr)
+      postForm.title = draftData.title || ''
+      postForm.content = draftData.content || ''
+      postForm.category = draftData.category || ''
+
+      if (draftData.savedAt) {
+        ElMessage.info(`임시저장된 내용을 불러왔습니다 (${formatDate(new Date(draftData.savedAt))})`)
+      }
+    } catch (error) {
+      console.error('임시저장 데이터 로드 실패:', error)
+    }
+  }
+}
+
+// 수동 임시저장
+const saveDraft = async () => {
+  draftLoading.value = true
+  try {
+    saveToDraft()
+    ElMessage.success('임시저장되었습니다')
+  } finally {
+    draftLoading.value = false
   }
 }
 
@@ -252,9 +268,10 @@ const resetForm = async () => {
     postForm.title = ''
     postForm.content = ''
     postForm.category = ''
+    localStorage.removeItem('post_draft')
     ElMessage.success('폼이 초기화되었습니다')
   } catch (error) {
-    return // 사용자가 취소한 경우
+    // 사용자가 취소한 경우
   }
 }
 
@@ -277,6 +294,9 @@ const handleSubmit = async () => {
 
     if (response.result) {
       ElMessage.success('게시글이 등록되었습니다')
+
+      // 임시저장 데이터 삭제
+      localStorage.removeItem('post_draft')
 
       // 생성된 게시글 상세로 이동
       router.push(`/posts/${response.data.id}`)
@@ -313,6 +333,18 @@ const goBack = async () => {
   router.push('/posts')
 }
 
+// 내용 포맷팅 (간단한 마크다운)
+const formatContent = (content: string) => {
+  if (!content) return '내용이 없습니다'
+
+  return content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code>$1</code>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+      .replace(/\n/g, '<br>')
+}
+
 // 날짜 포맷팅
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('ko-KR', {
@@ -334,11 +366,13 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 
 // 컴포넌트 라이프사이클
 onMounted(() => {
+  loadFromDraft()
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
+  clearTimeout(contentSaveTimer)
 })
 </script>
 
