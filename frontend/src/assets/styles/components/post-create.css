@@ -116,31 +116,64 @@
     color: #94a3b8;
 }
 
-/* 내용 입력 */
-.content-textarea .el-textarea__inner {
-    border-radius: 8px;
+/* Quill 에디터 스타일 */
+.quill-wrapper {
     border: 2px solid #e2e8f0;
+    border-radius: 8px;
     transition: all 0.2s ease;
-    padding: 16px;
-    font-size: 14px;
-    line-height: 1.6;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-    resize: vertical;
-    min-height: 400px;
 }
 
-.content-textarea .el-textarea__inner:hover {
+.quill-wrapper:hover {
     border-color: #cbd5e1;
 }
 
-.content-textarea .el-textarea__inner:focus {
+.quill-wrapper.focused {
     border-color: #409eff;
     box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
 }
 
-.content-textarea .el-textarea__inner::placeholder {
+.quill-editor {
+    min-height: 400px;
+}
+
+.quill-editor .ql-toolbar {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.quill-editor .ql-container {
+    border: none;
+    font-size: 14px;
+    line-height: 1.6;
+    border-radius: 0 0 8px 8px;
+}
+
+.quill-editor .ql-editor {
+    padding: 16px;
+    min-height: 350px;
+}
+
+.quill-editor .ql-editor.ql-blank::before {
     color: #94a3b8;
-    line-height: 1.5;
+    font-style: normal;
+}
+
+/* 글자 수 표시 */
+.content-counter {
+    text-align: right;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* 내용 입력 (기존 textarea 스타일 제거) */
+.content-textarea .el-textarea__inner {
+    display: none; /* Quill로 교체되었으므로 숨김 */
 }
 
 /* 하단 액션 */
