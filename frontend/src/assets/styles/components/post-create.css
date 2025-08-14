@@ -1,5 +1,6 @@
 /* post-create.css - 게시글 작성 화면 전용 스타일 */
 
+/* ===== 레이아웃 ===== */
 .post-create-container {
     min-height: calc(100vh - 70px);
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
@@ -11,7 +12,6 @@
     margin: 0 auto;
 }
 
-/* 카드 스타일 */
 .create-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
@@ -21,7 +21,7 @@
     overflow: hidden;
 }
 
-/* 헤더 */
+/* ===== 헤더 ===== */
 .create-header {
     display: flex;
     justify-content: space-between;
@@ -37,11 +37,6 @@
     letter-spacing: -0.025em;
 }
 
-.header-actions {
-    display: flex;
-    gap: 8px;
-}
-
 .header-actions .el-button {
     color: #64748b !important;
     font-size: 14px !important;
@@ -53,11 +48,7 @@
     background: #f1f5f9 !important;
 }
 
-/* 폼 스타일 */
-.post-form {
-    margin-top: 0;
-}
-
+/* ===== 폼 스타일 ===== */
 .post-form .el-form-item {
     margin-bottom: 24px;
 }
@@ -69,7 +60,7 @@
     margin-bottom: 8px;
 }
 
-/* 카테고리 선택 */
+/* ===== 카테고리 선택 ===== */
 .category-select {
     width: 200px;
 }
@@ -89,7 +80,7 @@
     box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
 }
 
-/* 제목 입력 */
+/* ===== 제목 입력 ===== */
 .title-input .el-input__wrapper {
     border-radius: 8px;
     border: 2px solid #e2e8f0;
@@ -116,34 +107,66 @@
     color: #94a3b8;
 }
 
-/* 내용 입력 */
-.content-textarea .el-textarea__inner {
-    border-radius: 8px;
-    border: 2px solid #e2e8f0;
-    transition: all 0.2s ease;
-    padding: 16px;
-    font-size: 14px;
-    line-height: 1.6;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-    resize: vertical;
-    min-height: 400px;
+/* ===== CKEditor 스타일 ===== */
+.editor-container {
+    position: relative;
+    width: 100%;
 }
 
-.content-textarea .el-textarea__inner:hover {
+.editor-wrapper {
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    min-height: 100px !important;
+}
+
+.editor-wrapper:hover {
     border-color: #cbd5e1;
 }
 
-.content-textarea .el-textarea__inner:focus {
+.editor-wrapper:focus-within {
     border-color: #409eff;
     box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.1);
 }
 
-.content-textarea .el-textarea__inner::placeholder {
-    color: #94a3b8;
-    line-height: 1.5;
+/* CKEditor 메인 컨테이너 */
+.large-editor :deep(.ck-editor) {
+    border: none !important;
 }
 
-/* 하단 액션 */
+.large-editor :deep(.ck-editor__editable) {
+    padding: 20px !important;
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+    outline: none !important;
+}
+
+.large-editor :deep(.ck-toolbar) {
+    padding: 12px 16px !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* 에디터 하단 */
+.editor-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 12px;
+    padding-right: 4px;
+}
+
+.content-counter {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 500;
+    padding: 1px 12px;
+    border-radius: 6px;
+}
+
+/* ===== 하단 액션 버튼 ===== */
 .create-actions {
     display: flex;
     justify-content: space-between;
@@ -178,10 +201,6 @@
     box-shadow: 0 6px 20px rgba(64, 158, 255, 0.35);
 }
 
-.action-right .el-button[type="primary"]:active {
-    transform: translateY(0);
-}
-
 .action-left .el-button {
     color: #64748b;
     border-color: #e2e8f0;
@@ -194,7 +213,7 @@
     background: #f8fafc;
 }
 
-/* 미리보기 다이얼로그 */
+/* ===== 미리보기 다이얼로그 ===== */
 .preview-dialog .el-dialog__body {
     padding: 0;
 }
@@ -241,46 +260,7 @@
     word-break: break-word;
 }
 
-.preview-body strong {
-    font-weight: 600;
-    color: #1e293b;
-}
-
-.preview-body em {
-    font-style: italic;
-    color: #64748b;
-}
-
-.preview-body code {
-    background: #f1f5f9;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', monospace;
-    font-size: 13px;
-    color: #dc2626;
-}
-
-.preview-body a {
-    color: #409eff;
-    text-decoration: none;
-}
-
-.preview-body a:hover {
-    text-decoration: underline;
-}
-
-/* 글자 수 표시 개선 */
-.el-input__count {
-    color: #94a3b8 !important;
-    font-size: 12px !important;
-}
-
-.el-textarea__count {
-    color: #94a3b8 !important;
-    font-size: 12px !important;
-}
-
-/* 반응형 */
+/* ===== 반응형 ===== */
 @media (max-width: 768px) {
     .post-create-container {
         padding: 12px;
@@ -290,11 +270,6 @@
         flex-direction: column;
         gap: 12px;
         align-items: flex-start;
-    }
-
-    .header-actions {
-        width: 100%;
-        justify-content: flex-end;
     }
 
     .create-title {
@@ -316,9 +291,26 @@
         justify-content: center;
     }
 
-    .content-textarea .el-textarea__inner {
-        min-height: 300px;
-        font-size: 16px; /* iOS 확대 방지 */
+    /* 모바일에서 에디터 크기 조정 */
+    .editor-wrapper {
+        min-height: 400px !important;
+    }
+
+    .large-editor {
+        min-height: 400px !important;
+    }
+
+    .large-editor :deep(.ck-editor) {
+        min-height: 400px !important;
+    }
+
+    .large-editor :deep(.ck-editor__main) {
+        min-height: 340px !important;
+    }
+
+    .large-editor :deep(.ck-editor__editable) {
+        padding: 16px !important;
+        font-size: 16px !important;
     }
 
     .preview-dialog {

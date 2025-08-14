@@ -7,12 +7,10 @@
         <div class="create-header">
           <h1 class="create-title">게시글 작성</h1>
           <div class="header-actions">
-            <el-button @click="saveDraft" :loading="draftLoading" text>
-              <el-icon><Document/></el-icon>
-              임시저장
-            </el-button>
             <el-button @click="showPreview" :disabled="!canPreview" text>
-              <el-icon><View/></el-icon>
+              <el-icon>
+                <View/>
+              </el-icon>
               미리보기
             </el-button>
           </div>
@@ -50,24 +48,26 @@
                 maxlength="100"
                 show-word-limit
                 class="title-input"
-                @input="onTitleChange"
             />
           </el-form-item>
 
-          <!-- 내용 입력 -->
+          <!-- 내용 입력 부분 -->
           <el-form-item label="내용" prop="content">
-            <el-input
-                v-model="postForm.content"
-                type="textarea"
-                placeholder="내용을 입력하세요&#10;&#10;마크다운 문법을 지원합니다:&#10;**굵게**, *기울임*, `코드`, [링크](URL)&#10;&#10;Ctrl+Enter로 빠른 등록이 가능합니다"
-                :rows="15"
-                maxlength="10000"
-                show-word-limit
-                class="content-textarea"
-                @input="onContentChange"
-                @keydown.ctrl.enter="handleSubmit"
-                @keydown.meta.enter="handleSubmit"
-            />
+            <div class="editor-container">
+              <div class="editor-wrapper">
+                <Ckeditor
+                    :editor="editor"
+                    v-model="postForm.content"
+                    :config="editorConfig"
+                    class="large-editor"
+                />
+              </div>
+              <div class="editor-footer">
+                <div class="content-counter">
+                  {{ getTextLength(postForm.content) }} / 10,000 글자
+                </div>
+              </div>
+            </div>
           </el-form-item>
         </el-form>
 
@@ -129,18 +129,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import {
-  ArrowLeft,
-  EditPen,
-  Document,
-  View,
-  RefreshRight
-} from '@element-plus/icons-vue'
-import { postApi } from '@/api/post'
-import { useAuthStore } from '@/stores/auth'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage, ElMessageBox, type FormInstance, type FormRules} from 'element-plus'
+import {ArrowLeft, EditPen, RefreshRight, View} from '@element-plus/icons-vue'
+import {postApi} from '@/api/post'
+import {useAuthStore} from '@/stores/auth'
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
+import {Ckeditor} from "@ckeditor/ckeditor5-vue";
+
+// CKEditor 설정
+const editor = ClassicEditor
+const editorConfig = {
+  licenseKey: 'GPL',
+  toolbar: [
+    'heading', '|',
+    'bold', 'italic', 'underline', '|',
+    'fontSize', 'fontColor', 'fontBackgroundColor', '|',
+    'alignment', '|',
+    'bulletedList', 'numberedList', '|',
+    'outdent', 'indent', '|',
+    'link', 'insertTable', '|',
+    'undo', 'redo'
+  ],
+  heading: {
+    options: [
+      { model: 'paragraph', title: '본문', class: 'ck-heading_paragraph' },
+      { model: 'heading1', view: 'h1', title: '제목 1', class: 'ck-heading_heading1' },
+      { model: 'heading2', view: 'h2', title: '제목 2', class: 'ck-heading_heading2' },
+      { model: 'heading3', view: 'h3', title: '제목 3', class: 'ck-heading_heading3' }
+    ]
+  },
+  fontSize: {
+    options: [ 9, 11, 13, 'default', 17, 19, 21 ]
+  }
+}
+
+// HTML에서 텍스트 길이 추출
+const getTextLength = (htmlContent: string) => {
+  if (!htmlContent) return 0
+  const div = document.createElement('div')
+  div.innerHTML = htmlContent
+  return div.textContent?.length || 0
+}
 
 // Router & Auth Store
 const router = useRouter()
@@ -149,7 +180,6 @@ const authStore = useAuthStore()
 // 반응형 데이터
 const postFormRef = ref<FormInstance>()
 const submitLoading = ref(false)
-const draftLoading = ref(false)
 const previewVisible = ref(false)
 
 // 게시글 폼 데이터
@@ -162,15 +192,15 @@ const postForm = reactive({
 // 폼 검증 규칙
 const postRules: FormRules = {
   category: [
-    { required: true, message: '카테고리를 선택해주세요', trigger: 'change' }
+    {required: true, message: '카테고리를 선택해주세요', trigger: 'change'}
   ],
   title: [
-    { required: true, message: '제목을 입력해주세요', trigger: 'blur' },
-    { min: 2, max: 100, message: '제목은 2-100자 사이여야 합니다', trigger: 'blur' }
+    {required: true, message: '제목을 입력해주세요', trigger: 'blur'},
+    {min: 2, max: 100, message: '제목은 2-100자 사이여야 합니다', trigger: 'blur'}
   ],
   content: [
-    { required: true, message: '내용을 입력해주세요', trigger: 'blur' },
-    { min: 10, max: 10000, message: '내용은 10-10000자 사이여야 합니다', trigger: 'blur' }
+    {required: true, message: '내용을 입력해주세요', trigger: 'blur'},
+    {min: 10, max: 10000, message: '내용은 10-10000자 사이여야 합니다', trigger: 'blur'}
   ]
 }
 
@@ -184,61 +214,6 @@ const canSubmit = computed(() => {
 const canPreview = computed(() => {
   return postForm.title.trim().length > 0 || postForm.content.trim().length > 0
 })
-
-// 제목 변경 시 실시간 저장
-const onTitleChange = () => {
-  saveToDraft()
-}
-
-// 내용 변경 시 실시간 저장 (디바운싱)
-let contentSaveTimer: NodeJS.Timeout
-const onContentChange = () => {
-  clearTimeout(contentSaveTimer)
-  contentSaveTimer = setTimeout(() => {
-    saveToDraft()
-  }, 1000) // 1초 후 저장
-}
-
-// 임시저장 (로컬스토리지)
-const saveToDraft = () => {
-  const draftData = {
-    title: postForm.title,
-    content: postForm.content,
-    category: postForm.category,
-    savedAt: new Date().toISOString()
-  }
-  localStorage.setItem('post_draft', JSON.stringify(draftData))
-}
-
-// 임시저장 불러오기
-const loadFromDraft = () => {
-  const draftStr = localStorage.getItem('post_draft')
-  if (draftStr) {
-    try {
-      const draftData = JSON.parse(draftStr)
-      postForm.title = draftData.title || ''
-      postForm.content = draftData.content || ''
-      postForm.category = draftData.category || ''
-
-      if (draftData.savedAt) {
-        ElMessage.info(`임시저장된 내용을 불러왔습니다 (${formatDate(new Date(draftData.savedAt))})`)
-      }
-    } catch (error) {
-      console.error('임시저장 데이터 로드 실패:', error)
-    }
-  }
-}
-
-// 수동 임시저장
-const saveDraft = async () => {
-  draftLoading.value = true
-  try {
-    saveToDraft()
-    ElMessage.success('임시저장되었습니다')
-  } finally {
-    draftLoading.value = false
-  }
-}
 
 // 미리보기 표시
 const showPreview = () => {
@@ -268,7 +243,6 @@ const resetForm = async () => {
     postForm.title = ''
     postForm.content = ''
     postForm.category = ''
-    localStorage.removeItem('post_draft')
     ElMessage.success('폼이 초기화되었습니다')
   } catch (error) {
     // 사용자가 취소한 경우
@@ -294,9 +268,6 @@ const handleSubmit = async () => {
 
     if (response.result) {
       ElMessage.success('게시글이 등록되었습니다')
-
-      // 임시저장 데이터 삭제
-      localStorage.removeItem('post_draft')
 
       // 생성된 게시글 상세로 이동
       router.push(`/posts/${response.data.id}`)
@@ -366,13 +337,11 @@ const handleBeforeUnload = (e: BeforeUnloadEvent) => {
 
 // 컴포넌트 라이프사이클
 onMounted(() => {
-  loadFromDraft()
   window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
-  clearTimeout(contentSaveTimer)
 })
 </script>
 
