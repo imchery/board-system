@@ -115,7 +115,7 @@
 
         <h1 class="preview-title">{{ postForm.title || '제목 없음' }}</h1>
 
-        <div class="preview-body" v-html="formatContent(postForm.content)"></div>
+        <div class="preview-body" v-html="postForm.content"></div>
       </div>
 
       <template #footer>
@@ -136,7 +136,7 @@ import {ArrowLeft, EditPen, RefreshRight, View} from '@element-plus/icons-vue'
 import {postApi} from '@/api/post'
 import {useAuthStore} from '@/stores/auth'
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
-import {Ckeditor} from "@ckeditor/ckeditor5-vue";
+import {Ckeditor} from "@ckeditor/ckeditor5-vue"
 
 // CKEditor 설정
 const editor = ClassicEditor
@@ -149,8 +149,8 @@ const editorConfig = {
     'alignment', '|',
     'bulletedList', 'numberedList', '|',
     'outdent', 'indent', '|',
-    'link', 'insertTable', '|',
-    'undo', 'redo'
+    'link', 'insertTable', 'imageUpload','|',
+    'undo', 'redo',
   ],
   heading: {
     options: [
@@ -162,7 +162,7 @@ const editorConfig = {
   },
   fontSize: {
     options: [ 9, 11, 13, 'default', 17, 19, 21 ]
-  }
+  },
 }
 
 // HTML에서 텍스트 길이 추출
@@ -302,18 +302,6 @@ const goBack = async () => {
   }
 
   router.push('/posts')
-}
-
-// 내용 포맷팅 (간단한 마크다운)
-const formatContent = (content: string) => {
-  if (!content) return '내용이 없습니다'
-
-  return content
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code>$1</code>')
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
-      .replace(/\n/g, '<br>')
 }
 
 // 날짜 포맷팅

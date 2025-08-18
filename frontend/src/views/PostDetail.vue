@@ -102,7 +102,7 @@
 
         <!-- 2. 본문 섹션 -->
         <div class="post-content-section">
-          <div class="post-content">{{ post.content }}</div>
+          <div class="post-content" v-html="post.content"></div>
         </div>
 
         <!-- 구분선 -->
