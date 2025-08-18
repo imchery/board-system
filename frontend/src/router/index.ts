@@ -1,4 +1,5 @@
 import {createRouter, createWebHistory} from 'vue-router'
+import PostEdit from "@/views/PostEdit.vue";
 
 // 페이지 컴포넌트 lazy loading (성능 최적화)
 const Home = () => import('@/views/Home.vue')
@@ -34,10 +35,17 @@ const router = createRouter({
             meta: {requiresAuth: true}
         },
         {
+            path: '/posts/:id/edit',
+            name: 'PostEdit',
+            component: PostEdit,
+            props: true,
+            meta: {requiresAuth: true}
+
+        },
+        {
             path: '/posts/:id',
             name: 'PostDetail',
             component: PostDetail,
-            // URL 파라미터를 props로 전달
             props: true
         }
     ]

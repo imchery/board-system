@@ -5,7 +5,7 @@
 
         <!-- 헤더 -->
         <div class="create-header">
-          <h1 class="create-title">게시글 작성</h1>
+          <h1 class="create-title">게시글 수정</h1>
           <div class="header-actions">
             <el-button @click="showPreview" :disabled="!canPreview" text>
               <el-icon>
@@ -18,7 +18,18 @@
 
         <el-divider/>
 
-        <!-- 작성 폼 -->
+        <!--    로딩 상태    -->
+        <div v-if="loading" class="loading-wrapper">
+          <el-skeleton animated>
+            <template #template>
+              <el-skeleton-item variant="h3" style="width: 40%; margin-bottom: 20px;"/>
+              <el-skeleton-item variant="text" style="width: 100%; margin-bottom: 20px;"/>
+              <el-skeleton-item variant="rect" style="width: 100%; height: 400px;"/>
+            </template>
+          </el-skeleton>
+        </div>
+
+        <!-- 수정 폼 -->
         <el-form
             ref="postFormRef"
             :model="postForm"
@@ -77,7 +88,7 @@
         <div class="create-actions">
           <div class="action-left">
             <el-button @click="goBack" :icon="ArrowLeft">
-              목록으로
+              취소
             </el-button>
           </div>
 
@@ -89,10 +100,10 @@
                 type="primary"
                 @click="handleSubmit"
                 :loading="submitLoading"
-                :disabled="!canSubmit"
+                :disabled="!canSubmit || !canEdit"
                 :icon="EditPen"
             >
-              {{ submitLoading ? '등록 중...' : '게시글 등록' }}
+              {{ submitLoading ? '수정 중...' : '수정 완료' }}
             </el-button>
           </div>
         </div>
@@ -121,7 +132,7 @@
       <template #footer>
         <el-button @click="previewVisible = false">닫기</el-button>
         <el-button type="primary" @click="submitFromPreview">
-          이대로 등록
+          이대로 수정
         </el-button>
       </template>
     </el-dialog>
@@ -129,17 +140,32 @@
 </template>
 
 <script setup lang="ts">
-import {computed, reactive, ref} from 'vue'
+import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {ElMessage, ElMessageBox, type FormInstance, type FormRules} from 'element-plus'
 import {ArrowLeft, EditPen, RefreshRight, View} from '@element-plus/icons-vue'
-import {postApi} from '@/api/post'
 import {useAuthStore} from '@/stores/auth'
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 import {Ckeditor} from "@ckeditor/ckeditor5-vue"
-import {usePageLeaveGuard} from "@/composables/usePageLeaveGuard.ts";
-import {getTextLength} from "@/utils/textHelper.ts";
-import {formatDate} from "@/utils/dateFormat.ts";
+import {postApi} from "@/api/post.ts";
+
+// Props: URL 받아오는 게시글 ID=
+interface Props {
+  id: string
+}
+
+// Router & Auth Store
+const router = useRouter()
+const authStore = useAuthStore()
+
+// 반응형 데이터
+const postFormRef = ref<FormInstance>()
+const loading = ref(true)
+const submitLoading = ref(false)
+const previewVisible = ref(false)
+const originalPost = ref<any>(null) // 원본 데이터 보관용
+
+const props = defineProps<Props>()
 
 // CKEditor 설정
 const editor = ClassicEditor as any
@@ -168,14 +194,13 @@ const editorConfig: any = {
   },
 }
 
-// Router & Auth Store
-const router = useRouter()
-const authStore = useAuthStore()
-
-// 반응형 데이터
-const postFormRef = ref<FormInstance>()
-const submitLoading = ref(false)
-const previewVisible = ref(false)
+// HTML content 텍스트 길이 추출
+const getTextLength = (htmlContent: string) => {
+  if (!htmlContent) return 0
+  const div = document.createElement('div')
+  div.innerHTML = htmlContent
+  return div.textContent?.length || 0
+}
 
 // 게시글 폼 데이터
 const postForm = reactive({
@@ -210,30 +235,143 @@ const canPreview = computed(() => {
   return postForm.title.trim().length > 0 || postForm.content.trim().length > 0
 })
 
-// 변경사항 감지
-const hasChanges = () => {
-  return postForm.title.trim().length > 0 || postForm.content.trim().length > 0
-}
+// 수정 권한 확인
+const canEdit = computed(() => {
+  if (!authStore.isLoggedIn || !originalPost.value) return false
+  return authStore.currentUser === originalPost.value.author
+})
 
-// 페이지 이탈 방지
-usePageLeaveGuard(hasChanges)
+// 변경 사항 감지
+const hasChanges = computed(() => {
+  if (!originalPost.value) return false
+
+  return originalPost.value.title !== postForm.title.trim() ||
+      originalPost.value.content !== postForm.content.trim() ||
+      originalPost.value.category === postForm.category
+})
 
 // 미리보기 표시
 const showPreview = () => {
   previewVisible.value = true
 }
 
-// 미리보기에서 등록
+// 미리보기에서 수정
 const submitFromPreview = () => {
   previewVisible.value = false
   handleSubmit()
 }
 
+// 기존 게시글 데이터 로드
+const fetchPost = async () => {
+  try {
+    loading.value = true
+    console.log('기존 게시글 데이터 로드:', props.id)
+
+    const response = await postApi.getPost(props.id)
+
+    if (response.result && response.data) {
+
+      // 원본 데이터 보관(권한 체크용)
+      originalPost.value = response.data
+
+      // 권한 체크
+      if (!canEdit.value) {
+        if (!authStore.isLoggedIn) {
+          ElMessage.error('로그인이 필요합니다')
+          await router.push('/login')
+        } else {
+          ElMessage.error('수정 권한이 없습니다')
+          await router.push(`/posts/${props.id}`)
+        }
+        return false
+      }
+
+      postForm.title = response.data.title
+      postForm.content = response.data.content
+      postForm.category = response.data.category || ''
+
+      console.log('게시글 로드 완료:', response.data)
+    } else {
+      ElMessage.error(response.message || '게시글을 불러오는데 실패했습니다')
+      // 실패 시 목록으로 이동
+      await router.push('/posts')
+    }
+  } catch (error: any) {
+    console.error('게시글 로드 실패:', error)
+
+    // 에러 타입별 처리
+    if (error.response?.status === 404) {
+      ElMessage.error('존재하지 않는 게시글입니다')
+    } else if (error.response?.status === 401) {
+      ElMessage.error('로그인이 필요합니다')
+      await router.push('/login')
+      return
+    } else {
+      ElMessage.error('게시글을 불러오는 중 오류가 발생했습니다')
+    }
+
+    // 에러 발생 시 목록으로 이동
+    await router.push('/posts')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 게시글 수정
+const handleSubmit = async () => {
+  if (!postFormRef.value) return
+
+  const isValid = await postFormRef.value.validate().catch(() => false)
+  if (!isValid) return
+
+  if (!canEdit.value) {
+    ElMessage.error('수정 권한이 없습니다')
+    return
+  }
+
+  try {
+    submitLoading.value = true
+
+    const response = await postApi.updatePost(props.id, {
+      title: postForm.title.trim(),
+      content: postForm.content.trim(),
+      category: postForm.category,
+    })
+
+    if (response.result) {
+      ElMessage.success('게시글이 수정되었습니다')
+
+      await router.push(`/posts/${props.id}`)
+    } else {
+      ElMessage.error(response.message || '게시글 수정에 실패했습니다')
+    }
+  } catch (error: any) {
+    console.error('게시글 수정 실패:', error)
+
+    if (error.response?.status === 401) {
+      ElMessage.error('로그인이 필요합니다')
+      await router.push('/login')
+    } else if (error.response?.status === 403) {
+      ElMessage.error('수정 권한이 없습니다')
+      await router.push(`/posts/${props.id}`)
+    } else if (error.response?.status === 404) {
+      ElMessage.error('존재하지 않는 게시글입니다')
+      await router.push('/posts')
+    } else {
+      ElMessage.error('게시글 수정 중 오류가 발생했습니다')
+    }
+  } finally {
+    submitLoading.value = false
+  }
+}
+
 // 폼 초기화
 const resetForm = async () => {
+  if (!originalPost.value) return
+
   try {
     await ElMessageBox.confirm(
-        '작성 중인 내용이 모두 삭제됩니다. 계속하시겠습니까?',
+        '작성 중인 내용이 모두 초기화됩니다. 계속하시겠습니까?',
         '폼 초기화',
         {
           confirmButtonText: '초기화',
@@ -242,70 +380,69 @@ const resetForm = async () => {
         }
     )
 
-    postFormRef.value?.resetFields()
-    postForm.title = ''
-    postForm.content = ''
-    postForm.category = ''
+    // 원본 데이터로 되돌리기
+    postForm.title = originalPost.value.title
+    postForm.content = originalPost.value.content
+    postForm.category = originalPost.value.category || ''
+
+    // 폼 검증 상태도 초기화
+    postFormRef.value?.clearValidate()
+
     ElMessage.success('폼이 초기화되었습니다')
   } catch (error) {
-    // 사용자가 취소한 경우
+    return
   }
 }
 
-// 게시글 등록
-const handleSubmit = async () => {
-  if (!postFormRef.value) return
-
-  // 폼 검증
-  const isValid = await postFormRef.value.validate().catch(() => false)
-  if (!isValid) return
-
-  try {
-    submitLoading.value = true
-
-    const response = await postApi.createPost({
-      title: postForm.title.trim(),
-      content: postForm.content.trim(),
-      category: postForm.category
-    })
-
-    if (response.result) {
-      ElMessage.success('게시글이 등록되었습니다')
-
-      // 생성된 게시글 상세로 이동
-      await router.push(`/posts/${response.data.id}`)
-    } else {
-      ElMessage.error(response.message || '게시글 등록에 실패했습니다')
-    }
-  } catch (error) {
-    console.error('게시글 등록 실패:', error)
-    ElMessage.error('게시글 등록 중 오류가 발생했습니다')
-  } finally {
-    submitLoading.value = false
-  }
-}
-
-// 목록으로 돌아가기
+// 상세화면으로 돌아가기
 const goBack = async () => {
-  // 작성 중인 내용이 있으면 확인
-  if (hasChanges()) {
+  // 변경 사항이 있으면 확인 다이얼로그
+  if (hasChanges.value) {
     try {
       await ElMessageBox.confirm(
-          '작성 중인 내용이 있습니다. 정말 나가시겠습니까?',
+          '저장하지 않은 변경사항이 있습니다. 정말 나가시겠습니까?',
           '페이지 나가기',
           {
             confirmButtonText: '나가기',
-            cancelButtonText: '계속 작성',
+            cancelButtonText: '계속 수정',
             type: 'warning'
           }
       )
     } catch (error) {
-      return // 사용자가 취소한 경우
+      return
     }
   }
-
-  await router.push('/posts')
+  await router.push(`/posts/${props.id}`)
 }
+
+// 날짜 포맷팅
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 페이지 이탈 방지
+const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+  if (hasChanges.value) {
+    e.preventDefault()
+    return ''
+  }
+}
+
+// 컴포넌트 라이프사이클
+onMounted(async () => {
+  window.addEventListener('beforeunload', handleBeforeUnload)
+  await fetchPost()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
 </script>
 
 <style scoped>
