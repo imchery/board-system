@@ -140,6 +140,7 @@ import {Ckeditor} from "@ckeditor/ckeditor5-vue"
 import {usePageLeaveGuard} from "@/composables/usePageLeaveGuard.ts";
 import {getTextLength} from "@/utils/textHelper.ts";
 import {formatDate} from "@/utils/dateFormat.ts";
+import {handlePostApiError} from "@/utils/errorHandler.ts";
 
 // CKEditor 설정
 const editor = ClassicEditor as any
@@ -278,8 +279,7 @@ const handleSubmit = async () => {
       ElMessage.error(response.message || '게시글 등록에 실패했습니다')
     }
   } catch (error) {
-    console.error('게시글 등록 실패:', error)
-    ElMessage.error('게시글 등록 중 오류가 발생했습니다')
+    handlePostApiError(error, 'create')
   } finally {
     submitLoading.value = false
   }

@@ -149,6 +149,7 @@ import {postApi} from '@/api/post'
 import {useAuthStore} from '@/stores/auth'
 import type {PostResponse} from '@/types/api'
 import CommentList from "@/components/comment/CommentList.vue";
+import {handleApiError, handlePostApiError} from "@/utils/errorHandler.ts";
 
 // Props
 interface Props {
@@ -191,16 +192,7 @@ const fetchPost = async () => {
       ElMessage.error(response.message || '게시글을 불러오는데 실패했습니다')
     }
   } catch (error: any) {
-    console.error('게시글 조회 실패:', error)
-    if (error.response?.status === 401) {
-      ElMessage.error('로그인이 필요합니다')
-      router.push('/login')
-    } else if (error.response?.status === 404) {
-      ElMessage.error('존재하지 않는 게시글입니다')
-      router.push('/posts')
-    } else {
-      ElMessage.error('게시글을 불러오는데 실패했습니다')
-    }
+    handlePostApiError(error, 'list')
   } finally {
     loading.value = false
   }
@@ -210,7 +202,7 @@ const fetchPost = async () => {
 const toggleLike = async () => {
   if (!authStore.isLoggedIn) {
     ElMessage.warning('로그인이 필요합니다')
-    router.push('/login')
+    await router.push('/login')
     return
   }
 
@@ -227,8 +219,12 @@ const toggleLike = async () => {
     }
     ElMessage.success(isLiked.value ? '좋아요!' : '좋아요 취소')
   } catch (error) {
-    console.error('좋아요 처리 실패:', error)
-    ElMessage.error('좋아요 처리에 실패했습니다')
+    handleApiError(error, {
+      customErrorMessages: {
+        500: '좋아요 처리에 실패했습니다'
+      },
+      skipRedirect: true
+    })
   } finally {
     likeLoading.value = false
   }
@@ -252,14 +248,18 @@ const handleDelete = async () => {
 
     if (response.result) {
       ElMessage.success('게시글이 삭제되었습니다')
-      router.push('/posts')
+      await router.push('/posts')
     } else {
       ElMessage.error(response.message || '게시글 삭제에 실패했습니다')
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('게시글 삭제 실패:', error)
-      ElMessage.error('게시글 삭제 중 오류가 발생했습니다')
+      handleApiError(error, {
+        customErrorMessages: {
+          500: '게시글 삭제 중 오류가 발생했습니다'
+        },
+        skipRedirect: true
+      })
     }
   } finally {
     deleteLoading.value = false

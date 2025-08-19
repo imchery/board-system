@@ -1,7 +1,7 @@
 <template>
   <div class="post-create-container">
     <div class="post-create">
-      <el-card class="create-card">
+      <el-card class="create-card" v-loading="loading" element-loading-text="게시글을 불러오는 중...">
 
         <!-- 헤더 -->
         <div class="create-header">
@@ -17,17 +17,6 @@
         </div>
 
         <el-divider/>
-
-        <!--    로딩 상태    -->
-        <div v-if="loading" class="loading-wrapper">
-          <el-skeleton animated>
-            <template #template>
-              <el-skeleton-item variant="h3" style="width: 40%; margin-bottom: 20px;"/>
-              <el-skeleton-item variant="text" style="width: 100%; margin-bottom: 20px;"/>
-              <el-skeleton-item variant="rect" style="width: 100%; height: 400px;"/>
-            </template>
-          </el-skeleton>
-        </div>
 
         <!-- 수정 폼 -->
         <el-form
@@ -148,11 +137,16 @@ import {useAuthStore} from '@/stores/auth'
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 import {Ckeditor} from "@ckeditor/ckeditor5-vue"
 import {postApi} from "@/api/post.ts";
+import {getTextLength} from "@/utils/textHelper.ts";
+import {formatDate} from "@/utils/dateFormat.ts";
+import {handlePostApiError} from "@/utils/errorHandler.ts";
 
 // Props: URL 받아오는 게시글 ID=
 interface Props {
   id: string
 }
+
+const props = defineProps<Props>()
 
 // Router & Auth Store
 const router = useRouter()
@@ -164,8 +158,6 @@ const loading = ref(true)
 const submitLoading = ref(false)
 const previewVisible = ref(false)
 const originalPost = ref<any>(null) // 원본 데이터 보관용
-
-const props = defineProps<Props>()
 
 // CKEditor 설정
 const editor = ClassicEditor as any
@@ -194,14 +186,6 @@ const editorConfig: any = {
   },
 }
 
-// HTML content 텍스트 길이 추출
-const getTextLength = (htmlContent: string) => {
-  if (!htmlContent) return 0
-  const div = document.createElement('div')
-  div.innerHTML = htmlContent
-  return div.textContent?.length || 0
-}
-
 // 게시글 폼 데이터
 const postForm = reactive({
   title: '',
@@ -227,7 +211,7 @@ const postRules: FormRules = {
 // 계산된 속성
 const canSubmit = computed(() => {
   return postForm.title.trim().length >= 2 &&
-      postForm.content.trim().length >= 10 &&
+      getTextLength(postForm.content) >= 10 &&
       postForm.category.length > 0
 })
 
@@ -237,7 +221,7 @@ const canPreview = computed(() => {
 
 // 수정 권한 확인
 const canEdit = computed(() => {
-  if (!authStore.isLoggedIn || !originalPost.value) return false
+  if (!originalPost.value) return false
   return authStore.currentUser === originalPost.value.author
 })
 
@@ -297,21 +281,7 @@ const fetchPost = async () => {
       await router.push('/posts')
     }
   } catch (error: any) {
-    console.error('게시글 로드 실패:', error)
-
-    // 에러 타입별 처리
-    if (error.response?.status === 404) {
-      ElMessage.error('존재하지 않는 게시글입니다')
-    } else if (error.response?.status === 401) {
-      ElMessage.error('로그인이 필요합니다')
-      await router.push('/login')
-      return
-    } else {
-      ElMessage.error('게시글을 불러오는 중 오류가 발생했습니다')
-    }
-
-    // 에러 발생 시 목록으로 이동
-    await router.push('/posts')
+    handlePostApiError(error, 'detail')
   } finally {
     loading.value = false
   }
@@ -346,20 +316,7 @@ const handleSubmit = async () => {
       ElMessage.error(response.message || '게시글 수정에 실패했습니다')
     }
   } catch (error: any) {
-    console.error('게시글 수정 실패:', error)
-
-    if (error.response?.status === 401) {
-      ElMessage.error('로그인이 필요합니다')
-      await router.push('/login')
-    } else if (error.response?.status === 403) {
-      ElMessage.error('수정 권한이 없습니다')
-      await router.push(`/posts/${props.id}`)
-    } else if (error.response?.status === 404) {
-      ElMessage.error('존재하지 않는 게시글입니다')
-      await router.push('/posts')
-    } else {
-      ElMessage.error('게시글 수정 중 오류가 발생했습니다')
-    }
+    handlePostApiError(error, 'edit')
   } finally {
     submitLoading.value = false
   }
@@ -413,17 +370,6 @@ const goBack = async () => {
     }
   }
   await router.push(`/posts/${props.id}`)
-}
-
-// 날짜 포맷팅
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
 }
 
 // 페이지 이탈 방지

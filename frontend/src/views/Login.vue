@@ -91,6 +91,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+import {handleAuthApiError} from "@/utils/errorHandler.ts";
 
 // Vue Router & Auth Store
 const router = useRouter()
@@ -142,8 +143,7 @@ const handleLogin = async () => {
     }
 
   } catch (error) {
-    console.error('로그인 에러:', error)
-    ElMessage.error('로그인 중 오류가 발생했습니다')
+    handleAuthApiError(error)
   }
 }
 

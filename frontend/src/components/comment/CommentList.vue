@@ -90,6 +90,7 @@ import CommentForm from "@/components/comment/CommentForm.vue";
 import CommentItem from "@/components/comment/CommentItem.vue";
 import {commentApi} from "@/api/comment.ts";
 import {ElMessage} from "element-plus";
+import {handleCommentApiError} from "@/utils/errorHandler.ts";
 
 interface Props {
   postId: string
@@ -129,8 +130,7 @@ const loadComments = async () => {
       ElMessage.error(response.message || '댓글을 불러오는데 실패했습니다')
     }
   } catch (error) {
-    console.error('댓글 로드 실패:', error)
-    ElMessage.error('댓글을 불러오는 중 오류가 발생했습니다')
+    handleCommentApiError(error, 'load')
   } finally {
     loading.value = false
   }

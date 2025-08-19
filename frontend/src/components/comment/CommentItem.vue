@@ -157,6 +157,8 @@ import {ArrowDown, ArrowUp, ChatLineRound, Delete, Edit, User, MoreFilled} from 
 import CommentForm from "@/components/comment/CommentForm.vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {commentApi} from "@/api/comment.ts";
+import {formatDate} from "@/utils/dateFormat.ts";
+import {handleCommentApiError} from "@/utils/errorHandler.ts";
 
 // Props
 interface Props {
@@ -248,8 +250,7 @@ const saveEdit = async () => {
       ElMessage.error(response.message || '댓글 수정에 실패했습니다')
     }
   } catch (error) {
-    console.error('댓글 수정 실패:', error)
-    ElMessage.error('댓글 수정 중 오류가 발생했습니다')
+    handleCommentApiError(error, 'edit')
   } finally {
     editLoading.value = false
   }
@@ -278,8 +279,7 @@ const handleDelete = async () => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('댓글 삭제 실패:', error)
-      ElMessage.error('댓글 삭제 중 오류가 발생했습니다')
+      handleCommentApiError(error, 'delete')
     }
   }
 }
@@ -320,7 +320,7 @@ const loadReplyPreview = async () => {
       console.log('답글 미리보기 로드 성공:', response.data)
     }
   } catch (error) {
-    console.error('답글 미리보기 로드 실패:', error)
+    handleCommentApiError(error, 'load')
   }
 }
 
@@ -339,7 +339,7 @@ const loadReplies = async () => {
       console.log('전체 답글 로드 성공:', response.data.content)
     }
   } catch (error) {
-    console.error('답글 로드 실패:', error)
+    handleCommentApiError(error, 'load')
   } finally {
     repliesLoading.value = false
   }
@@ -358,32 +358,10 @@ const loadMoreReplies = async () => {
       hasMoreReplies.value = !response.data.last
     }
   } catch (error) {
-    console.error('답글 더보기 실패:', error)
+    handleCommentApiError(error, 'load')
   } finally {
     repliesLoading.value = false
   }
-}
-
-// 날짜 포맷팅
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-
-  if (minutes < 1) return '방금 전'
-  if (minutes < 60) return `${minutes}분 전`
-  if (hours < 24) return `${hours}시간 전`
-  if (days < 7) return `${days}일 전`
-
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
 }
 
 // 컴포넌트 마운트 시 답글 미리보기 로드

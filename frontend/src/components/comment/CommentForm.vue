@@ -49,6 +49,7 @@ import {ref} from "vue";
 import {ElMessage} from "element-plus";
 import {CommentRequest} from "@/types/api.ts";
 import {commentApi} from "@/api/comment.ts";
+import {handleCommentApiError} from "@/utils/errorHandler.ts";
 
 // Props: 전달할 데이터 타입 정의
 interface Props {
@@ -98,8 +99,7 @@ const submitComment = async () => {
       ElMessage.error(response.message || '댓글 등록에 실패했습니다')
     }
   } catch (error) {
-    console.error('댓글 작성 실패:', error)
-    ElMessage.error('댓글 작성 중 오류가 발생했습니다')
+    handleCommentApiError(error, 'create')
   } finally {
     loading.value = false
   }
