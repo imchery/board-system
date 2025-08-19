@@ -1,6 +1,6 @@
-import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
-import type { ApiError } from '@/types/api'
+import {ElMessage} from 'element-plus'
+import {useRouter} from 'vue-router'
+import type {ApiError} from '@/types/api'
 
 /**
  * API 에러 공통 처리 함수
@@ -29,8 +29,8 @@ export const handleApiError = (
     const statusCode = apiError.response?.status
 
     // 커스텀 메시지가 있으면 우선 사용
-    if (options.customErrorMessages?.[statusCode!]) {
-        ElMessage.error(options.customErrorMessages[statusCode!])
+    if (statusCode && options.customErrorMessages?.[statusCode]) {
+        ElMessage.error(options.customErrorMessages[statusCode])
         return
     }
 
@@ -60,9 +60,17 @@ export const handleApiError = (
 
         default:
             // 네트워크 에러나 기타 에러
-            if (error.code === 'NETWORK_ERROR') {
-                ElMessage.error('네트워크 연결을 확인해주세요')
+            if (!error.response) {
+                // 응답 자체가 없음 = 네트워크 문제
+                if (error.code === 'NETWORK_ERROR') {
+                    ElMessage.error('네트워크 연결을 확인해주세요')
+                } else if (error.code === 'ECONNABORTED') {
+                    ElMessage.error('요청 시간이 초과되었습니다')
+                } else {
+                    ElMessage.error('서버에 연결할 수 없습니다')
+                }
             } else {
+                // 응답은 왔지만 에러 상태 = 백엔드 에러
                 ElMessage.error('요청 처리 중 오류가 발생했습니다')
             }
     }

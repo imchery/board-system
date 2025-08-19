@@ -104,7 +104,7 @@
         </el-table-column>
 
         <!--    작성일 컬럼    -->
-        <el-table-column prop="createdAt" label="작성일" width="120" align="center">
+        <el-table-column prop="createdAt" label="작성일" width="160" align="center">
           <template #default="scope">
             <span class="post-date">{{ formatDate(scope.row.createdAt) }}</span>
           </template>
@@ -132,10 +132,10 @@ import {onMounted, ref} from 'vue'
 import {useRouter} from "vue-router"
 import {ElMessage} from "element-plus";
 import {postApi} from "@/api/post.ts";
-import type {ApiError, PostResponse} from "@/types/api.ts";
+import type {PostResponse} from "@/types/api.ts";
 import {Edit, Search} from "@element-plus/icons-vue";
 import {formatDate} from "@/utils/dateFormat.ts";
-import {handleApiError, handlePostApiError} from "@/utils/errorHandler.ts";
+import {handlePostApiError} from "@/utils/errorHandler.ts";
 
 // 반응형 데이터
 const posts = ref<PostResponse[]>([])

@@ -107,7 +107,7 @@ const handleLoggout = async () => {
       ElMessage.success('로그아웃되었습니다')
 
       // 홈으로 이동
-      router.push({path: '/'})
+      await router.push({path: '/'})
     }
   } catch (error) {
     // 취소를 누른 경우(에러X)

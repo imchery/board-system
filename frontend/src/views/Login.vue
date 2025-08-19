@@ -137,7 +137,7 @@ const handleLogin = async () => {
       ElMessage.success(result.message || '로그인 성공!')
 
       // 게시글 목록으로 이동
-      router.push('/posts')
+      await router.push('/posts')
     } else {
       ElMessage.error(result.message || '로그인에 실패했습니다')
     }
