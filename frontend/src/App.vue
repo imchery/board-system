@@ -93,4 +93,11 @@ onMounted(async () => {
 .main-content.no-header {
   min-height: 100vh; /* 헤더 없을 때는 전체 높이 */
 }
+
+/* 전역 스타일 */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
 </style>
