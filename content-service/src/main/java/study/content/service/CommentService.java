@@ -2,13 +2,14 @@ package study.content.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.common.lib.exception.BaseException;
 import study.common.lib.exception.ErrorCode;
 import study.common.lib.response.PageResponse;
+import study.common.lib.util.BasePagingUtil;
+import study.common.lib.util.StringUtil;
+import study.content.common.enums.CommentSortType;
 import study.content.dto.comment.CommentRequest;
 import study.content.dto.comment.CommentResponse;
 import study.content.dto.comment.CommentUpdateRequest;
@@ -17,7 +18,6 @@ import study.content.repository.CommentRepository;
 import study.content.repository.PostRepository;
 
 import java.util.List;
-import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -27,6 +27,10 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  생성/수정/삭제
+    // -----------------------------------------------------------------------------------------------------------------
 
     /**
      * 댓글 생성
@@ -43,7 +47,7 @@ public class CommentService {
         validatePostExists(request.getPostId());
 
         // 2. 대댓글인 경우 부모 댓글 존재 여부 확인
-        if (request.getParentCommentId() != null) {
+        if (!StringUtil.isEmpty(request.getParentCommentId())) {
             validateParentCommentExists(request.getPostId(), request.getParentCommentId());
         }
 
@@ -110,24 +114,32 @@ public class CommentService {
     }
 
     // -----------------------------------------------------------------------------------------------------------------
-    //                                                  조회
+    //                                                  조회 (BasePagingUtil 활용)
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * 특정 게시글의 최상위 댓글 목록 조회 (페이징)
+     * 특정 게시글의 최상위 댓글 목록 조회 (페이징, 정렬)
      *
      * @param postId
      * @param page
      * @param size
      * @return
      */
-    public PageResponse<CommentResponse> getRootComments(String postId, int page, int size) {
-        log.info("Fetching root comments for post: {} - page: {}, size: {}", postId, page, size);
+    public PageResponse<CommentResponse> getRootComments(String postId, int page, int size, String sort) {
+        log.info("Fetching root comments for post: {} - page: {}, size: {}, sort: {}",
+                postId, page, size, sort);
 
         // 게시글 존재 여부 확인
         validatePostExists(postId);
 
-        return getCommentsWithPaging(page, size, pageable -> commentRepository.findRootCommentByPostId(postId, pageable));
+        // 댓글 정렬 타입 변환
+        CommentSortType sortType = CommentSortType.fromString(sort);
+
+        return BasePagingUtil.createPageResponse(
+                page, size, sortType.toMongoSort(),
+                pageable -> commentRepository.findRootCommentByPostId(postId, pageable),
+                CommentResponse::form
+        );
     }
 
     /**
@@ -159,12 +171,17 @@ public class CommentService {
      * @return
      */
     public PageResponse<CommentResponse> getReplies(String postId, String parentCommentId, int page, int size) {
-        log.info("Fetching replies for post: {} - parentCommentId: {}, page: {}, size: {}", postId, parentCommentId, page, size);
+        log.info("Fetching replies for post: {} - parentCommentId: {}, page: {}, size: {}",
+                postId, parentCommentId, page, size);
 
         // 게시글 존재 및 부모 댓글 존재 확인
         validateParentCommentExists(postId, parentCommentId);
 
-        return getCommentsWithPaging(page, size, pageable -> commentRepository.findRepliesByParentId(postId, parentCommentId, pageable));
+        return BasePagingUtil.createUnsortedPageResponse(
+                page, size,
+                pageable -> commentRepository.findRepliesByParentId(postId, parentCommentId, pageable),
+                CommentResponse::form
+        );
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -180,10 +197,17 @@ public class CommentService {
      * @param size
      * @return
      */
-    public PageResponse<CommentResponse> getCommentsByAuthor(String author, int page, int size) {
-        log.info("Fetching comments by author: {} - page: {}, size: {}", author, page, size);
+    public PageResponse<CommentResponse> getCommentsByAuthor(String author, int page, int size, String sort) {
+        log.info("Fetching comments by author: {} - page: {}, size: {}, sort: {}",
+                author, page, size, sort);
 
-        return getCommentsWithPaging(page, size, pageable -> commentRepository.findByAuthor(author, pageable));
+        CommentSortType sortType = CommentSortType.fromString(sort);
+
+        return BasePagingUtil.createPageResponse(
+                page, size, sortType.toMongoSort(),
+                pageable -> commentRepository.findByAuthor(author, pageable),
+                CommentResponse::form
+        );
     }
 
     /**
@@ -273,23 +297,6 @@ public class CommentService {
         if (parentComment.isReply()) {
             throw new BaseException(ErrorCode.INVALID_REQUEST, "대댓글에는 답글을 달 수 없습니다");
         }
-    }
-
-    /**
-     * 페이징 처리 공통 로직
-     *
-     * @param page
-     * @param size
-     * @param repositoryMethod
-     * @return
-     */
-    private PageResponse<CommentResponse> getCommentsWithPaging(int page, int size, Function<Pageable, Page<Comment>> repositoryMethod) {
-        Pageable pageable = Pageable.ofSize(size)
-                .withPage(page);
-        Page<Comment> commentPage = repositoryMethod.apply(pageable);
-        Page<CommentResponse> responsePage = commentPage.map(CommentResponse::form);
-
-        return PageResponse.from(responsePage);
     }
 
     /**

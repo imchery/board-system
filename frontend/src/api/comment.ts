@@ -30,7 +30,7 @@ apiClient.interceptors.request.use(
 // 응답 인터셉터 (에러 처리)
 apiClient.interceptors.response.use(
     (response) => {
-        return response.data // 백엔드 ResponseVO에서 data 부분만 추출
+        return response.data // 백엔드 ResponseVO 에서 data 부분만 추출
     },
     (error) => {
         console.error('API 에러:', error)
@@ -38,44 +38,191 @@ apiClient.interceptors.response.use(
     }
 )
 
-// 댓글 관련 API 함수들
+/**
+ * 댓글 정렬 타입
+ */
+export enum CommentSortType {
+    LATEST = 'latest',
+    OLDEST = 'oldest'
+}
+
+/**
+ * 댓글 관련 API 함수들
+ * - 기본 값은 'latest' (최신순)
+ */
 export const commentApi = {
 
-    // 댓글 생성
-    createComment: async (postId: string, request: CommentRequest): Promise<ResponseVO<CommentResponse>> => {
+    // ======================= 생성/수정/삭제 =======================
+
+    /**
+     * 댓글 생성
+     * @param postId
+     * @param request
+     */
+    createComment: async (
+        postId: string,
+        request: CommentRequest
+    ): Promise<ResponseVO<CommentResponse>> => {
         return await apiClient.post(`/api/posts/${postId}/comments`, request)
     },
 
-    // 댓글 수정
-    updateComment: async (commentId: string, request: CommentUpdateRequest): Promise<ResponseVO<CommentResponse>> => {
+    /**
+     * 댓글 수정
+     * @param commentId
+     * @param request
+     */
+    updateComment: async (
+        commentId: string,
+        request: CommentUpdateRequest
+    ): Promise<ResponseVO<CommentResponse>> => {
         return await apiClient.put(`/api/comments/${commentId}`, request)
     },
 
-    // 댓글 삭제
+    /**
+     * 댓글 삭제
+     * @param commentId
+     */
     deleteComment: async (commentId: string): Promise<ResponseVO<void>> => {
         return await apiClient.delete(`/api/comments/${commentId}`)
     },
 
-    // 특정 게시글의 최상위 댓글 목록 조회(페이징)
-    getRootComments: async (postId: string, page = 0, size = 10): Promise<ResponseVO<PageResponse<CommentResponse>>> => {
-        const params = {page, size}
+    // ======================= 조회 (정렬 지원) =======================
+
+    /**
+     * 특정 게시글의 최상위 댓글 목록 조회 (정렬 지원)
+     * @param postId 게시글 ID
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기 (기본 10개)
+     * @param sort 정렬 방식 (latest: 최신순, oldest: 오래된순)
+     */
+    getRootComments: async (
+        postId: string,
+        page = 0,
+        size = 10,
+        sort: CommentSortType = CommentSortType.LATEST
+    ): Promise<ResponseVO<PageResponse<CommentResponse>>> => {
+        const params = {page, size, sort}
         return await apiClient.get(`/api/posts/${postId}/comments`, {params})
     },
 
-    // 특정 댓글의 대댓글 미리보기 (처음 3개)
-    getReplyPreview: async (postId: string, commentId: string): Promise<ResponseVO<CommentResponse[]>> => {
+    /**
+     * 특정 댓글의 대댓글 미리보기 (처음 3개)
+     * 정렬 없음 - 최신순
+     * @param postId
+     * @param commentId
+     */
+    getReplyPreview: async (
+        postId: string,
+        commentId: string
+    ): Promise<ResponseVO<CommentResponse[]>> => {
         return await apiClient.get(`/api/posts/${postId}/comments/${commentId}/preview`)
     },
 
-    // 특정 댓글의 대댓글 목록 조회(페이징)
-    getReplies: async (postId: string, commentId: string, page = 0, size = 10): Promise<ResponseVO<PageResponse<CommentResponse>>> => {
+    /**
+     * 특정 댓글의 대댓글 목록 조회 (정렬 지원)
+     * @param postId 게시글 ID
+     * @param commentId 부모 댓글 ID
+     * @param page 페이지 번호
+     * @param size 페이지 크기
+     */
+    getReplies: async (
+        postId: string,
+        commentId: string,
+        page = 0,
+        size = 10
+    ): Promise<ResponseVO<PageResponse<CommentResponse>>> => {
         const params = {page, size}
         return await apiClient.get(`/api/posts/${postId}/comments/${commentId}/replies`, {params})
     },
 
-    // 작성자별 댓글 조회 (마이페이지용)
-    getCommentByAuthor: async (author: string, page = 0, size = 10): Promise<ResponseVO<PageResponse<CommentResponse>>> => {
-        const params = {page, size}
+    /**
+     * 작성자별 댓글 조회 (마이페이지용)
+     * @param author
+     * @param page
+     * @param size
+     * @param sort
+     */
+    getCommentByAuthor: async (
+        author: string,
+        page = 0,
+        size = 10,
+        sort: CommentSortType = CommentSortType.LATEST
+    ): Promise<ResponseVO<PageResponse<CommentResponse>>> => {
+        const params = {page, size, sort}
         return await apiClient.get(`/api/comments/author/${author}`, {params})
+    },
+
+    // ======================= 기타 조회 =======================
+
+    /**
+     * 관리자용 댓글 조회 (삭제된 것 포함, 정렬 X)
+     * @param postId
+     */
+    getAllCommentsForAdmin: async (postId: string): Promise<ResponseVO<CommentResponse[]>> => {
+        return await apiClient.get(`/api/admin/posts/{postId}/comments`)
+    },
+
+    /**
+     * 댓글 통계 조회
+     * @param postId
+     */
+    getCommentStats: async (postId: string): Promise<ResponseVO<number>> => {
+        return await apiClient.get(`/api/posts/{postId}/comments/stats`)
+    },
+
+    /**
+     * 대댓글 개수 조회
+     * @param postId
+     * @param commentId
+     */
+    getReplyCount: async (
+        postId: string,
+        commentId: string
+    ): Promise<ResponseVO<number>> => {
+        return await apiClient.get(`/api/posts/{postId}/comments/{commentId}/count`)
     }
 }
+
+// ======================= 유틸리티 함수들 =======================
+
+/**
+ * 정렬 타입을 한글 텍스트로 변환
+ * UI 에서 사용자에게 보여줄 때 활용
+ * @param sort
+ */
+export const getSortDisplayName = (sort: CommentSortType): string => {
+    switch (sort) {
+        case CommentSortType.LATEST:
+            return '최신순'
+        case CommentSortType.OLDEST:
+            return '오래된순'
+        default:
+            return '최신순'
+    }
+}
+
+/**
+ * 문자열을 CommentSortType 으로 안전하게 변환
+ * @param sortString
+ */
+export const parseCommentSortType = (sortString: string): CommentSortType => {
+    const normalizedSort = sortString?.toLowerCase()
+
+    switch (normalizedSort) {
+        case 'latest':
+            return CommentSortType.LATEST
+        case 'oldest':
+            return CommentSortType.OLDEST
+        default:
+            console.warn(`Unknown sort type: ${sortString}, defaulting to LATEST`)
+            return CommentSortType.LATEST
+    }
+}
+
+/**
+ * 정렬 옵션 목록 (UI 컴포넌트에서 사용)
+ */
+export const COMMENT_SORT_OPTIONS = [
+    {value: CommentSortType.LATEST, label: '최신순'},
+    {value: CommentSortType.OLDEST, label: '오래된순'}
+] as const // 불변보장

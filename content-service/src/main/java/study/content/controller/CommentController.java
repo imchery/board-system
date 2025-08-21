@@ -22,6 +22,10 @@ public class CommentController {
 
     private final CommentService commentService;
 
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                  생성/수정/삭제
+    // -----------------------------------------------------------------------------------------------------------------
+
     /**
      * 댓글 생성
      *
@@ -118,10 +122,11 @@ public class CommentController {
     @GetMapping("/posts/{postId}/comments")
     public ResponseVO getRootComments(@PathVariable String postId,
                                       @RequestParam(defaultValue = "0") int page,
-                                      @RequestParam(defaultValue = "10") int size) {
-        log.info("최상위 댓글 목록 조회: postId: {}, page: {}, size: {}", postId, page, size);
+                                      @RequestParam(defaultValue = "10") int size,
+                                      @RequestParam(defaultValue = "latest") String sort) {
+        log.info("최상위 댓글 목록 조회: postId: {}, page: {}, size: {}, sort: {}", postId, page, size, sort);
 
-        PageResponse<CommentResponse> comments = commentService.getRootComments(postId, page, size);
+        PageResponse<CommentResponse> comments = commentService.getRootComments(postId, page, size, sort);
         return ResponseVO.ok(comments);
     }
 
@@ -176,14 +181,17 @@ public class CommentController {
     @GetMapping("/comments/author/{author}")
     public ResponseVO getCommentsByAuthor(@PathVariable String author,
                                           @RequestParam(defaultValue = "0") int page,
-                                          @RequestParam(defaultValue = "10") int size) {
-        log.info("작성자별 댓글 조회: author: {}, page: {}, size: {}", author, page, size);
-        PageResponse<CommentResponse> comments = commentService.getCommentsByAuthor(author, page, size);
+                                          @RequestParam(defaultValue = "10") int size,
+                                          @RequestParam(defaultValue = "latest") String sort) {
+        log.info("작성자별 댓글 조회: author: {}, page: {}, size: {}, sort: {}", author, page, size, sort);
+
+        PageResponse<CommentResponse> comments = commentService.getCommentsByAuthor(author, page, size, sort);
         return ResponseVO.ok(comments);
     }
 
     /**
      * 특정 게시글의 모든 댓글 조회 (관리자용 - 삭제된 것 포함)
+     *
      * @param postId
      * @return
      */

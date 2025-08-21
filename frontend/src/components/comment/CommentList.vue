@@ -2,7 +2,7 @@
   <div class="comment-list">
     <!--  댓글 작성 폼 (로그인한 경우만)  -->
     <div v-if="authStore.isLoggedIn" class="comment-form-actions">
-      <CommentForm :post-id="props.postId" @succes="handleCommentSuccess" parent-comment-id=""/>
+      <CommentForm :post-id="props.postId" @success="handleCommentSuccess"/>
     </div>
 
     <!--  로그인 안내 (비로그인 사용자)  -->
@@ -88,7 +88,7 @@ import {CommentResponse} from "@/types/api.ts";
 import {onMounted, ref} from 'vue'
 import CommentForm from "@/components/comment/CommentForm.vue";
 import CommentItem from "@/components/comment/CommentItem.vue";
-import {commentApi} from "@/api/comment.ts";
+import {commentApi, parseCommentSortType} from "@/api/comment.ts";
 import {ElMessage} from "element-plus";
 import {handleCommentApiError} from "@/utils/errorHandler.ts";
 
@@ -102,24 +102,29 @@ const props = defineProps<Props>()
 const authStore = useAuthStore()
 const router = useRouter()
 
-// 반응형 데이터
+// 댓글 데이터 상태
 const comments = ref<CommentResponse[]>([])
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalComments = ref(0)
 const totalPages = ref(0)
-const sortBy = ref('latest')
+const sortBy = ref<string>('latest')
 
-// 댓글 목록 조회
+/**
+ * 댓글 목록 조회
+ */
 const loadComments = async () => {
   try {
     loading.value = true
 
+    const sortType = parseCommentSortType(sortBy.value)
+
     const response = await commentApi.getRootComments(
         props.postId,
         currentPage.value - 1, // 백엔드는 0부터 시작
-        pageSize.value
+        pageSize.value,
+        sortType
     )
 
     if (response.result) {
@@ -130,16 +135,43 @@ const loadComments = async () => {
       ElMessage.error(response.message || '댓글을 불러오는데 실패했습니다')
     }
   } catch (error) {
+    console.error('댓글 조회 에러:', error)
     handleCommentApiError(error, 'load')
   } finally {
     loading.value = false
   }
 }
 
-// 댓글 작성 성공 처리
+/**
+ * 댓글 작성 성공 처리
+ */
 const handleCommentSuccess = () => {
   // 첫 페이지로 이동하여 새 댓글 확인
   currentPage.value = 1
+
+  // 최신순으로 정렬
+  if (sortBy.value !== 'latest') {
+    sortBy.value = 'latest'
+  }
+
+  loadComments()
+}
+
+/**
+ * 정렬 변경 처리
+ */
+const handleSortChange = () => {
+  // 정렬 변경 시 첫 페이지로 이동
+  currentPage.value = 1
+  loadComments()
+}
+
+/**
+ * 페이지 변경 처리
+ * @param page
+ */
+const handlePageChange = (page: number) => {
+  currentPage.value = page
   loadComments()
 }
 
@@ -148,21 +180,8 @@ const goToLogin = () => {
   router.push("/login")
 }
 
-// 정렬 변경
-const handleSortChange = () => {
-  // TODO: 백엔드에서 정렬 지원 시 구현
-  // 현재는 최신순만 지원
-  loadComments()
-}
-
 // 댓글 새로고침
 const refreshComments = () => {
-  loadComments()
-}
-
-// 페이지 변경
-const handlePageChange = (page: number) => {
-  currentPage.value = page
   loadComments()
 }
 

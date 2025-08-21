@@ -54,7 +54,7 @@ import {handleCommentApiError} from "@/utils/errorHandler.ts";
 // Props: 전달할 데이터 타입 정의
 interface Props {
   postId: string
-  parentCommentId: string
+  parentCommentId?: string
   isReply?: boolean
 }
 

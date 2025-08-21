@@ -628,3 +628,19 @@
         font-size: 12px;
     }
 }
+
+.comment-list {
+    margin-top: 20px;
+}
+.comments-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+.login-prompt {
+    margin-bottom: 20px;
+}
+.comment-form-actions {
+    margin-bottom: 24px;
+}

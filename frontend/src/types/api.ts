@@ -1,4 +1,4 @@
-// 백엔드 ResponseVO 타입 정의
+// ======================= 백엔드 공통 응답 타입 =======================
 export interface ResponseVO<T = any> {
     result: boolean
     message: string
@@ -6,7 +6,6 @@ export interface ResponseVO<T = any> {
     timestamp: number
 }
 
-// 페이징 응답 타입
 export interface PageResponse<T> {
     content: T[]
     page: number
@@ -19,7 +18,7 @@ export interface PageResponse<T> {
     hasPrevious: boolean
 }
 
-// 게시글 타입
+// ======================= 게시글 타입 =======================
 export interface PostResponse {
     id: string
     title: string
@@ -31,9 +30,10 @@ export interface PostResponse {
     viewCount?: number
     likeCount?: number
     commentCount?: number
-    isLikedByCurrentUser?:boolean
+    isLikedByCurrentUser?: boolean
 }
 
+// ======================= 댓글 타입 =======================
 export interface CommentResponse {
     id: string
     postId: string
@@ -42,13 +42,18 @@ export interface CommentResponse {
     createdAt: string
     updatedAt: string
     parentCommentId?: string // null 가능
-    isReply?: boolean // 대댓글 여부
+    isReply?: boolean        // 대댓글 여부
+
+    displayTime?: string     // 서버에서 제공하는 상태시간 ("3시간 전")
+    canEdit?: boolean        // 수정 가능 여부
+    canDelete?: boolean      // 삭제 가능 여부
+    replyCount?: number      // 대댓글 개수
 }
 
 export interface CommentRequest {
     postId: string
     content: string
-    parentCommentId?: string // 대댓글용 (null이면 최상위 댓글)
+    parentCommentId?: string // 대댓글용 (null 이면 최상위 댓글)
 }
 
 export interface CommentUpdateRequest {
@@ -61,7 +66,7 @@ export interface CommentStatsResponse {
     replies: number
 }
 
-// Axios 에러 타입
+// ======================= 에러 타입 =======================
 export interface ApiError {
     response?: {
         status: number
@@ -70,15 +75,109 @@ export interface ApiError {
     message: string
 }
 
-// 로그인 요청 타입
-export interface LoginRequest{
+// ======================= 인증 타입 =======================
+export interface LoginRequest {
     username: string
     password: string
 }
 
-// 로그인 응답 타입
 export interface LoginResponse {
     token: string | null
     username: string | null
     message: string
+}
+
+// ======================= 정렬 관련 타입 =======================
+
+/**
+ * 댓글 정렬 방향
+ */
+export type CommentSortDirection = 'latest' | 'oldest'
+
+/**
+ * 정렬 옵션 인터페이스 (UI 컴포넌트에서 사용)
+ */
+export interface SortOption {
+    value: CommentSortDirection
+    label: string
+    description?: string // 추가 설명
+}
+
+/**
+ * 페이징 요청 파라미터
+ */
+export interface PagingParams {
+    page?: number
+    size?: number
+    sort?: CommentSortDirection
+}
+
+/**
+ * 검색 파라미터
+ */
+export interface SearchParams extends PagingParams {
+    keyword?: string
+    category?: string
+    author?: string
+    startDate?: string
+    endDate?: string
+}
+
+// ======================= API 응답 헬퍼 타입 =======================
+
+/**
+ * API 호출 결과를 처리하기 위한 유니온 타입
+ * 유니온 타입: 이것 또는 저것 타입
+ */
+export type ApiResult<T> = {
+    success: true
+    data: T
+} | {
+    success: false
+    error: string
+}
+
+/**
+ * 로딩 상태를 포함한 데이터 타입
+ */
+export interface DataWithLoading<T> {
+    data: T | null
+    loading: boolean
+    error: string | null
+}
+
+// ======================= 타입 가드 함수들 =======================
+
+/**
+ * CommentResponse 타입 가드
+ * @param obj
+ */
+export const isCommentResponse = (obj: any): obj is CommentResponse => {
+    return obj &&
+        typeof obj.id === 'string' &&
+        typeof obj.postId === 'string' &&
+        typeof obj.content === 'string' &&
+        typeof obj.author === 'string' &&
+        typeof obj.createdAt === 'string'
+}
+
+/**
+ * PageResponse 타입 가드
+ * @param obj
+ */
+export const isPageResponse = <T>(obj: any): obj is PageResponse<T> => {
+    return obj &&
+        Array.isArray(obj.constent) &&
+        typeof obj.page === 'number' &&
+        typeof obj.size === 'number' &&
+        typeof obj.totalElements === 'number' &&
+        typeof obj.totalPages === 'number'
+}
+
+/**
+ * 정렬 방향 검증
+ * @param sort
+ */
+export const isValidSortDirection = (sort: string): sort is CommentSortDirection => {
+    return sort === 'latest' || sort === 'oldest'
 }
