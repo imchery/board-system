@@ -5,8 +5,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import study.content.entity.CommentLike;
 
-import java.util.Optional;
-
 public interface CommentLikeRepository extends MongoRepository<CommentLike, String> {
 
     // ======================= 핵심 기능 =======================
@@ -19,16 +17,6 @@ public interface CommentLikeRepository extends MongoRepository<CommentLike, Stri
      * @return 좋아요 여부
      */
     boolean existsByCommentIdAndUsername(String commentId, String username);
-
-    /**
-     * 특정 사용자가 특정 댓글에 한 좋아요 조회
-     * 좋아요 삭제 시 사용
-     *
-     * @param commentId 댓글 ID
-     * @param username  사용자명
-     * @return 좋아요 객체
-     */
-    Optional<CommentLike> findByCommentIdAndUsername(String commentId, String username);
 
     /**
      * 특정 댓글의 총 좋아요 개수
