@@ -1,39 +1,58 @@
 <template>
   <div class="comment-wrapper" :class="{'is-reply': comment.isReply}">
-
     <div class="comment-item">
-      <!-- 댓글 헤더: 프로필(왼쪽) + 액션버튼(오른쪽 상단) -->
+
+      <!-- 댓글 헤더: 프로필(왼쪽) + 날짜/액션버튼(오른쪽) -->
       <div class="comment-header">
         <div class="comment-author">
           <el-avatar :size="comment.isReply ? 24 : 28" class="comment-avatar">
-            <el-icon><User/></el-icon>
+            <el-icon>
+              <User/>
+            </el-icon>
           </el-avatar>
           <div class="comment-info">
             <span class="comment-author-name">{{ comment.author }}</span>
           </div>
         </div>
 
-        <div class="comment-meta">
-          <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
+        <!--    오른쪽 영역: 날짜 + 액션 + 좋아요    -->
+        <div class="comment-right-section">
+          <!--     첫 번째 줄: 날짜 + 수정/삭제 드롭다운     -->
+          <div class="comment-meta-line">
+            <span class="comment-date">{{ formatDate(comment.createdAt) }}</span>
 
-          <!-- 수정/삭제 드롭다운 (오른쪽 상단) -->
-          <div class="comment-actions" v-if="isAuthor && !isEditing">
-            <el-dropdown trigger="click" @command="handleCommand">
-              <el-button
-                  size="small"
-                  text
-                  circle
-                  class="comment-more-btn"
-              >
-                <el-icon><MoreFilled/></el-icon>
-              </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="edit" :icon="Edit">수정</el-dropdown-item>
-                  <el-dropdown-item command="delete" :icon="Delete">삭제</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
+            <!-- 수정/삭제 드롭다운 -->
+            <div class="comment-actions" v-if="isAuthor && !isEditing">
+              <el-dropdown trigger="click" @command="handleCommand">
+                <el-button
+                    size="small"
+                    text
+                    circle
+                    class="comment-more-btn"
+                >
+                  <el-icon>
+                    <MoreFilled/>
+                  </el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="edit" :icon="Edit">수정</el-dropdown-item>
+                    <el-dropdown-item command="delete" :icon="Delete">삭제</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
+          </div>
+
+          <!--     두 번째 줄: 좋아요 버튼(오른쪽 정렬)     -->
+          <div v-if="!isEditing" class="comment-like-section">
+            <CommentLikeButton
+                :comment-id="comment.id"
+                :initial-like-count="comment.likeCount || 0"
+                :initial-is-liked="comment.isLikedByCurrentUser || false"
+                :is-authenticated="isLoggedIn"
+                @like-toggled="handleLikeToggled"
+            />
           </div>
         </div>
       </div>
@@ -70,21 +89,8 @@
         </div>
       </div>
 
-      <!-- 답글 버튼 (최상위 댓글만) -->
-      <div v-if="!comment.isReply && !isEditing && authStore.isLoggedIn" class="comment-footer">
-        <el-button
-            size="small"
-            text
-            @click="toggleReplyForm"
-            :icon="ChatLineRound"
-            class="reply-btn"
-        >
-          답글등록
-        </el-button>
-      </div>
-
       <!-- 답글 작성 폼 -->
-      <div v-if="showReplyForm" class="reply-form">
+      <div v-if="!comment.isReply && showReplyForm" class="reply-form">
         <CommentForm
             :post-id="comment.postId"
             :parent-comment-id="comment.id"
@@ -96,54 +102,69 @@
       </div>
     </div>
 
-    <!-- 답글 보기/숨기기 토글 -->
-    <div v-if="!comment.isReply && replyCount > 0" class="replies-toggle-section">
-      <el-button
-          v-if="!showReplies"
-          size="small"
-          text
-          @click="toggleReplies"
-          class="replies-toggle-btn"
-      >
-        <el-icon><ArrowDown/></el-icon>
-        답글 {{ replyCount }}개 보기
-      </el-button>
+    <!-- 댓글 하단 액션바 (답글 버튼들은 기존 위치 유지) -->
+    <div v-if="!isEditing" class="comment-footer">
+      <div class="comment-left-actions">
+        <!-- 답글 버튼 (최상위 댓글만) -->
+        <el-button
+            v-if="!comment.isReply  && !showReplyForm"
+            size="small"
+            text
+            @click="toggleReplyForm"
+            class="reply-btn"
+        >
+          <template #icon>
+            <el-icon>
+              <ChatLineRound/>
+            </el-icon>
+          </template>
+          답글
+        </el-button>
+      </div>
 
-      <el-button
-          v-else
-          size="small"
-          text
-          @click="toggleReplies"
-          class="replies-toggle-btn"
-      >
-        <el-icon><ArrowUp/></el-icon>
-        답글 숨기기
-      </el-button>
+      <!-- 답글 개수 및 토글 (답글이 있는 경우만) -->
+      <div v-if="!comment.isReply && replyCount > 0" class="comment-right-actions">
+        <el-button
+            size="small"
+            text
+            @click="toggleReplies"
+            class="replies-toggle"
+        >
+          <template #icon>
+            <el-icon>
+              <ArrowDown v-if="!showReplies"/>
+              <ArrowUp v-else/>
+            </el-icon>
+          </template>
+          {{ showReplies ? '답글 숨기기' : `답글 ${replyCount}개 보기` }}
+        </el-button>
+      </div>
     </div>
 
-    <!-- 답글 목록 -->
-    <div v-if="!comment.isReply && showReplies" class="replies-container">
-      <!-- 전체 답글 목록만 표시 -->
-      <div v-if="replies.length > 0" class="replies-list">
-        <CommentItem
-            v-for="reply in replies"
-            :key="reply.id"
-            :comment="reply"
-            @updated="$emit('updated')"
-            @deleted="$emit('deleted')"
-        />
+  </div>
 
-        <!-- 답글 더보기 -->
-        <div v-if="hasMoreReplies" class="load-more-section">
-          <el-button
-              size="small"
-              text
-              @click="loadMoreReplies"
-              :loading="repliesLoading"
-          >
-            더 많은 답글 보기
-          </el-button>
-        </div>
+  <!-- 답글 목록 -->
+  <div v-if="!comment.isReply && showReplies" class="replies-container">
+    <!-- 전체 답글 목록만 표시 -->
+    <div v-if="replies.length > 0" class="replies-list">
+      <CommentItem
+          v-for="reply in replies"
+          :key="reply.id"
+          :comment="reply"
+          @updated="$emit('updated')"
+          @deleted="$emit('deleted')"
+      />
+
+      <!-- 답글 더보기 -->
+      <div v-if="hasMoreReplies" class="load-more-section">
+        <el-button
+            size="small"
+            text
+            @click="loadMoreReplies"
+            :loading="repliesLoading"
+        >
+          더 많은 답글 보기
+        </el-button>
       </div>
     </div>
   </div>
@@ -153,12 +174,13 @@
 import {CommentResponse, CommentUpdateRequest} from "@/types/api.ts";
 import {useAuthStore} from "@/stores/auth.ts";
 import {computed, onMounted, ref} from "vue";
-import {ArrowDown, ArrowUp, ChatLineRound, Delete, Edit, User, MoreFilled} from "@element-plus/icons-vue";
+import {ArrowDown, ArrowUp, ChatLineRound, Delete, Edit, MoreFilled, User} from "@element-plus/icons-vue";
 import CommentForm from "@/components/comment/CommentForm.vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {commentApi} from "@/api/comment.ts";
 import {formatDate} from "@/utils/dateFormat.ts";
 import {handleCommentApiError} from "@/utils/errorHandler.ts";
+import CommentLikeButton from "@/components/comment/CommentLikeButton.vue";
 
 // Props
 interface Props {
@@ -194,6 +216,10 @@ const currentReplyPage = ref(0)
 // 계산된 속성
 const isAuthor = computed(() => {
   return authStore.isLoggedIn && authStore.currentUser === props.comment.author
+})
+
+const isLoggedIn = computed(() => {
+  return authStore.isLoggedIn
 })
 
 // 드롭다운 명령 처리
@@ -361,6 +387,49 @@ const loadMoreReplies = async () => {
     handleCommentApiError(error, 'load')
   } finally {
     repliesLoading.value = false
+  }
+}
+
+/**
+ * 댓글 좋아요 토글 이벤트 처리
+ * @param commentId 댓글 ID
+ * @param newLikeCount 변경된 좋아요 개수
+ * @param newIsLiked 변경된 좋아요 상태
+ */
+const handleLikeToggled = async (commentId: string, newLikeCount: number, newIsLiked: boolean) => {
+  try {
+    console.log('댓글 좋아요 토글 처리:', {commentId, newLikeCount, newIsLiked})
+
+    // 실제 API 호출
+    const response = await commentApi.toggleLike(commentId)
+
+    if (response.result) {
+      // 성공 시 로그
+      console.log('댓글 좋아요 API 성공:', response.data)
+
+      // 서버 응답과 클라이언트 상태 동기화 검증
+      const serverLikeCount = response.data.likeCount
+      const serverIsLiked = response.data.isLikedByCurrentUser
+
+      if (serverLikeCount !== newLikeCount || serverIsLiked !== newIsLiked) {
+        console.warn('클라이언트-서버 상태 불일치 감지:', {
+          client: {newLikeCount, newIsLiked},
+          server: {serverLikeCount, serverIsLiked},
+        })
+
+        // 상태 강제 동기화 (부모 컴포넌트에 알림)
+        emit('updated')
+      }
+    } else {
+      ElMessage.error(response.message || '좋아요 처리에 실패했습니다.')
+      // 실패 시 댓글 목록 새로고침으로 상태 복구
+      emit('updated')
+    }
+  } catch
+      (error) {
+    console.error('댓글 좋아요 API 에러:', error)
+    ElMessage.error('네트워크 오류가 발생했습니다. 다시 시도해주세요.')
+    emit('updated')
   }
 }
 

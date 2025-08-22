@@ -41,6 +41,36 @@
                 </el-icon>
                 <span class="like-count">{{ post.likeCount || 0 }}</span>
               </button>
+
+              <!-- 작성자 전용 드롭다운 메뉴 -->
+              <div v-if="isAuthor" class="post-actions">
+                <el-dropdown trigger="click" placement="bottom-end">
+                  <button class="more-button">
+                    <el-icon class="more-icon">
+                      <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M176 511a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0z"/>
+                      </svg>
+                    </el-icon>
+                  </button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item @click="goToEdit">
+                        <el-icon>
+                          <Edit/>
+                        </el-icon>
+                        수정
+                      </el-dropdown-item>
+                      <el-dropdown-item @click="handleDelete" divided>
+                        <el-icon>
+                          <Delete/>
+                        </el-icon>
+                        삭제
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
             </div>
 
             <div class="post-info">
@@ -64,36 +94,6 @@
                 </span>
               </div>
             </div>
-          </div>
-
-          <!-- 작성자 전용 드롭다운 메뉴 -->
-          <div v-if="isAuthor" class="post-actions">
-            <el-dropdown trigger="click" placement="bottom-end">
-              <button class="more-button">
-                <el-icon class="more-icon">
-                  <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M176 511a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0zm280 0a56 56 0 1 0 112 0 56 56 0 1 0-112 0z"/>
-                  </svg>
-                </el-icon>
-              </button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item @click="goToEdit">
-                    <el-icon>
-                      <Edit/>
-                    </el-icon>
-                    수정
-                  </el-dropdown-item>
-                  <el-dropdown-item @click="handleDelete" divided>
-                    <el-icon>
-                      <Delete/>
-                    </el-icon>
-                    삭제
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
           </div>
         </div>
 

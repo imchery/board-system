@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
         ),
         @CompoundIndex(
                 name = "comment_create_idx",
-                def = "{'commentId: 1, 'createAt': -1}" // 댓글별 좋아요 목록 조회 최적화
+                def = "{'commentId': 1, 'createdAt': -1}" // 댓글별 좋아요 목록 조회 최적화
         )
 })
 @Getter

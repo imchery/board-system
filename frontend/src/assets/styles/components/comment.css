@@ -101,22 +101,18 @@
 }
 
 .reply-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border: none;
-    background: transparent;
-    color: #6b7280;
-    font-size: 13px;
-    cursor: pointer;
-    border-radius: 4px;
+    color: #6b7280 !important;
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+    height: auto !important;
+    border: none !important;
+    background: transparent !important;
     transition: all 0.2s ease;
 }
 
 .reply-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
+    background: #f3f4f6 !important;
+    color: #374151 !important;
 }
 
 .reply-summary {
@@ -238,6 +234,7 @@
     background: #d1d5db;
     cursor: not-allowed;
 }
+
 /* ===== 댓글 작성 폼 섹션 ===== */
 .comment-form-section {
     margin-bottom: 24px;
@@ -358,6 +355,7 @@
         flex: 1;
     }
 }
+
 /* ===== 새로운 댓글 폼 스타일 ===== */
 .comment-form {
     margin-bottom: 20px;
@@ -434,13 +432,14 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 8px; /* 간격 축소 */
+    margin-bottom: 12px;
 }
 
 .comment-author {
     display: flex;
     align-items: center;
-    gap: 8px; /* 간격 축소 */
+    gap: 8px;
+    flex: 1; /* 왼쪽 영역이 공간을 차지하도록 */
 }
 
 .comment-avatar {
@@ -465,13 +464,29 @@
     gap: 8px;
 }
 
+/* 오른쪽 섹션 (날짜 + 액션 + 좋아요) */
+.comment-right-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    min-width: 120px; /* 최소 너비 확보 */
+}
+
+/* 첫 번째 줄: 날짜 + 드롭다운 */
+.comment-meta-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .comment-date {
-    font-size: 11px; /* 폰트 축소 */
+    font-size: 11px;
     color: #999;
     white-space: nowrap;
 }
 
-/* 액션 버튼 (오른쪽 상단) */
+/* 수정/삭제 액션 버튼 */
 .comment-actions {
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -494,13 +509,26 @@
     color: #666 !important;
 }
 
-/* 댓글 내용 */
+/* 두 번째 줄: 좋아요 버튼 */
+.comment-like-section {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* 좋아요 버튼 크기 조정 */
+.comment-like-section .like-btn {
+    transform: scale(0.9); /* 약간 작게 */
+    margin: 0; /* 여백 제거 */
+}
+
+/* ===== 댓글 내용 영역 ===== */
 .comment-content {
-    margin-bottom: 8px; /* 간격 축소 */
+    margin-bottom: 8px;
 }
 
 .comment-text {
-    font-size: 13px; /* 폰트 축소 */
+    font-size: 13px;
     line-height: 1.5;
     color: #333;
     white-space: pre-wrap;
@@ -536,20 +564,30 @@
     padding: 4px 12px;
 }
 
-/* 답글 버튼 */
+/* ===== 댓글 하단 (답글 버튼만) ===== */
 .comment-footer {
-    padding-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid #f3f4f6;
 }
 
+/* 답글 버튼 스타일 */
 .reply-btn {
-    color: #666 !important;
-    font-size: 12px !important; /* 폰트 축소 */
-    padding: 2px 4px !important;
+    color: #6b7280 !important;
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+    height: auto !important;
+    border: none !important;
+    background: transparent !important;
+    transition: all 0.2s ease;
 }
 
 .reply-btn:hover {
-    background: #f5f5f5 !important;
-    color: #409eff !important;
+    background: #f3f4f6 !important;
+    color: #374151 !important;
 }
 
 /* 답글 폼 */
@@ -616,6 +654,7 @@
         align-items: flex-start;
     }
 
+
     .comment-meta {
         align-self: flex-end;
     }
@@ -632,15 +671,239 @@
 .comment-list {
     margin-top: 20px;
 }
+
 .comments-header h3 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
     color: #1f2937;
 }
+
 .login-prompt {
     margin-bottom: 20px;
 }
+
 .comment-form-actions {
     margin-bottom: 24px;
+}
+
+/* 기본 버튼 스타일 */
+.like-btn {
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    height: auto;
+    min-height: 28px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+/* 좋아요 개수 텍스트 */
+.like-count {
+    margin-left: 4px;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+/* 하트 아이콘 기본 스타일 */
+.custom-heart {
+    transition: all 0.3s ease;
+    width: 16px;
+    height: 16px;
+}
+
+/* 좋아요 상태일 때 빨간색 하트 */
+.like-btn.el-button--danger {
+    background: #fff1f0 !important;
+    border-color: #ff4d4f !important;
+    color: #ff4d4f !important;
+}
+
+.like-btn.el-button--danger .custom-heart {
+    color: #ff4d4f !important;
+    animation: heartBeat 0.6s ease;
+}
+
+.like-btn.el-button--default .custom-heart {
+    color: #666;
+}
+
+.like-btn:hover .custom-heart {
+    transform: scale(1.1);
+    color: #ff4d4f;
+}
+
+/* 호버 효과 */
+.like-btn:hover {
+    border-color: #ff4d4f;
+    color: #ff4d4f;
+}
+
+.like-btn.active {
+    background: #fff1f0;
+    border-color: #ff4d4f;
+    color: #ff4d4f;
+}
+
+/* 하트 뛰는 애니메이션 */
+@keyframes heartBeat {
+    0% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.2);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    75% {
+        transform: scale(1.25);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 클릭 시 애니메이션 */
+.like-btn:active .custom-heart {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+
+/* 비활성 상태 스타일 */
+.like-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===== 댓글 하단 액션바 스타일 ===== */
+.comment-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
+
+/* 좌측 액션 버튼들 (좋아요 + 답글) */
+.comment-left-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.comment-right-actions {
+    display: flex;
+    align-items: center;
+}
+
+/* 답글 버튼 스타일 */
+.reply-btn {
+    color: #6b7280 !important;
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+    height: auto !important;
+    border: none !important;
+    background: transparent !important;
+    transition: all 0.2s ease;
+}
+
+.reply-btn:hover {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+}
+
+.reply-btn .el-icon {
+    margin-right: 4px;
+    font-size: 14px;
+}
+
+/* 답글 토글 버튼 */
+.replies-toggle {
+    color: #3b82f6 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 6px 12px !important;
+    height: auto !important;
+    border: none !important;
+    background: transparent !important;
+    transition: all 0.2s ease;
+}
+
+.replies-toggle:hover {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+}
+
+.replies-toggle .el-icon {
+    margin-right: 4px;
+    font-size: 14px;
+}
+
+/* ===== 대댓글 스타일 조정 ===== */
+.comment-wrapper.is-reply .comment-content {
+    margin-left: 32px; /* 대댓글은 조금 덜 들여쓰기 */
+}
+
+.comment-wrapper.is-reply .comment-footer {
+    margin-left: 32px;
+}
+
+.comment-wrapper.is-reply .comment-like-section .like-btn {
+    transform: scale(0.85); /* 대댓글에서는 더 작게 */
+}
+
+/* 대댓글에서는 답글 버튼 숨기기 */
+.comment-wrapper.is-reply .reply-btn {
+    display: none;
+}
+
+/* 좋아요 버튼과 다른 버튼들 간의 간격 조정 */
+.comment-left-actions > * {
+    flex-shrink: 0;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .comment-footer {
+        margin-left: 32px;
+    }
+
+    .comment-left-actions {
+        justify-content: flex-start;
+    }
+
+    .comment-right-actions {
+        justify-content: flex-end;
+    }
+
+    .reply-btn,
+    .replies-toggle {
+        font-size: 12px !important;
+        padding: 4px 8px !important;
+    }
+
+    .comment-like-section .like-btn {
+        transform: scale(0.8); /* 모바일에서 더 작게 */
+    }
+
+    .comment-right-section {
+        min-width: 100px;
+        gap: 6px;
+    }
+
+    .comment-meta-line {
+        gap: 4px;
+    }
+
+    .comment-date {
+        font-size: 10px;
+    }
+
+    .comment-content {
+        margin-left: 32px; /* 모바일에서는 들여쓰기 줄이기 */
+    }
 }
