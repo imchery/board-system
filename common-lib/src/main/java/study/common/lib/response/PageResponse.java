@@ -107,4 +107,27 @@ public class PageResponse<T> {
                 .build();
     }
 
+    /**
+     * 기존 PageResponse의 메타데이터를 유지하면서 content만 교체
+     *
+     * @param originalPage 원본 PageResponse (메타데이터 소스)
+     * @param newContent   새로운 컨텐츠 리스트
+     * @param <T>          새로운 컨텐츠 타입
+     * @param <R>          원본 컨텐츠 타입
+     * @return 새로운 컨텐츠가 포함된 PageResponse
+     */
+    public static <T, R> PageResponse<T> withNewContent(PageResponse<R> originalPage, List<T> newContent) {
+        return PageResponse.<T>builder()
+                .content(newContent)
+                .page(originalPage.getPage())
+                .size(originalPage.getSize())
+                .totalElements(originalPage.getTotalElements())
+                .totalPages(originalPage.getTotalPages())
+                .first(originalPage.isFirst())
+                .last(originalPage.isLast())
+                .hasNext(originalPage.isHasNext())
+                .hasPrevious(originalPage.isHasPrevious())
+                .build();
+    }
+
 }

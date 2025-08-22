@@ -14,6 +14,7 @@ import study.content.dto.comment.CommentRequest;
 import study.content.dto.comment.CommentResponse;
 import study.content.dto.comment.CommentUpdateRequest;
 import study.content.entity.Comment;
+import study.content.repository.CommentLikeRepository;
 import study.content.repository.CommentRepository;
 import study.content.repository.PostRepository;
 
@@ -27,6 +28,7 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final CommentLikeRepository commentLikeRepository;
 
     // -----------------------------------------------------------------------------------------------------------------
     //                                                  생성/수정/삭제
@@ -125,21 +127,33 @@ public class CommentService {
      * @param size
      * @return
      */
-    public PageResponse<CommentResponse> getRootComments(String postId, int page, int size, String sort) {
-        log.info("Fetching root comments for post: {} - page: {}, size: {}, sort: {}",
-                postId, page, size, sort);
+    public PageResponse<CommentResponse> getRootComments(
+            String postId, int page, int size, String sort, String currentUsername
+    ) {
+        log.info("Fetching root comments with likes for post: {} - page: {}, size: {}, sort: {}, user: {}",
+                postId, page, size, sort, currentUsername);
 
-        // 게시글 존재 여부 확인
+        // 1. 게시글 존재 여부 확인
         validatePostExists(postId);
 
-        // 댓글 정렬 타입 변환
+        // 2. 댓글 정렬 타입 변환
         CommentSortType sortType = CommentSortType.fromString(sort);
 
-        return BasePagingUtil.createPageResponse(
+        // 3. 기본 댓글 목록 조회
+        PageResponse<CommentResponse> basicComments = BasePagingUtil.createPageResponse(
                 page, size, sortType.toMongoSort(),
                 pageable -> commentRepository.findRootCommentByPostId(postId, pageable),
                 CommentResponse::form
         );
+
+        // 4. 각 댓글에 좋아요 정보 추가
+        List<CommentResponse> commentsWithLikes = basicComments.getContent()
+                .stream()
+                .map(comment -> enrichCommentWithLikeInfo(comment, currentUsername))
+                .toList();
+
+        // 5. PageResponse 재구성
+        return PageResponse.withNewContent(basicComments, commentsWithLikes);
     }
 
     /**
@@ -170,18 +184,30 @@ public class CommentService {
      * @param size
      * @return
      */
-    public PageResponse<CommentResponse> getReplies(String postId, String parentCommentId, int page, int size) {
-        log.info("Fetching replies for post: {} - parentCommentId: {}, page: {}, size: {}",
-                postId, parentCommentId, page, size);
+    public PageResponse<CommentResponse> getReplies(
+            String postId, String parentCommentId, int page, int size, String currentUsername) {
 
-        // 게시글 존재 및 부모 댓글 존재 확인
+        log.info("Fetching replies with likes - postId: {}, parentCommentId: {}, page: {}, size: {}, user: {}",
+                postId, parentCommentId, page, size, currentUsername);
+
+        // 1. 게시글 존재 및 부모 댓글 존재 확인
         validateParentCommentExists(postId, parentCommentId);
 
-        return BasePagingUtil.createUnsortedPageResponse(
+        // 2. 기본 대댓글 목록 조회
+        PageResponse<CommentResponse> basicReplies = BasePagingUtil.createUnsortedPageResponse(
                 page, size,
                 pageable -> commentRepository.findRepliesByParentId(postId, parentCommentId, pageable),
                 CommentResponse::form
         );
+
+        // 3. 각 댓글에 좋아요 정보 추가
+        List<CommentResponse> repliesWithLikes = basicReplies.getContent()
+                .stream()
+                .map(comment -> enrichCommentWithLikeInfo(comment, currentUsername))
+                .toList();
+
+        // 4. PageResponse 재구성
+        return PageResponse.withNewContent(basicReplies, repliesWithLikes);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -320,5 +346,35 @@ public class CommentService {
         if (!comment.isAuthor(author)) {
             throw new BaseException(ErrorCode.COMMENT_ACCESS_DENIED);
         }
+    }
+
+    // -----------------------------------------------------------------------------------------------------------------
+    //                                                헬퍼 메서드
+    // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * 댓글에 좋아요 정보를 추가하는 헬퍼 메서드
+     * 기존 CommentResponse에 좋아요 정보만 추가
+     *
+     * @param comment         기본 댓글 정보
+     * @param currentUsername 현재 사용자명(null 가능)
+     * @return 좋아요 정보가 포함된 댓글 응답
+     */
+    private CommentResponse enrichCommentWithLikeInfo(CommentResponse comment, String currentUsername) {
+
+        // 1. 해당 댓글의 좋아요 개수 조회
+        long likeCount = commentLikeRepository.countByCommentId(comment.getId());
+
+        // 2. 현재 사용자의 좋아요 여부 확인 (로그인한 경우만)
+        boolean isLikedByCurrentUser = false;
+        if (currentUsername != null) {
+            isLikedByCurrentUser = commentLikeRepository.existsByCommentIdAndUsername(
+                    comment.getId(), currentUsername);
+        }
+
+        // 3. 기존 CommentResponse에 좋아요 정보 추가
+        comment.setLikeCount(likeCount);
+        comment.setIsLikedByCurrentUser(isLikedByCurrentUser);
+        return comment;
     }
 }

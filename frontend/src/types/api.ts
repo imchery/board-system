@@ -44,6 +44,9 @@ export interface CommentResponse {
     parentCommentId?: string // null 가능
     isReply?: boolean        // 대댓글 여부
 
+    likeCount?: number       // 좋아요 개수
+    isLikedByCurrentUser?: boolean // 현재 사용자 좋아요 여부
+
     displayTime?: string     // 서버에서 제공하는 상태시간 ("3시간 전")
     canEdit?: boolean        // 수정 가능 여부
     canDelete?: boolean      // 삭제 가능 여부
@@ -64,6 +67,15 @@ export interface CommentStatsResponse {
     totalComments: number
     rootComments: number
     replies: number
+}
+
+/**
+ * 댓글 좋아요 토글 API 응답
+ */
+export interface CommentLikeToggleResponse {
+    id: string
+    likeCount: number
+    isLikedByCurrentUser: boolean
 }
 
 // ======================= 에러 타입 =======================
@@ -180,4 +192,32 @@ export const isPageResponse = <T>(obj: any): obj is PageResponse<T> => {
  */
 export const isValidSortDirection = (sort: string): sort is CommentSortDirection => {
     return sort === 'latest' || sort === 'oldest'
+}
+
+// ======================= API 호출 함수 타입 =======================
+
+/**
+ * 댓글 좋아요 토글 함수 시그니처
+ */
+export type ToggleCommentLikeFunction = (commentId: string) => Promise<ResponseVO<CommentLikeToggleResponse>>
+
+// ======================= 댓글 좋아요 상태 관리 타입 =======================
+
+/**
+ * 댓글 좋아요 UI 상태
+ */
+export interface CommentLikeState {
+    loading: boolean        // 좋아요 토글 중인지
+    likeCount: number       // 현재 좋아요 개수
+    isLiked: boolean        // 현재 좋아요 상태
+}
+
+/**
+ * 댓글 좋아요 액션 결과
+ */
+export interface CommentLikeActionResult {
+    success: boolean        // 성공여부
+    newLikeCount?: number   // 변경된 좋아요 개수
+    newIsLiked?: boolean    // 변경된 좋아요 상태
+    message?: string        // 에러 메시지 또는 성공 메시지
 }

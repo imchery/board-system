@@ -123,10 +123,15 @@ public class CommentController {
     public ResponseVO getRootComments(@PathVariable String postId,
                                       @RequestParam(defaultValue = "0") int page,
                                       @RequestParam(defaultValue = "10") int size,
-                                      @RequestParam(defaultValue = "latest") String sort) {
+                                      @RequestParam(defaultValue = "latest") String sort,
+                                      HttpServletRequest httpRequest
+    ) {
         log.info("최상위 댓글 목록 조회: postId: {}, page: {}, size: {}, sort: {}", postId, page, size, sort);
 
-        PageResponse<CommentResponse> comments = commentService.getRootComments(postId, page, size, sort);
+        String currentUsername = (String) httpRequest.getAttribute("username");
+
+        PageResponse<CommentResponse> comments = commentService.getRootComments(
+                postId, page, size, sort, currentUsername);
         return ResponseVO.ok(comments);
     }
 
@@ -159,10 +164,15 @@ public class CommentController {
     public ResponseVO getReplies(@PathVariable String postId,
                                  @PathVariable String commentId,
                                  @RequestParam(defaultValue = "0") int page,
-                                 @RequestParam(defaultValue = "10") int size) {
+                                 @RequestParam(defaultValue = "10") int size,
+                                 HttpServletRequest httpRequest
+    ) {
         log.info("대댓글 목록 조회: postId: {}, commentId: {}, page: {}, size: {}", postId, commentId, page, size);
 
-        PageResponse<CommentResponse> replies = commentService.getReplies(postId, commentId, page, size);
+        String currentUsername = (String) httpRequest.getAttribute("username");
+
+        PageResponse<CommentResponse> replies = commentService.getReplies(
+                postId, commentId, page, size, currentUsername);
         return ResponseVO.ok(replies);
     }
 

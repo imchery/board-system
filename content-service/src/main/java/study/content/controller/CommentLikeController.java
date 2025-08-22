@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import study.common.lib.response.ResponseVO;
-import study.content.dto.comment.CommentLikeResponse;
+import study.content.dto.comment.CommentResponse;
 import study.content.service.CommentLikeService;
 import study.content.service.CommentService;
 
@@ -48,15 +48,17 @@ public class CommentLikeController {
             // 3. 토글 후 좋아요 개수 조회
             long likeCount = commentLikeService.getCommentLikeCount(commentId);
 
-            // 4. 응답 DTO 생성
-            CommentLikeResponse response = isLiked
-                    ? CommentLikeResponse.liked(commentId, likeCount)
-                    : CommentLikeResponse.unLiked(commentId, likeCount);
+            // 4. 댓글 정보 조회
+            CommentResponse comment = CommentResponse.builder()
+                    .id(commentId)
+                    .likeCount(likeCount)
+                    .isLikedByCurrentUser(isLiked)
+                    .build();
 
             log.info("댓글 좋아요 토글 완료: commentId: {}, username: {}, isLiked: {}, likeCount: {}",
                     commentId, username, isLiked, likeCount);
 
-            return ResponseVO.ok(response);
+            return ResponseVO.ok(comment);
         } catch (Exception e) {
             log.error("댓글 좋아요 토글 실패: commentId: {}, username: {}, error: {}",
                     commentId, username, e.getMessage(), e);
