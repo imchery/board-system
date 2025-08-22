@@ -7,8 +7,6 @@ import study.content.entity.CommentLike;
 
 public interface CommentLikeRepository extends MongoRepository<CommentLike, String> {
 
-    // ======================= 핵심 기능 =======================
-
     /**
      * 특정 사용자가 특정 댓글에 좋아요했는지 확인
      *
@@ -25,8 +23,6 @@ public interface CommentLikeRepository extends MongoRepository<CommentLike, Stri
      * @return 좋아요 개수
      */
     long countByCommentId(String commentId);
-
-    // ======================= 관리용 =======================
 
     /**
      * 특정 사용자가 특정 댓글에 한 좋아요 삭제
@@ -62,5 +58,6 @@ public interface CommentLikeRepository extends MongoRepository<CommentLike, Stri
      * @param username 사용자명
      * @return 삭제된 좋아요 개수
      */
+    // TODO 회원탈퇴 생성 후 추가
     long deleteByUsername(String username);
 }

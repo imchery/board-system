@@ -66,6 +66,14 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     @Query("{'author': ?0, 'status': 'ACTIVE'}")
     Page<Comment> findByAuthor(String author, Pageable pageable);
 
+    /**
+     * 특정 부모 댓글의 활성 대댓글 조회
+     * @param parentCommentId
+     * @return
+     */
+    @Query("{'parentCommentId':  ?0, 'status': 'ACTIVE'}")
+    List<Comment> findActiveRepliesByParentId(String parentCommentId);
+
     // ======================= 통계용 쿼리 조회 =======================
 
     /**

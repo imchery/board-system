@@ -15,12 +15,12 @@ import java.time.LocalDateTime;
 @CompoundIndexes({
         @CompoundIndex(
                 name = "comment_user_unique_idx",
-                def = "{'commentId': 1, 'username': 1}",
+                def = "{'commentId': 1, 'username': 1}", // 한 사용자가 같은 댓글에 중복 좋아요 방지
                 unique = true // 중복 좋아요 방지
         ),
         @CompoundIndex(
                 name = "comment_create_idx",
-                def = "{'commentId': 1, 'createdAt': -1}" // 댓글별 좋아요 목록 조회 최적화
+                def = "{'commentId': 1, 'createdAt': -1}" // 특정 댓글의 좋아요 목록을 최신순으로 조회
         )
 })
 @Getter
@@ -62,30 +62,6 @@ public class CommentLike {
         commentLike.createdAt = LocalDateTime.now();
         return commentLike;
     }
-
-    // ======================= 비즈니스 로직 =======================
-
-    /**
-     * 특정 사용자의 좋아요인지 확인
-     *
-     * @param username 확인할 사용자명
-     * @return 해당 사용자의 좋아요 여부
-     */
-    public boolean isLikedBy(String username) {
-        return this.username != null && this.username.equals(username);
-    }
-
-    /**
-     * 특정 댓글의 좋아요인지 확인
-     *
-     * @param commentId 확인할 댓글 ID
-     * @return 해당 댓글의 좋아요 여부
-     */
-    public boolean isForComment(String commentId) {
-        return this.commentId != null && this.commentId.equals(commentId);
-    }
-
-    // ======================= 디버깅용 toString =======================
 
     @Override
     public String toString() {

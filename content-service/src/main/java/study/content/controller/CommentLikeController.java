@@ -8,9 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import study.common.lib.response.ResponseVO;
-import study.content.dto.comment.CommentResponse;
+import study.content.dto.comment.CommentLikeResponse;
 import study.content.service.CommentLikeService;
-import study.content.service.CommentService;
 
 @Slf4j
 @RestController
@@ -19,7 +18,6 @@ import study.content.service.CommentService;
 public class CommentLikeController {
 
     private final CommentLikeService commentLikeService;
-    private final CommentService commentService;
 
     /**
      * 댓글 좋아요 토글 (생성/삭제)
@@ -49,7 +47,7 @@ public class CommentLikeController {
             long likeCount = commentLikeService.getCommentLikeCount(commentId);
 
             // 4. 댓글 정보 조회
-            CommentResponse comment = CommentResponse.builder()
+            CommentLikeResponse comment = CommentLikeResponse.builder()
                     .id(commentId)
                     .likeCount(likeCount)
                     .isLikedByCurrentUser(isLiked)

@@ -108,11 +108,32 @@ public class CommentService {
         // 2. 권한 검증
         validateAuthor(comment, author);
 
-        // 3. 삭제 및 저장
+        // 3. 부모 댓글인 경우 모든 대댓글 처리
+        if (!comment.isReply()) {
+            List<Comment> replies = commentRepository.findActiveRepliesByParentId(commentId);
+
+            for (Comment reply : replies) {
+                // 각 대댓글의 좋아요 물리 삭제
+                long replyLikesDeleted = commentLikeRepository.deleteByCommentId(reply.getId());
+                reply.delete(); // 대댓글 soft delete
+                log.debug("Reply deleted - id: {}, likes deleted: {}", reply.getId(), replyLikesDeleted);
+            }
+
+            if (!replies.isEmpty()) {
+                commentRepository.saveAll(replies);
+                log.info("Cascade deleted {} replies for comment: {}", replies.size(), commentId);
+            }
+        }
+
+        // 4. 원본 댓글 좋아요 물리 삭제
+        long deletedLikes = commentLikeRepository.deleteByCommentId(commentId);
+
+        // 5. 원본 댓글 soft delete
         comment.delete();
         commentRepository.save(comment);
 
-        log.info("Comment soft deleted - id: {}", commentId);
+        log.info("Comment deletion completed - commentId: {}, total likes deleted: {}",
+                commentId, deletedLikes);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
