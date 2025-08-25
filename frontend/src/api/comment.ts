@@ -193,13 +193,7 @@ export const commentApi = {
     toggleLike: async (commentId: string): Promise<ResponseVO<CommentLikeResponse>> => {
         try {
             console.log('댓글 좋아요 토글 요청:', commentId)
-            const response = await apiClient.post(`/api/comments/${commentId}/like`)
-            console.log('댓글 좋아요 토글 성공:', {
-                commentId,
-                likeCount: response.data?.likeCount,
-                isLiked: response.data?.isLikedByCurrentUser
-            })
-            return response.data
+            return await apiClient.post(`/api/comments/${commentId}/like`)
 
         } catch (error) {
             console.error('댓글 좋아요 토글 실패:', error)
