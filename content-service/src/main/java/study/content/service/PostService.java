@@ -190,20 +190,6 @@ public class PostService {
     }
 
     /**
-     * 게시글 좋아요 여부 확인
-     * 상세화면용
-     * @param postId
-     * @param username
-     * @return
-     */
-    public boolean getLikeStatus(String postId, String username) {
-        log.info("게시글 좋아요 여부 확인: {} by user: {}", postId, username);
-
-        Post post = findActivePostById(postId);
-        return post.isLikeBy(username);
-    }
-
-    /**
      * 작성자별 게시글 조회
      *
      * @param author

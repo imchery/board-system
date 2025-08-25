@@ -123,7 +123,7 @@ public class CommentController {
     public ResponseVO getRootComments(@PathVariable String postId,
                                       @RequestParam(defaultValue = "0") int page,
                                       @RequestParam(defaultValue = "10") int size,
-                                      @RequestParam(defaultValue = "latest") String sort,
+                                      @RequestParam(defaultValue = "LATEST") String sort,
                                       HttpServletRequest httpRequest
     ) {
         log.info("최상위 댓글 목록 조회: postId: {}, page: {}, size: {}, sort: {}", postId, page, size, sort);
@@ -192,7 +192,7 @@ public class CommentController {
     public ResponseVO getCommentsByAuthor(@PathVariable String author,
                                           @RequestParam(defaultValue = "0") int page,
                                           @RequestParam(defaultValue = "10") int size,
-                                          @RequestParam(defaultValue = "latest") String sort) {
+                                          @RequestParam(defaultValue = "LATEST") String sort) {
         log.info("작성자별 댓글 조회: author: {}, page: {}, size: {}, sort: {}", author, page, size, sort);
 
         PageResponse<CommentResponse> comments = commentService.getCommentsByAuthor(author, page, size, sort);

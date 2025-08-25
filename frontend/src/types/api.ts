@@ -33,26 +33,6 @@ export interface PostResponse {
     isLikedByCurrentUser?: boolean
 }
 
-/**
- * 페이징 요청 파라미터
- */
-export interface PagingParams {
-    page?: number
-    size?: number
-    sort?: CommentSortDirection
-}
-
-/**
- * 검색 파라미터
- */
-export interface SearchParams extends PagingParams {
-    keyword?: string
-    category?: string
-    author?: string
-    startDate?: string
-    endDate?: string
-}
-
 // ======================= 댓글 타입 =======================
 export interface CommentResponse {
     id: string
@@ -110,22 +90,6 @@ export interface LoginResponse {
     message: string
 }
 
-// ======================= 정렬 관련 타입 =======================
-
-/**
- * 댓글 정렬 방향
- */
-export type CommentSortDirection = 'latest' | 'oldest'
-
-/**
- * 정렬 옵션 인터페이스 (UI 컴포넌트에서 사용)
- */
-export interface SortOption {
-    value: CommentSortDirection
-    label: string
-    description?: string // 추가 설명
-}
-
 // ======================= API 응답 헬퍼 타입 =======================
 
 /**
@@ -175,14 +139,6 @@ export const isPageResponse = <T>(obj: any): obj is PageResponse<T> => {
         typeof obj.size === 'number' &&
         typeof obj.totalElements === 'number' &&
         typeof obj.totalPages === 'number'
-}
-
-/**
- * 정렬 방향 검증
- * @param sort
- */
-export const isValidSortDirection = (sort: string): sort is CommentSortDirection => {
-    return sort === 'latest' || sort === 'oldest'
 }
 
 // ======================= 댓글 좋아요 상태 관리 타입 =======================

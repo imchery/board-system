@@ -30,7 +30,7 @@ apiClient.interceptors.request.use(
 // 응답 인터셉터 (에러 처리)
 apiClient.interceptors.response.use(
     (response) => {
-        return response.data // 백엔드 ResponseVO에서 data 부분만 추출
+        return response.data // 백엔드 ResponseVO 에서 data 부분만 추출
     },
     (error) => {
         console.error('API 에러:', error)

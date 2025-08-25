@@ -150,6 +150,7 @@ import {useAuthStore} from '@/stores/auth'
 import type {PostResponse} from '@/types/api'
 import CommentList from "@/components/comment/CommentList.vue";
 import {handleApiError, handlePostApiError} from "@/utils/errorHandler.ts";
+import {formatDate} from "@/utils/dateFormat.ts";
 
 // Props
 interface Props {
@@ -277,24 +278,6 @@ const goToEdit = () => {
 
 const goToCreate = () => {
   router.push('/posts/create')
-}
-
-// 날짜 포맷팅
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-  if (days === 0) return '오늘'
-  if (days === 1) return '어제'
-  if (days < 7) return `${days}일 전`
-
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
 }
 
 // 컴포넌트 마운트 시 데이터 로드

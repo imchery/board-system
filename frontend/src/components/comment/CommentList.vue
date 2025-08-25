@@ -26,8 +26,8 @@
       <h3>댓글 {{ totalComments }}개</h3>
       <div class="sort-options">
         <el-radio-group v-model="sortBy" size="small" @change="handleSortChange">
-          <el-radio-button value="latest">최신순</el-radio-button>
-          <el-radio-button value="oldest">오래된순</el-radio-button>
+          <el-radio-button value="LATEST">최신순</el-radio-button>
+          <el-radio-button value="OLDEST">오래된순</el-radio-button>
         </el-radio-group>
       </div>
     </div>
@@ -88,7 +88,7 @@ import {CommentResponse} from "@/types/api.ts";
 import {onMounted, ref} from 'vue'
 import CommentForm from "@/components/comment/CommentForm.vue";
 import CommentItem from "@/components/comment/CommentItem.vue";
-import {commentApi, parseCommentSortType} from "@/api/comment.ts";
+import {commentApi, CommentSortType} from "@/api/comment.ts";
 import {ElMessage} from "element-plus";
 import {handleCommentApiError} from "@/utils/errorHandler.ts";
 
@@ -109,7 +109,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const totalComments = ref(0)
 const totalPages = ref(0)
-const sortBy = ref<string>('latest')
+const sortBy = ref<CommentSortType>('LATEST')
 
 /**
  * 댓글 목록 조회
@@ -118,13 +118,11 @@ const loadComments = async () => {
   try {
     loading.value = true
 
-    const sortType = parseCommentSortType(sortBy.value)
-
     const response = await commentApi.getRootComments(
         props.postId,
         currentPage.value - 1, // 백엔드는 0부터 시작
         pageSize.value,
-        sortType
+        sortBy.value
     )
 
     if (response.result) {
@@ -145,16 +143,35 @@ const loadComments = async () => {
 /**
  * 댓글 작성 성공 처리
  */
-const handleCommentSuccess = () => {
-  // 첫 페이지로 이동하여 새 댓글 확인
-  currentPage.value = 1
-
-  // 최신순으로 정렬
-  if (sortBy.value !== 'latest') {
-    sortBy.value = 'latest'
+const handleCommentSuccess = (newComment: CommentResponse) => {
+  // 1. 최신순이 아니면 최신순으로 변경하고 새로고침
+  if (sortBy.value !== 'LATEST') {
+    sortBy.value = 'LATEST'
+    currentPage.value = 1
+    loadComments()
+    return
   }
 
-  loadComments()
+  // 2. 최신순인데 첫 페이지가 아니면 첫 페이지로 이동
+  if (currentPage.value !== 1) {
+    currentPage.value = 1
+    loadComments()
+    return
+  }
+
+  // 최신순 + 첫페이지, 새 댓글을 맨 앞에 추가
+  comments.value.unshift(newComment)
+
+  // 총 댓글 수 증가
+  totalComments.value += 1
+
+  // 페이지 크기 초과하면 마지막 댓글 제거
+  if (comments.value.length > pageSize.value) {
+    comments.value.pop()
+  }
+
+  // 총 페이지 수 재계산
+  totalPages.value = Math.ceil(totalComments.value / pageSize.value)
 }
 
 /**

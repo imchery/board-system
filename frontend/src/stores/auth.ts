@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
     // ===== Actions =====
 
     /**
-     * localStorage에서 토큰 확인하고 인증 상태 복원
+     * localStorage 에서 토큰 확인하고 인증 상태 복원
      */
     const initializeAuth = async () => {
         console.log('인증 상태 초기화 시작')

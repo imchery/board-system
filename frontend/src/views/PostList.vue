@@ -106,7 +106,7 @@
         <!--    작성일 컬럼    -->
         <el-table-column prop="createdAt" label="작성일" width="160" align="center">
           <template #default="scope">
-            <span class="post-date">{{ formatDate(scope.row.createdAt) }}</span>
+            <span class="post-date">{{ scope.row.createdAt ? formatDate(scope.row.createdAt) : '날짜 없음' }}</span>
           </template>
         </el-table-column>
       </el-table>

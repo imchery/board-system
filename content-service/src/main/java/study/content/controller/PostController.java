@@ -229,30 +229,4 @@ public class PostController {
         }
     }
 
-    /**
-     * 게시글 좋아요 여부 확인
-     *
-     * @param postId
-     * @param httpRequest
-     * @return
-     */
-    @GetMapping("/{postId}/like-status")
-    public ResponseVO getLikeStatus(@PathVariable String postId,
-                                    HttpServletRequest httpRequest) {
-        String username = (String) httpRequest.getAttribute("username");
-        if (username == null) {
-            return ResponseVO.authFail();
-        }
-
-        log.info("게시글 좋아요 상태 확인: postId: {}, username: {}", postId, username);
-
-        try {
-            boolean isLiked = postService.getLikeStatus(postId, username);
-            return ResponseVO.ok(isLiked);
-        } catch (RuntimeException e) {
-            return ResponseVO.error("좋아요 상태 확인에 실패했습니다.");
-        }
-
-    }
-
 }

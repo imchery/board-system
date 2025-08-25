@@ -77,12 +77,12 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     // ======================= 통계용 쿼리 조회 =======================
 
     /**
-     * 특정 게시글의 댓글 개수 (대댓글 포함)
+     * 특정 게시글의 댓글 개수 (대댓글 미포함)
      *
      * @param postId
      * @return
      */
-    @Query(value = "{'postId': ?0, 'status': 'ACTIVE'}", count = true)
+    @Query(value = "{'postId': ?0, 'status': 'ACTIVE', 'parentCommentId': null}", count = true)
     long countByPostId(String postId);
 
     /**

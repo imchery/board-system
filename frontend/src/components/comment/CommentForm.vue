@@ -18,7 +18,6 @@
       <el-input
           v-model="commentText"
           type="textarea"
-          :row="isReply ? 2 : 3"
           :placeholder="isReply ? '답글을 입력하세요...' : '댓글을 입력하세요...'"
           maxlength="1000"
           show-word-limit

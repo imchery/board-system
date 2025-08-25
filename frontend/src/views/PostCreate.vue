@@ -110,7 +110,7 @@
         <div class="preview-meta">
           <el-tag type="primary">{{ postForm.category || '미분류' }}</el-tag>
           <span class="preview-author">{{ authStore.currentUser }}</span>
-          <span class="preview-date">{{ formatDate(new Date()) }}</span>
+          <span class="preview-date">{{ formatDateTime(new Date()) }}</span>
         </div>
 
         <h1 class="preview-title">{{ postForm.title || '제목 없음' }}</h1>
@@ -139,7 +139,7 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 import {Ckeditor} from "@ckeditor/ckeditor5-vue"
 import {usePageLeaveGuard} from "@/composables/usePageLeaveGuard.ts";
 import {getTextLength} from "@/utils/textHelper.ts";
-import {formatDate} from "@/utils/dateFormat.ts";
+import {formatDateTime} from "@/utils/dateFormat.ts";
 import {handlePostApiError} from "@/utils/errorHandler.ts";
 
 // CKEditor 설정

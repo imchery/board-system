@@ -2,8 +2,14 @@
  * 날짜를 사용자 친화적인 형식으로 포맷팅
  * @param date
  */
-export const formatDate = (date: Date | string): string => {
+export const formatDate = (date: Date | string | null | undefined): string => {
     try {
+
+        // null, undefined 체크 추가
+        if (!date) {
+            return '날짜 없음'
+        }
+
         const dateObj = typeof date === 'string' ? new Date(date) : date
 
         // 유효하지 않은 날짜 체크

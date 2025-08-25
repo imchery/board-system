@@ -45,17 +45,14 @@ apiClient.interceptors.response.use(
     }
 )
 
-/**
+/**s
  * 댓글 정렬 타입
  */
-export enum CommentSortType {
-    LATEST = 'latest',
-    OLDEST = 'oldest'
-}
+export type CommentSortType = 'LATEST' | 'OLDEST'
 
 /**
  * 댓글 관련 API 함수들
- * - 기본 값은 'latest' (최신순)
+ * - 기본 값은 'LATEST' (최신순)
  */
 export const commentApi = {
 
@@ -100,13 +97,13 @@ export const commentApi = {
      * @param postId 게시글 ID
      * @param page 페이지 번호 (0부터 시작)
      * @param size 페이지 크기 (기본 10개)
-     * @param sort 정렬 방식 (latest: 최신순, oldest: 오래된순)
+     * @param sort 정렬 방식 (LATEST: 최신순, OLDEST: 오래된순)
      */
     getRootComments: async (
         postId: string,
         page = 0,
         size = 10,
-        sort: CommentSortType = CommentSortType.LATEST
+        sort: CommentSortType = 'LATEST'
     ): Promise<ResponseVO<PageResponse<CommentResponse>>> => {
         const params = {page, size, sort}
         return await apiClient.get(`/api/posts/${postId}/comments`, {params})
@@ -153,7 +150,7 @@ export const commentApi = {
         author: string,
         page = 0,
         size = 10,
-        sort: CommentSortType = CommentSortType.LATEST
+        sort: CommentSortType = 'LATEST'
     ): Promise<ResponseVO<PageResponse<CommentResponse>>> => {
         const params = {page, size, sort}
         return await apiClient.get(`/api/comments/author/${author}`, {params})
@@ -210,47 +207,3 @@ export const commentApi = {
         }
     }
 }
-
-// ======================= 유틸리티 함수들 =======================
-
-/**
- * 정렬 타입을 한글 텍스트로 변환
- * UI 에서 사용자에게 보여줄 때 활용
- * @param sort
- */
-export const getSortDisplayName = (sort: CommentSortType): string => {
-    switch (sort) {
-        case CommentSortType.LATEST:
-            return '최신순'
-        case CommentSortType.OLDEST:
-            return '오래된순'
-        default:
-            return '최신순'
-    }
-}
-
-/**
- * 문자열을 CommentSortType 으로 안전하게 변환
- * @param sortString
- */
-export const parseCommentSortType = (sortString: string): CommentSortType => {
-    const normalizedSort = sortString?.toLowerCase()
-
-    switch (normalizedSort) {
-        case 'latest':
-            return CommentSortType.LATEST
-        case 'oldest':
-            return CommentSortType.OLDEST
-        default:
-            console.warn(`Unknown sort type: ${sortString}, defaulting to LATEST`)
-            return CommentSortType.LATEST
-    }
-}
-
-/**
- * 정렬 옵션 목록 (UI 컴포넌트에서 사용)
- */
-export const COMMENT_SORT_OPTIONS = [
-    {value: CommentSortType.LATEST, label: '최신순'},
-    {value: CommentSortType.OLDEST, label: '오래된순'}
-] as const // 불변보장

@@ -40,7 +40,7 @@ public enum CommentSortType {
      * 문자열을 CommentSortType 으로 변환
      * 대소문자 무관하게 처리하고, 잘못된 값이면 기본값 반환
      *
-     * @param sortString 정렬 문자열(latest, oldest)
+     * @param sortString 정렬 문자열(LATEST, OLDEST)
      * @return CommentSortType
      */
     public static CommentSortType fromString(String sortString) {
@@ -49,7 +49,7 @@ public enum CommentSortType {
             return LATEST; // 기본값
         }
         try {
-            return CommentSortType.valueOf(sortString.toUpperCase());
+            return CommentSortType.valueOf(sortString);
         } catch (IllegalArgumentException e) {
             return LATEST;
         }
