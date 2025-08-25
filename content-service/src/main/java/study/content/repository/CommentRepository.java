@@ -67,7 +67,7 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     Page<Comment> findByAuthor(String author, Pageable pageable);
 
     /**
-     * 특정 부모 댓글의 활성 대댓글 조회
+     * 특정 부모 댓글의 활성 대댓글 조회 - 삭제용
      * @param parentCommentId
      * @return
      */

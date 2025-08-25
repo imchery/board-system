@@ -54,7 +54,7 @@ public class Comment {
     private CommentStatus status;
 
     /**
-     * 대댓글을 위한 부모 댓글 ID (향후 확장용)
+     * 대댓글을 위한 부모 댓글 ID
      */
     private String parentCommentId;
 
@@ -99,24 +99,6 @@ public class Comment {
     }
 
     /**
-     * 활성화 상태 확인
-     *
-     * @return
-     */
-    public boolean isActive() {
-        return this.status == CommentStatus.ACTIVE;
-    }
-
-    /**
-     * 삭제 상태 확인
-     *
-     * @return
-     */
-    public boolean isDeleted() {
-        return this.status == CommentStatus.DELETED;
-    }
-
-    /**
      * 대댓글인지 확인
      *
      * @return
@@ -124,15 +106,5 @@ public class Comment {
     public Boolean isReply() {
         return this.parentCommentId != null;
     }
-
-    /**
-     * 최상위 댓글인지 확인
-     *
-     * @return
-     */
-    public boolean isRootComment() {
-        return this.parentCommentId == null;
-    }
-
 
 }

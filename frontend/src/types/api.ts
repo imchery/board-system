@@ -190,12 +190,12 @@ export const isValidSortDirection = (sort: string): sort is CommentSortDirection
 /**
  * 댓글 좋아요 토글 함수 시그니처
  */
-export type ToggleCommentLikeFunction = (commentId: string) => Promise<ResponseVO<CommentLikeToggleResponse>>
+export type ToggleCommentLikeFunction = (commentId: string) => Promise<ResponseVO<CommentLikeResponse>>
 
 /**
  * 댓글 좋아요 토글 API 응답
  */
-export interface CommentLikeToggleResponse {
+export interface CommentLikeResponse {
     id: string
     likeCount: number
     isLikedByCurrentUser: boolean

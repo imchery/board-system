@@ -1,7 +1,7 @@
 // 백엔드 API 기본 설정
 import axios from "axios";
 import {
-    CommentLikeToggleResponse,
+    CommentLikeResponse,
     CommentRequest,
     CommentResponse,
     CommentUpdateRequest,
@@ -193,20 +193,20 @@ export const commentApi = {
      * 댓글 좋아요 토글
      * @param commentId 댓글 ID
      */
-    toggleLike: async (commentId: string): Promise<ResponseVO<CommentLikeToggleResponse>> => {
+    toggleLike: async (commentId: string): Promise<ResponseVO<CommentLikeResponse>> => {
         try {
             console.log('댓글 좋아요 토글 요청:', commentId)
             const response = await apiClient.post(`/api/comments/${commentId}/like`)
             console.log('댓글 좋아요 토글 성공:', {
                 commentId,
                 likeCount: response.data?.likeCount,
-                isLiked: response.data?.likeCount
+                isLiked: response.data?.isLikedByCurrentUser
             })
+            return response.data
 
-            return response
-        }catch (error) {
+        } catch (error) {
             console.error('댓글 좋아요 토글 실패:', error)
-            throw  error
+            throw error
         }
     }
 }
