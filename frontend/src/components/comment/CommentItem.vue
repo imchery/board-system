@@ -95,14 +95,13 @@
             :post-id="comment.postId"
             :parent-comment-id="comment.id"
             :is-reply="true"
-            :comment="comment"
             @success="handleReplySuccess"
             @cancel="hideReplyForm"
         />
       </div>
     </div>
 
-    <!-- 댓글 하단 액션바 (답글 버튼들은 기존 위치 유지) -->
+    <!-- 댓글 하단 액션바 -->
     <div v-if="!isEditing" class="comment-footer">
       <div class="comment-left-actions">
         <!-- 답글 버튼 (최상위 댓글만) -->
@@ -154,18 +153,6 @@
           @updated="$emit('updated')"
           @deleted="$emit('deleted')"
       />
-
-      <!-- 답글 더보기 -->
-      <div v-if="hasMoreReplies" class="load-more-section">
-        <el-button
-            size="small"
-            text
-            @click="loadMoreReplies"
-            :loading="repliesLoading"
-        >
-          더 많은 답글 보기
-        </el-button>
-      </div>
     </div>
   </div>
 </template>
@@ -175,12 +162,12 @@ import {CommentResponse, CommentUpdateRequest} from "@/types/api.ts";
 import {useAuthStore} from "@/stores/auth.ts";
 import {computed, onMounted, ref} from "vue";
 import {ArrowDown, ArrowUp, ChatLineRound, Delete, Edit, MoreFilled, User} from "@element-plus/icons-vue";
-import CommentForm from "@/components/comment/CommentForm.vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {commentApi} from "@/api/comment.ts";
 import {formatDate} from "@/utils/dateFormat.ts";
 import {handleCommentApiError} from "@/utils/errorHandler.ts";
 import CommentLikeButton from "@/components/comment/CommentLikeButton.vue";
+import CommentForm from "@/components/comment/CommentForm.vue";
 
 // Props
 interface Props {
@@ -206,10 +193,8 @@ const showReplies = ref(false)
 const editText = ref('')
 const editLoading = ref(false)
 
-const replyPreview = ref<CommentResponse[]>([])
 const replies = ref<CommentResponse[]>([])
 const replyCount = ref(0)
-const repliesLoading = ref(false)
 const hasMoreReplies = ref(false)
 const currentReplyPage = ref(0)
 
@@ -313,48 +298,22 @@ const handleDelete = async () => {
 // 답글 성공 처리
 const handleReplySuccess = () => {
   hideReplyForm()
-  loadReplyPreview()
+  loadReplies()
   emit('updated')
 }
 
-// 답글 토글 (수정된 부분)
+// 답글 토글
 const toggleReplies = () => {
-  console.log('toggleReplies 호출됨', {
-    showReplies: showReplies.value,
-    repliesLength: replies.value.length
-  })
-
   showReplies.value = !showReplies.value
 
   if (showReplies.value && replies.value.length === 0) {
-    console.log('전체 답글 로드 시작')
     loadReplies()
-  }
-}
-
-// 답글 미리보기 로드
-const loadReplyPreview = async () => {
-  if (props.comment.isReply) return
-
-  try {
-    console.log('답글 미리보기 로드:', props.comment.id)
-    const response = await commentApi.getReplyPreview(props.comment.postId, props.comment.id)
-
-    if (response.result) {
-      replyPreview.value = response.data
-      replyCount.value = response.data.length
-      console.log('답글 미리보기 로드 성공:', response.data)
-    }
-  } catch (error) {
-    handleCommentApiError(error, 'load')
   }
 }
 
 // 전체 답글 로드
 const loadReplies = async () => {
   try {
-    console.log('전체 답글 로드 시작')
-    repliesLoading.value = true
     currentReplyPage.value = 0
 
     const response = await commentApi.getReplies(props.comment.postId, props.comment.id, currentReplyPage.value)
@@ -362,31 +321,10 @@ const loadReplies = async () => {
     if (response.result) {
       replies.value = response.data.content
       hasMoreReplies.value = !response.data.last
-      console.log('전체 답글 로드 성공:', response.data.content)
+      replyCount.value = response.data.totalElements
     }
   } catch (error) {
     handleCommentApiError(error, 'load')
-  } finally {
-    repliesLoading.value = false
-  }
-}
-
-// 답글 더보기
-const loadMoreReplies = async () => {
-  try {
-    repliesLoading.value = true
-    currentReplyPage.value++
-
-    const response = await commentApi.getReplies(props.comment.postId, props.comment.id, currentReplyPage.value)
-
-    if (response.result) {
-      replies.value.push(...response.data.content)
-      hasMoreReplies.value = !response.data.last
-    }
-  } catch (error) {
-    handleCommentApiError(error, 'load')
-  } finally {
-    repliesLoading.value = false
   }
 }
 
@@ -398,15 +336,9 @@ const loadMoreReplies = async () => {
  */
 const handleLikeToggled = async (commentId: string, newLikeCount: number, newIsLiked: boolean) => {
   try {
-    console.log('댓글 좋아요 토글 처리:', {commentId, newLikeCount, newIsLiked})
-
-    // 실제 API 호출
     const response = await commentApi.toggleLike(commentId)
 
     if (response.result) {
-      // 성공 시 로그
-      console.log('댓글 좋아요 API 성공:', response.data)
-
       // 서버 응답과 클라이언트 상태 동기화 검증
       const serverLikeCount = response.data.likeCount
       const serverIsLiked = response.data.isLikedByCurrentUser
@@ -436,7 +368,7 @@ const handleLikeToggled = async (commentId: string, newLikeCount: number, newIsL
 // 컴포넌트 마운트 시 답글 미리보기 로드
 onMounted(() => {
   if (!props.comment.isReply) {
-    loadReplyPreview()
+    loadReplies()
   }
 })
 </script>

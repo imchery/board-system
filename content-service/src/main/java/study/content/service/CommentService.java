@@ -178,25 +178,6 @@ public class CommentService {
     }
 
     /**
-     * 특정 댓글의 대댓글 미리보기 (처음 3개만 보여주기)
-     *
-     * @param postId
-     * @param parentCommentId
-     * @return
-     */
-    public List<CommentResponse> getReplyPreview(String postId, String parentCommentId) {
-        log.info("Fetching reply preview for post: {} - parentCommentId: {}", postId, parentCommentId);
-
-        // 게시글 존재 및 부모 댓글 존재 확인
-        validateParentCommentExists(postId, parentCommentId);
-
-        List<Comment> replies = commentRepository.findTop3RepliesByPostIdAndParentId(postId, parentCommentId);
-        return replies.stream()
-                .map(CommentResponse::form)
-                .toList();
-    }
-
-    /**
      * 특정 댓글의 대댓글 목록 조회 (페이징)
      *
      * @param postId

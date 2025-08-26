@@ -32,17 +32,6 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     @Query("{'postId': ?0, 'parentCommentId': ?1, 'status': 'ACTIVE'}")
     Page<Comment> findRepliesByParentId(String postId, String parentCommentId, Pageable pageable);
 
-    /**
-     * 특정 게시글의 특정 댓글에 달린 대댓글들 조회(전체 or 미리보기용)
-     * 처음 몇 개만 보여주고 '답글 더 보기' 구현할 때 사용
-     *
-     * @param postId
-     * @param parentCommentId
-     * @return
-     */
-    @Query("{'postId': ?0, 'parentCommentId': ?1, 'status': 'ACTIVE'}")
-    List<Comment> findTop3RepliesByPostIdAndParentId(String postId, String parentCommentId);
-
     // ======================= 댓글 개별 조회 =======================
 
     /**

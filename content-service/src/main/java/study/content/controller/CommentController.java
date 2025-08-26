@@ -136,22 +136,6 @@ public class CommentController {
     }
 
     /**
-     * 특정 댓글의 대댓글 미리보기 (처음 3개)
-     *
-     * @param postId
-     * @param commentId
-     * @return
-     */
-    @GetMapping("/posts/{postId}/comments/{commentId}/preview")
-    public ResponseVO getReplyPreview(@PathVariable String postId,
-                                      @PathVariable String commentId) {
-        log.info("대댓글 미리보기 조회: postId: {}, commentId: {}", postId, commentId);
-
-        List<CommentResponse> replies = commentService.getReplyPreview(postId, commentId);
-        return ResponseVO.ok(replies);
-    }
-
-    /**
      * 특정 댓글의 대댓글 목록 조회 (페이징)
      *
      * @param postId

@@ -4,7 +4,6 @@
  */
 export const formatDate = (date: Date | string | null | undefined): string => {
     try {
-
         // null, undefined 체크 추가
         if (!date) {
             return '날짜 없음'

@@ -110,19 +110,6 @@ export const commentApi = {
     },
 
     /**
-     * 특정 댓글의 대댓글 미리보기 (처음 3개)
-     * 정렬 없음 - 최신순
-     * @param postId
-     * @param commentId
-     */
-    getReplyPreview: async (
-        postId: string,
-        commentId: string
-    ): Promise<ResponseVO<CommentResponse[]>> => {
-        return await apiClient.get(`/api/posts/${postId}/comments/${commentId}/preview`)
-    },
-
-    /**
      * 특정 댓글의 대댓글 목록 조회 (정렬 지원)
      * @param postId 게시글 ID
      * @param commentId 부모 댓글 ID
@@ -192,9 +179,7 @@ export const commentApi = {
      */
     toggleLike: async (commentId: string): Promise<ResponseVO<CommentLikeResponse>> => {
         try {
-            console.log('댓글 좋아요 토글 요청:', commentId)
             return await apiClient.post(`/api/comments/${commentId}/like`)
-
         } catch (error) {
             console.error('댓글 좋아요 토글 실패:', error)
             throw error

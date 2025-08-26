@@ -159,6 +159,7 @@ const handleCommentSuccess = (newComment: CommentResponse) => {
     return
   }
 
+  /* 낙관적 업데이트 */
   // 최신순 + 첫페이지, 새 댓글을 맨 앞에 추가
   comments.value.unshift(newComment)
 
