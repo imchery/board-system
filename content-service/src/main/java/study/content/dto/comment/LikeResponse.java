@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CommentLikeResponse {
+public class LikeResponse {
 
     /**
      * 댓글 ID
