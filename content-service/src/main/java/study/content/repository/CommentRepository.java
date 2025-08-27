@@ -94,4 +94,13 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
      */
     @Query("{'postId': ?0}")
     List<Comment> findAllCommentsByPostIdIncludingDeleted(String postId);
+
+    /**
+     * 모든 댓글 조회 (활성상태 및 답글 포함)
+     * @param postId
+     * @return
+     */
+    @Query("{'postId': ?0, 'status': 'ACTIVE'}")
+    List<Comment> findAllActiveCommentsByPostId(String postId);
+
 }

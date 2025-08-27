@@ -11,8 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import study.common.lib.response.PageResponse;
 import study.content.dto.post.PostRequest;
 import study.content.dto.post.PostResponse;
+import study.content.entity.Comment;
 import study.content.entity.Post;
+import study.content.repository.CommentLikeRepository;
 import study.content.repository.CommentRepository;
+import study.content.repository.PostLikeRepository;
 import study.content.repository.PostRepository;
 
 import java.util.List;
@@ -26,6 +29,8 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
+    private final PostLikeRepository postLikeRepository;
 
     /**
      * 게시글 생성
@@ -116,20 +121,46 @@ public class PostService {
 
     /**
      * 게시글 삭제 (Soft Delete)
+     * - 순서
+     * 댓글 좋아요 delete -> 댓글 전체 soft delete -> 게시글 좋아요 delete -> 게시글 soft delete
      *
      * @param id
      * @param author
      */
     @Transactional
     public void deletePost(String id, String author) {
-        log.info("Deleting post id: {} by author: {}", id, author);
+        log.info("Deleting post with all related data - id: {} by author: {}", id, author);
 
+        // 1. 게시글 존재 및 권한 확인
         Post post = findActivePostById(id);
         validateAuthor(post, author);
 
+        // 2. 모든 댓글 조회 (부모댓글 + 대댓글)
+        List<Comment> allComments = commentRepository.findAllActiveCommentsByPostId(id);
+        log.info("Found {} comments to delete for post: {}", allComments.size(), id);
+
+        // 3. 각 댓글의 좋아요 물리 삭제
+        long totalCommentLikesDeleted = 0;
+        for (Comment comment : allComments) {
+            long likesDeleted = commentLikeRepository.deleteByCommentId(comment.getId());
+            totalCommentLikesDeleted += likesDeleted;
+            comment.delete();
+        }
+
+        // 4. 모든 댓글 일괄 저장 (soft delete 반영)
+        if (!allComments.isEmpty()) {
+            commentRepository.saveAll(allComments);
+        }
+
+        // 5. 게시글 좋아요 물리 삭제
+        long postLikesDeleted = postLikeRepository.deleteByPostId(id);
+
+        // 6. 게시글 soft delete
         post.delete();
         postRepository.save(post);
-        log.info("Post soft deleted - id: {}", id);
+
+        log.info("Post deletion completed - postId: {}, comments: {}, commentLikes: {}, postLikes: {}",
+                id, allComments.size(), totalCommentLikesDeleted, postLikesDeleted);
     }
 
     /**
