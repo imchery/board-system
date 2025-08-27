@@ -29,7 +29,7 @@
               <h1 class="post-title">{{ post.title }}</h1>
               <button
                   class="like-button"
-                  :class="{ active: isLiked }"
+                  :class="{ active: currentUserLiked }"
                   @click="toggleLike"
                   :disabled="likeLoading"
               >
@@ -39,7 +39,7 @@
                         d="M923 283.6c-13.4-31.1-32.6-58.9-56.9-82.8-24.3-23.9-52.8-42.6-84.9-55.5C749.3 131.6 714.7 124 679 124c-39.1 0-77.5 9.7-114.3 28.9-33.8 17.6-63.3 42.8-87.7 74.9-24.4-32.1-53.9-57.3-87.7-74.9C352.5 133.7 314.1 124 275 124c-35.7 0-70.3 7.6-102.2 21.3-32.1 12.9-60.6 31.6-84.9 55.5-24.3 23.9-43.5 51.7-56.9 82.8-13.9 32.3-21 66.6-21 101.9 0 33.3 6.8 68 20.3 103.3 11.3 29.5 27.5 60.1 48.2 91 32.8 48.9 77.9 99.9 133.9 151.6 92.8 85.7 184.7 144.9 188.6 147.3l23.7 15.2c10.5 6.7 24 6.7 34.5 0l23.7-15.2c3.9-2.5 95.7-61.6 188.6-147.3 56-51.7 101.1-102.7 133.9-151.6 20.7-30.9 37-61.5 48.2-91 13.5-35.3 20.3-70 20.3-103.3.1-35.3-7-69.6-20.9-101.9z"/>
                   </svg>
                 </el-icon>
-                <span class="like-count">{{ post.likeCount || 0 }}</span>
+                <span class="like-count">{{ likeCount || 0 }}</span>
               </button>
 
               <!-- 작성자 전용 드롭다운 메뉴 -->
@@ -166,9 +166,12 @@ const authStore = useAuthStore()
 // 게시글 관련 반응형 데이터
 const loading = ref<boolean>(true)
 const post = ref<PostResponse | null>(null)
-const isLiked = ref<boolean>(false)
-const likeLoading = ref<boolean>(false)
 const deleteLoading = ref<boolean>(false)
+
+// 좋아요 관련 데이터
+const likeLoading = ref<boolean>(false)
+const likeCount = ref<number>(0)
+const currentUserLiked = ref<boolean>(false)
 
 // 계산된 속성
 const isAuthor = computed(() => {
@@ -184,11 +187,10 @@ const fetchPost = async () => {
 
     if (response.result) {
       post.value = response.data
-      if (response.data.isLikedByCurrentUser !== undefined) {
-        isLiked.value = response.data.isLikedByCurrentUser
-      } else {
-        isLiked.value = false
-      }
+
+      // 좋아요 정보 초기화
+      likeCount.value = response.data.likeCount || 0
+      currentUserLiked.value = response.data.isLikedByCurrentUser || false
     } else {
       ElMessage.error(response.message || '게시글을 불러오는데 실패했습니다')
     }
@@ -212,20 +214,20 @@ const toggleLike = async () => {
     const response = await postApi.toggleLike(props.id)
 
     if (response.result) {
-      post.value = response.data
-      if (response.data.isLikedByCurrentUser !== undefined) {
-        isLiked.value = response.data.isLikedByCurrentUser
-      }
-      console.log(`좋아요 토글 후 상태:`, isLiked.value)
+      const likeData = response.data
+      likeCount.value = likeData.likeCount
+      currentUserLiked.value = likeData.isLikedByCurrentUser
+
+      ElMessage.success({
+        message: likeData.isLikedByCurrentUser ? '좋아요!' : '좋아요 취소',
+        duration: 1500,
+        showClose: false,
+      })
+    } else {
+      ElMessage.error(response.message || '좋아요 처리에 실패했습니다.')
     }
-    ElMessage.success(isLiked.value ? '좋아요!' : '좋아요 취소')
   } catch (error) {
-    handleApiError(error, {
-      customErrorMessages: {
-        500: '좋아요 처리에 실패했습니다'
-      },
-      skipRedirect: true
-    })
+    ElMessage.error('좋아요 처리 중 오류가 발생했습니다. 다시 시도해주세요.')
   } finally {
     likeLoading.value = false
   }

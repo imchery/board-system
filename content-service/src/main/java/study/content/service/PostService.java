@@ -25,7 +25,6 @@ import java.util.function.Function;
 public class PostService {
 
     private final PostRepository postRepository;
-
     private final CommentRepository commentRepository;
 
     /**
@@ -160,33 +159,6 @@ public class PostService {
         return popularPosts.stream()
                 .map(PostResponse::from)
                 .toList();
-    }
-
-    /**
-     * 게시글 좋아요 토글 (좋아요/취소)
-     *
-     * @param postId
-     * @param username
-     * @return
-     */
-    @Transactional
-    public PostResponse toggleLike(String postId, String username) {
-        log.info("게시글 좋아요 토글 요청: {} by user: {}", postId, username);
-
-        Post post = findActivePostById(postId);
-
-        if (post.isLikeBy(username)) {
-            // 이미 좋아요했으면 취소
-            post.removeLike(username);
-            log.info("게시글 좋아요 취소됨: postId: {}, username: {}", postId, username);
-        } else {
-            // 좋아요하지 않았으면 추가
-            post.addLike(username);
-            log.info("게시글 좋아요 추가됨: postId: {}, username: {}", postId, username);
-        }
-
-        Post savedPost = postRepository.save(post);
-        return PostResponse.from(savedPost, username);
     }
 
     /**

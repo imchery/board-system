@@ -63,12 +63,6 @@ export interface CommentUpdateRequest {
     content: string
 }
 
-export interface CommentStatsResponse {
-    totalComments: number
-    rootComments: number
-    replies: number
-}
-
 // ======================= 에러 타입 =======================
 export interface ApiError {
     response?: {
@@ -90,63 +84,7 @@ export interface LoginResponse {
     message: string
 }
 
-// ======================= API 응답 헬퍼 타입 =======================
-
-/**
- * API 호출 결과를 처리하기 위한 유니온 타입
- * 유니온 타입: 이것 또는 저것 타입
- */
-export type ApiResult<T> = {
-    success: true
-    data: T
-} | {
-    success: false
-    error: string
-}
-
-/**
- * 로딩 상태를 포함한 데이터 타입
- */
-export interface DataWithLoading<T> {
-    data: T | null
-    loading: boolean
-    error: string | null
-}
-
-// ======================= 타입 가드 함수들 =======================
-
-/**
- * CommentResponse 타입 가드
- * @param obj
- */
-export const isCommentResponse = (obj: any): obj is CommentResponse => {
-    return obj &&
-        typeof obj.id === 'string' &&
-        typeof obj.postId === 'string' &&
-        typeof obj.content === 'string' &&
-        typeof obj.author === 'string' &&
-        typeof obj.createdAt === 'string'
-}
-
-/**
- * PageResponse 타입 가드
- * @param obj
- */
-export const isPageResponse = <T>(obj: any): obj is PageResponse<T> => {
-    return obj &&
-        Array.isArray(obj.constent) &&
-        typeof obj.page === 'number' &&
-        typeof obj.size === 'number' &&
-        typeof obj.totalElements === 'number' &&
-        typeof obj.totalPages === 'number'
-}
-
 // ======================= 댓글 좋아요 상태 관리 타입 =======================
-
-/**
- * 댓글 좋아요 토글 함수 시그니처
- */
-export type ToggleCommentLikeFunction = (commentId: string) => Promise<ResponseVO<CommentLikeResponse>>
 
 /**
  * 댓글 좋아요 토글 API 응답
@@ -158,20 +96,10 @@ export interface CommentLikeResponse {
 }
 
 /**
- * 댓글 좋아요 UI 상태
+ * 좋아요 토글 API 응답
  */
-export interface CommentLikeState {
-    loading: boolean        // 좋아요 토글 중인지
-    likeCount: number       // 현재 좋아요 개수
-    isLiked: boolean        // 현재 좋아요 상태
-}
-
-/**
- * 댓글 좋아요 액션 결과
- */
-export interface CommentLikeActionResult {
-    success: boolean        // 성공여부
-    newLikeCount?: number   // 변경된 좋아요 개수
-    newIsLiked?: boolean    // 변경된 좋아요 상태
-    message?: string        // 에러 메시지 또는 성공 메시지
+export interface LikeResponse {
+    id: string
+    likeCount: number
+    isLikedByCurrentUser: boolean
 }

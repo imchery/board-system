@@ -203,30 +203,4 @@ public class PostController {
         return ResponseVO.ok(posts);
     }
 
-    /**
-     * 게시글 좋아요 토글 (좋아요/취소)
-     *
-     * @param postId
-     * @param httpRequest
-     * @return
-     */
-    @PutMapping("/{postId}/toggle-like")
-    public ResponseVO toggleLike(@PathVariable String postId,
-                                 HttpServletRequest httpRequest) {
-        String username = (String) httpRequest.getAttribute("username");
-        if (username == null) {
-            return ResponseVO.authFail();
-        }
-
-        log.info("게시글 좋아요 토글 요청: postId: {}, username: {}", postId, username);
-
-        try {
-            PostResponse post = postService.toggleLike(postId, username);
-            return ResponseVO.updateOk(post);
-        } catch (RuntimeException e) {
-            log.info("좋아요 토글 실패: {}", e.getMessage());
-            return ResponseVO.error("좋아요 처리에 실패했습니다.");
-        }
-    }
-
 }

@@ -14,8 +14,6 @@ public class PostResponse {
     private String content;
     private String author;
     private Integer viewCount;
-    private Integer likeCount;
-    private Boolean isLikedByCurrentUser; // 현재 사용자가 좋아요했는지
     private String category;
     private String createdAt;
     private String updatedAt;
@@ -29,8 +27,6 @@ public class PostResponse {
                 .content(post.getContent())
                 .author(post.getAuthor())
                 .viewCount(post.getViewCount())
-                .likeCount(post.getLikeCount())
-                .isLikedByCurrentUser(currentUser != null ? post.isLikeBy(currentUser) : null)
                 .category(post.getCategory())
                 .createdAt(post.getCreatedAt()
                         .toString())

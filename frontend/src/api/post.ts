@@ -1,5 +1,5 @@
 import axios from "axios";
-import {PageResponse, PostResponse, ResponseVO} from "@/types/api.ts";
+import {LikeResponse, PageResponse, PostResponse, ResponseVO} from "@/types/api.ts";
 
 // 백엔드 API 기본 설정
 const API_BASE_URL = 'http://localhost:9082'
@@ -78,12 +78,7 @@ export const postApi = {
     },
 
     // 게시글 좋아요 토글
-    toggleLike: async (id: string): Promise<ResponseVO<PostResponse>> => {
-        return await apiClient.put(`/api/posts/${id}/toggle-like`)
-    },
-
-    // 인기 게시글 조회
-    getPopularPosts: async (): Promise<ResponseVO<PostResponse[]>> => {
-        return await apiClient.get('/api/posts/popular')
+    toggleLike: async (id: string): Promise<ResponseVO<LikeResponse>> => {
+        return await apiClient.put(`/api/posts/${id}/like`)
     },
 }
