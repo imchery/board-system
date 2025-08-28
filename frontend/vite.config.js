@@ -33,7 +33,7 @@ export default defineConfig({
         },
     },
     server: {
-        port: 5173, // 개발 서버 포트 (3000 → 8080)
+        port: 5173, // 개발 서버 포트
         proxy: {
             // 백엔드 API 프록시 설정
             '/api': {

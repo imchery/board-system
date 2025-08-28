@@ -130,7 +130,6 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue'
 import {useRouter} from "vue-router"
-import {ElMessage} from "element-plus";
 import {postApi} from "@/api/post.ts";
 import type {PostResponse} from "@/types/api.ts";
 import {Edit, Search} from "@element-plus/icons-vue";
@@ -157,23 +156,42 @@ onMounted(() => {
 
 // 게시글 목록 조회 함수
 const fetchPosts = async () => {
-  loading.value = true
   try {
-    // 하나의 API 호출로 통일
+    loading.value = true
+
+    // 1. 게시글 목록 먼저 조회
     const response = await postApi.getPosts(
         currentPage.value - 1,
         pageSize.value,
         searchKeyword.value.trim()
     )
 
-    // 백엔드 ResponseVO 구조에 맞게 데이터 추출
-    if (response && response.result) {
-      posts.value = response.data.content || []
-      totalElements.value = response.data.totalElements || 0
-    } else {
-      ElMessage.error(response.message || '게시글을 불러오는데 실패했습니다')
-      posts.value = []
-      totalElements.value = 0
+    if (response.result) {
+      const postData = response.data.content
+
+      // 2. 게시글이 있으면 좋아요 정보 일괄 조회
+      if (postData.length > 0) {
+        try {
+          const postIds = postData.map(post => post.id)
+          const likeResponse = await postApi.getBulkLikeCounts(postIds)
+
+          if (likeResponse.result) {
+            // 3. 좋아요 개수 정보 합치기
+            postData.forEach(post => {
+              post.likeCount = likeResponse.data[post.id] || 0
+            })
+          }
+        } catch (error) {
+          console.warn('좋아요 정보 조회 실패, 기본값 사용:', error)
+          postData.forEach(post => {
+            post.likeCount = 0
+          })
+        }
+      }
+
+      // 4. 최종 데이터 설정
+      posts.value = postData
+      totalElements.value = response.data.totalElements
     }
   } catch (error) {
     handlePostApiError(error, 'list')

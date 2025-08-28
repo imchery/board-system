@@ -188,9 +188,24 @@ const fetchPost = async () => {
     if (response.result) {
       post.value = response.data
 
-      // 좋아요 정보 초기화
-      likeCount.value = response.data.likeCount || 0
-      currentUserLiked.value = response.data.isLikedByCurrentUser || false
+      try {
+        const likeResponse = await postApi.getPostLikeInfo(props.id)
+
+        if (likeResponse.result) {
+          likeCount.value = likeResponse.data.likeCount
+          currentUserLiked.value = likeResponse.data.isLikedByCurrentUser
+        } else {
+          // API 호출은 성공했지만 result가 false
+          console.warn('좋아요 정보 조회 실패:', likeResponse.message)
+          likeCount.value = 0
+          currentUserLiked.value = false
+        }
+      } catch (error) {
+        // 네트워크 에러 등
+        console.warn('좋아요 정보 조회 중 에러:', error)
+        likeCount.value = 0
+        currentUserLiked.value = false
+      }
     } else {
       ElMessage.error(response.message || '게시글을 불러오는데 실패했습니다')
     }

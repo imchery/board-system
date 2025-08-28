@@ -40,23 +40,8 @@ public class CommentLikeController {
         log.info("댓글 좋아요 토글 요청: commentId: {}, username: {}", commentId, username);
 
         try {
-            // 2. 좋아요 토글 실행
-            boolean isLiked = commentLikeService.toggleCommentLike(commentId, username);
-
-            // 3. 토글 후 좋아요 개수 조회
-            long likeCount = commentLikeService.getCommentLikeCount(commentId);
-
-            // 4. 댓글 정보 조회
-            LikeResponse comment = LikeResponse.builder()
-                    .id(commentId)
-                    .likeCount(likeCount)
-                    .isLikedByCurrentUser(isLiked)
-                    .build();
-
-            log.info("댓글 좋아요 토글 완료: commentId: {}, username: {}, isLiked: {}, likeCount: {}",
-                    commentId, username, isLiked, likeCount);
-
-            return ResponseVO.ok(comment);
+           LikeResponse response = commentLikeService.toggleCommentLikeAndGetInfo(commentId, username);
+           return ResponseVO.ok(response);
         } catch (Exception e) {
             log.error("댓글 좋아요 토글 실패: commentId: {}, username: {}, error: {}",
                     commentId, username, e.getMessage(), e);

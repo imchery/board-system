@@ -79,6 +79,16 @@ export const postApi = {
 
     // 게시글 좋아요 토글
     toggleLike: async (id: string): Promise<ResponseVO<LikeResponse>> => {
-        return await apiClient.put(`/api/posts/${id}/like`)
+        return await apiClient.post(`/api/posts/${id}/like`)
     },
+
+    // 게시글 좋아요 개수 일괄 조회(PostList용)
+    getBulkLikeCounts: async (postIds: string[]): Promise<ResponseVO<Record<string, number>>> => {
+        return await apiClient.post(`/api/posts/bulk-like-counts`, postIds)
+    },
+
+    // 특정 게시글 좋아요 정보 조회(PostDetail용)
+    getPostLikeInfo: async (postId: string): Promise<ResponseVO<LikeResponse>> => {
+        return await apiClient.get(`/api/posts/${postId}/like-info`)
+    }
 }

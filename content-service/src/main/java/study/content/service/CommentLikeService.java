@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.common.lib.exception.BaseException;
 import study.common.lib.exception.ErrorCode;
+import study.content.dto.comment.LikeResponse;
 import study.content.entity.CommentLike;
 import study.content.repository.CommentLikeRepository;
 import study.content.repository.CommentRepository;
@@ -81,5 +82,35 @@ public class CommentLikeService {
                     log.warn("활성 댓글을 찾을 수 없습니다. commentId: {}", commentId);
                     return new BaseException(ErrorCode.COMMENT_NOT_FOUND);
                 });
+    }
+
+    /**
+     * 댓글 좋아요 토글 + 결과 정보 반환
+     *
+     * @param commentId 댓글 ID
+     * @param username  사용자명
+     * @return 토글 후 좋아요 상태 + 개수 정보
+     */
+    @Transactional
+    public LikeResponse toggleCommentLikeAndGetInfo(String commentId, String username) {
+        log.info("댓글 좋아요 토글 with info - commentId: {}, username: {}", commentId, username);
+
+        // 1. 기존 토글 로직 재사용
+        boolean isLiked = toggleCommentLike(commentId, username);
+
+        // 2. 토글 후 최신 좋아요 개수 조정
+        long likeCount = getCommentLikeCount(commentId);
+
+        // 3. 응답 객체 생성
+        LikeResponse response = LikeResponse.builder()
+                .id(commentId)
+                .likeCount(likeCount)
+                .isLikedByCurrentUser(isLiked)
+                .build();
+
+        log.info("댓글 좋아요 토글 완료 - commentId: {}, isLiked: {}, likeCount: {}",
+                commentId, isLiked, likeCount);
+
+        return response;
     }
 }
