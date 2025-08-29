@@ -34,15 +34,6 @@ public interface CommentLikeRepository extends MongoRepository<CommentLike, Stri
     long deleteByCommentIdAndUsername(String commentId, String username);
 
     /**
-     * 특정 사용자가 누른 모든 좋아요 조회(마이페이지)
-     *
-     * @param username 사용자명
-     * @param pageable 페이징 정보
-     * @return 사용자의 좋아요 목록
-     */
-    Page<CommentLike> findByUsernameOrderByCreatedAtDesc(String username, Pageable pageable);
-
-    /**
      * 특정 댓글의 모든 좋아요 삭제
      * 댓글 삭제 시 연관된 좋아요도 함께 삭제
      *
@@ -50,14 +41,4 @@ public interface CommentLikeRepository extends MongoRepository<CommentLike, Stri
      * @return 삭제된 좋아요 개수
      */
     long deleteByCommentId(String commentId);
-
-    /**
-     * 특정 사용자의 모든 좋아요 삭제
-     * 회원 탈퇴 시 연관된 좋아요 정리
-     *
-     * @param username 사용자명
-     * @return 삭제된 좋아요 개수
-     */
-    // TODO 회원탈퇴 생성 후 추가
-    long deleteByUsername(String username);
 }

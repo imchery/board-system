@@ -21,10 +21,6 @@ public interface PostRepository extends MongoRepository<Post, String> {
     @Query("{'status': 'ACTIVE', '$or': [{'title': {$regex: ?0, $options: 'i'}}, {'content': {$regex: ?0, $options: 'i'}}]}")
     Page<Post> findByTitleOrContentContaining(String keyword, Pageable pageable);
 
-    // 작성자별 게시글 조회(활성 상태만)
-    @Query("{'author': ?0, 'status':  'ACTIVE'}")
-    Page<Post> findByAuthor(String author, Pageable pageable);
-
     // 카테고리별 게시글 조회(활성 상태만)
     @Query("{'category': ?0, 'status':  'ACTIVE'}")
     Page<Post> findByCategory(String category, Pageable pageable);
@@ -36,4 +32,12 @@ public interface PostRepository extends MongoRepository<Post, String> {
     // 조회수 상위 게시글
     @Query("{'status': 'ACTIVE'}")
     List<Post> findTop10ByOrderByViewCountDesc();
+
+    // 특정 사용자가 작성한 활성 게시글 수
+    @Query(value = "{'author': ?0, 'status': 'ACTIVE'}", count = true)
+    long countByAuthorAndStatus(String author, String status);
+
+    // 작성자별 게시글 조회(활성 상태만)
+    @Query("{'author': ?0, 'status':  'ACTIVE'}")
+    Page<Post> findByAuthor(String author, Pageable pageable);
 }

@@ -103,3 +103,14 @@ export interface LikeResponse {
     likeCount: number
     isLikedByCurrentUser: boolean
 }
+
+// ======================= 사용자 타입 =======================
+
+/**
+ * 사용자 통계 응답
+ */
+export interface UserStatsResponse {
+    username: string
+    postCount: number
+    commentCount: number
+}

@@ -192,34 +192,6 @@ public class PostService {
                 .toList();
     }
 
-    /**
-     * 작성자별 게시글 조회
-     *
-     * @param author
-     * @param page
-     * @param size
-     * @return
-     */
-    public PageResponse<PostResponse> getPostsByAuthor(String author, int page, int size) {
-        log.info("Fetching posts by author: {}", author);
-
-        return getPostsWithPaging(page, size, pageable -> postRepository.findByAuthor(author, pageable));
-    }
-
-    /**
-     * 카테고리별 게시글 조회
-     *
-     * @param category
-     * @param page
-     * @param size
-     * @return
-     */
-    public PageResponse<PostResponse> getPostsByCategory(String category, int page, int size) {
-        log.info("Fetching posts by category: {}", category);
-
-        return getPostsWithPaging(page, size, pageable -> postRepository.findByCategory(category, pageable));
-    }
-
     // ==================================================== 프라이빗 헬퍼 메서드 ====================================================
 
     /**

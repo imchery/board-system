@@ -56,7 +56,18 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     Page<Comment> findByAuthor(String author, Pageable pageable);
 
     /**
+     * 특정 사용자가 작성한 활성 댓글 수
+     *
+     * @param author
+     * @param status
+     * @return
+     */
+    @Query(value = "{'author': ?0, 'status': 'ACTIVE'}", count = true)
+    long countByAuthorAndStatus(String author, String status);
+
+    /**
      * 특정 부모 댓글의 활성 대댓글 조회 - 삭제용
+     *
      * @param parentCommentId
      * @return
      */
@@ -97,6 +108,7 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
 
     /**
      * 모든 댓글 조회 (활성상태 및 답글 포함)
+     *
      * @param postId
      * @return
      */

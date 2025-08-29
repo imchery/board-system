@@ -127,53 +127,6 @@ export const commentApi = {
     },
 
     /**
-     * 작성자별 댓글 조회 (마이페이지용)
-     * @param author
-     * @param page
-     * @param size
-     * @param sort
-     */
-    getCommentByAuthor: async (
-        author: string,
-        page = 0,
-        size = 10,
-        sort: CommentSortType = 'LATEST'
-    ): Promise<ResponseVO<PageResponse<CommentResponse>>> => {
-        const params = {page, size, sort}
-        return await apiClient.get(`/api/comments/author/${author}`, {params})
-    },
-
-    // ======================= 기타 조회 =======================
-
-    /**
-     * 관리자용 댓글 조회 (삭제된 것 포함, 정렬 X)
-     * @param postId
-     */
-    getAllCommentsForAdmin: async (postId: string): Promise<ResponseVO<CommentResponse[]>> => {
-        return await apiClient.get(`/api/admin/posts/{postId}/comments`)
-    },
-
-    /**
-     * 댓글 통계 조회
-     * @param postId
-     */
-    getCommentStats: async (postId: string): Promise<ResponseVO<number>> => {
-        return await apiClient.get(`/api/posts/{postId}/comments/stats`)
-    },
-
-    /**
-     * 대댓글 개수 조회
-     * @param postId
-     * @param commentId
-     */
-    getReplyCount: async (
-        postId: string,
-        commentId: string
-    ): Promise<ResponseVO<number>> => {
-        return await apiClient.get(`/api/posts/{postId}/comments/{commentId}/count`)
-    },
-
-    /**
      * 댓글 좋아요 토글
      * @param commentId 댓글 ID
      */

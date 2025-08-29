@@ -166,41 +166,4 @@ public class PostController {
         List<PostResponse> posts = postService.getPopularPosts();
         return ResponseVO.ok(posts);
     }
-
-    /**
-     * 작성자별 게시글 조회
-     *
-     * @param author
-     * @param page
-     * @param size
-     * @return
-     */
-    @GetMapping("/author/{author}")
-    public ResponseVO getPostsByAuthor(@PathVariable String author,
-                                       @RequestParam(defaultValue = "0") int page,
-                                       @RequestParam(defaultValue = "10") int size) {
-        log.info("작성자별 게시글 조회: {}", author);
-
-        PageResponse<PostResponse> posts = postService.getPostsByAuthor(author, page, size);
-        return ResponseVO.ok(posts);
-    }
-
-    /**
-     * 카테고리별 게시글 조회
-     *
-     * @param category
-     * @param page
-     * @param size
-     * @return
-     */
-    @GetMapping("/category/{category}")
-    public ResponseVO getPostsByCategory(@PathVariable String category,
-                                         @RequestParam(defaultValue = "0") int page,
-                                         @RequestParam(defaultValue = "10") int size) {
-        log.info("카테고리별 게시글 조회: {}", category);
-
-        PageResponse<PostResponse> posts = postService.getPostsByCategory(category, page, size);
-        return ResponseVO.ok(posts);
-    }
-
 }
