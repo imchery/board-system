@@ -32,6 +32,12 @@
 
               <template #dropdown>
                 <el-dropdown-menu>
+                  <el-dropdown-item command="mypage">
+                    <el-icon>
+                      <User/>
+                    </el-icon>
+                    마이페이지
+                  </el-dropdown-item>
                   <el-dropdown-item command="profile">
                     <el-icon>
                       <User/>
@@ -77,6 +83,10 @@ const authStore = useAuthStore()
 // 사용자 드롭다운 명령 처리
 const handleUserCommand = async (command: string) => {
   switch (command) {
+    case 'mypage':
+      await router.push('/mypage')
+      break
+
     case 'profile':
       ElMessage.info('프로필 페이지는 준비 중입니다')
       break

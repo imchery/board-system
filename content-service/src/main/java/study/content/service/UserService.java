@@ -65,7 +65,13 @@ public class UserService {
                 Sort.by("createdAt")
                         .descending(),
                 pageable -> postRepository.findByAuthor(username, pageable),
-                PostResponse::from
+                post -> {
+                    PostResponse postResponse = PostResponse.from(post);
+
+                    long commentCount = commentRepository.countByPostId(post.getId());
+                    postResponse.setCommentCount(commentCount);
+                    return postResponse;
+                }
         );
         log.info("내가 쓴 글 조회 완료: username: {}, 총 {}개", username, result.getTotalElements());
         return result;

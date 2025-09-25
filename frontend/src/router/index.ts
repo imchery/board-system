@@ -7,6 +7,7 @@ const PostList = () => import('@/views/PostList.vue')
 const PostDetail = () => import('@/views/PostDetail.vue')
 const PostCreate = () => import('@/views/PostCreate.vue')
 const Login = () => import('@/views/Login.vue')
+const MyPage = () => import('@/views/MyPage.vue')
 
 const router = createRouter({
     // HTML5 History API 사용 (hash 모드 X)
@@ -21,6 +22,12 @@ const router = createRouter({
             path: '/login',
             name: 'Login',
             component: Login
+        },
+        {
+            path: '/mypage',
+            name: 'MyPage',
+            component: MyPage,
+            meta: {requiresAuth: true}
         },
         {
             path: '/posts',
