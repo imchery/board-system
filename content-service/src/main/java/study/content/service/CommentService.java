@@ -14,8 +14,9 @@ import study.content.dto.comment.CommentRequest;
 import study.content.dto.comment.CommentResponse;
 import study.content.dto.comment.CommentUpdateRequest;
 import study.content.entity.Comment;
-import study.content.repository.CommentLikeRepository;
+import study.content.entity.Like;
 import study.content.repository.CommentRepository;
+import study.content.repository.LikeRepository;
 import study.content.repository.PostRepository;
 
 import java.util.List;
@@ -28,7 +29,7 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
-    private final CommentLikeRepository commentLikeRepository;
+    private final LikeRepository likeRepository;
 
     // -----------------------------------------------------------------------------------------------------------------
     //                                                  생성/수정/삭제
@@ -114,7 +115,7 @@ public class CommentService {
 
             for (Comment reply : replies) {
                 // 각 대댓글의 좋아요 물리 삭제
-                long replyLikesDeleted = commentLikeRepository.deleteByCommentId(reply.getId());
+                long replyLikesDeleted = likeRepository.deleteByTargetIdAndTargetType(reply.getId(), Like.TargetType.COMMENT);
                 reply.delete(); // 대댓글 soft delete
                 log.debug("Reply deleted - id: {}, likes deleted: {}", reply.getId(), replyLikesDeleted);
             }
@@ -126,7 +127,7 @@ public class CommentService {
         }
 
         // 4. 원본 댓글 좋아요 물리 삭제
-        long deletedLikes = commentLikeRepository.deleteByCommentId(commentId);
+        long deletedLikes = likeRepository.deleteByTargetIdAndTargetType(commentId, Like.TargetType.COMMENT);
 
         // 5. 원본 댓글 soft delete
         comment.delete();
@@ -285,13 +286,12 @@ public class CommentService {
     private CommentResponse enrichCommentWithLikeInfo(CommentResponse comment, String currentUsername) {
 
         // 1. 해당 댓글의 좋아요 개수 조회
-        long likeCount = commentLikeRepository.countByCommentId(comment.getId());
+        long likeCount = likeRepository.countByTargetIdAndTargetType(comment.getId(), Like.TargetType.COMMENT);
 
         // 2. 현재 사용자의 좋아요 여부 확인 (로그인한 경우만)
         boolean isLikedByCurrentUser = false;
         if (currentUsername != null) {
-            isLikedByCurrentUser = commentLikeRepository.existsByCommentIdAndUsername(
-                    comment.getId(), currentUsername);
+            isLikedByCurrentUser = likeRepository.existsByTargetIdAndTargetTypeAndUsername(comment.getId(), Like.TargetType.COMMENT, currentUsername);
         }
 
         // 3. 기존 CommentResponse에 좋아요 정보 추가

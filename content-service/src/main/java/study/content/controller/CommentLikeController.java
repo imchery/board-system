@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import study.common.lib.response.ResponseVO;
 import study.content.dto.comment.LikeResponse;
-import study.content.service.CommentLikeService;
+import study.content.entity.Like;
+import study.content.service.LikeService;
 
 @Slf4j
 @RestController
@@ -17,7 +18,7 @@ import study.content.service.CommentLikeService;
 @RequiredArgsConstructor
 public class CommentLikeController {
 
-    private final CommentLikeService commentLikeService;
+    private final LikeService likeService;
 
     /**
      * 댓글 좋아요 토글 (생성/삭제)
@@ -40,8 +41,8 @@ public class CommentLikeController {
         log.info("댓글 좋아요 토글 요청: commentId: {}, username: {}", commentId, username);
 
         try {
-           LikeResponse response = commentLikeService.toggleCommentLikeAndGetInfo(commentId, username);
-           return ResponseVO.ok(response);
+            LikeResponse response = likeService.toggleLikeAndGetInfo(commentId, Like.TargetType.COMMENT, username);
+            return ResponseVO.ok(response);
         } catch (Exception e) {
             log.error("댓글 좋아요 토글 실패: commentId: {}, username: {}, error: {}",
                     commentId, username, e.getMessage(), e);

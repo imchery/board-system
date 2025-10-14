@@ -6,7 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import study.common.lib.response.ResponseVO;
 import study.content.dto.comment.LikeResponse;
-import study.content.service.PostLikeService;
+import study.content.entity.Like;
+import study.content.service.LikeService;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PostLikeController {
 
-    private final PostLikeService postLikeService;
+    private final LikeService likeService;
 
     /**
      * 게시글 목록 및 상세화면 좋아요 정보
@@ -41,7 +42,7 @@ public class PostLikeController {
         log.info("게시글 좋아요 토글 요청: postId: {}, username: {}", postId, username);
 
         try {
-            LikeResponse response = postLikeService.togglePostLikeAndGetInfo(postId, username);
+            LikeResponse response = likeService.toggleLikeAndGetInfo(postId, Like.TargetType.POST, username);
             return ResponseVO.ok(response);
 
         } catch (Exception e) {
@@ -69,7 +70,7 @@ public class PostLikeController {
         log.info("게시글 좋아요 개수 일괄 조회: postIds count: {}", postIds.size());
 
         try {
-            Map<String, Long> likeCounts = postLikeService.getBulkLikeCounts(postIds);
+            Map<String, Long> likeCounts = likeService.getBulkLikeCount(postIds, Like.TargetType.POST);
             return ResponseVO.ok(likeCounts);
         } catch (Exception e) {
             log.error("게시글 좋아요 일괄 조회 실패: error: {}", e.getMessage(), e);
@@ -80,7 +81,7 @@ public class PostLikeController {
     /**
      * 특정 게시글의 좋아요 정보 조회
      *
-     * @param postId 게시글 ID
+     * @param postId      게시글 ID
      * @param httpRequest 사용자명
      * @return 게시글별 좋아요 개수
      */
@@ -92,7 +93,7 @@ public class PostLikeController {
         String username = (String) httpRequest.getAttribute("username");
 
         try {
-            LikeResponse response = postLikeService.getPostLikeInfo(postId, username);
+            LikeResponse response = likeService.getLikeInfo(postId, Like.TargetType.POST, username);
             return ResponseVO.ok(response);
         } catch (Exception e) {
             log.error("좋아요 정보 조회 실패: {}", e.getMessage());

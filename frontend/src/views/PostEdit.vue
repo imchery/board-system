@@ -108,12 +108,23 @@
     >
       <div class="preview-content">
         <div class="preview-meta">
-          <el-tag type="primary">{{ postForm.category || '미분류' }}</el-tag>
-          <span class="preview-author">{{ authStore.currentUser }}</span>
-          <span class="preview-date">{{ formatDate(new Date()) }}</span>
-        </div>
+          <div class="meta-left">
+            <el-tag type="primary">{{ postForm.category || '미분류' }}</el-tag>
+            <h1 class="preview-title">{{ postForm.title || '제목 없음' }}</h1>
+          </div>
 
-        <h1 class="preview-title">{{ postForm.title || '제목 없음' }}</h1>
+          <div class="meta-right">
+            <div class="author-info">
+              <el-avatar :size="32" class="author-avatar">
+                <el-icon>
+                  <User/>
+                </el-icon>
+              </el-avatar>
+              <span class="preview-author">{{ authStore.currentUser }}</span>
+            </div>
+            <span class="preview-date">{{ formatDateTime(new Date()) }}</span>
+          </div>
+        </div>
 
         <div class="preview-body" v-html="postForm.content"></div>
       </div>
@@ -132,13 +143,13 @@
 import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {ElMessage, ElMessageBox, type FormInstance, type FormRules} from 'element-plus'
-import {ArrowLeft, EditPen, RefreshRight, View} from '@element-plus/icons-vue'
+import {ArrowLeft, EditPen, RefreshRight, User, View} from '@element-plus/icons-vue'
 import {useAuthStore} from '@/stores/auth'
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 import {Ckeditor} from "@ckeditor/ckeditor5-vue"
 import {postApi} from "@/api/post.ts";
 import {getTextLength} from "@/utils/textHelper.ts";
-import {formatDate} from "@/utils/dateFormat.ts";
+import {formatDateTime} from "@/utils/dateFormat.ts";
 import {handlePostApiError} from "@/utils/errorHandler.ts";
 
 // Props: URL 받아오는 게시글 ID=
@@ -393,4 +404,62 @@ onBeforeUnmount(() => {
 
 <style scoped>
 @import '@/assets/styles/components/post-create.css';
+</style>
+
+<!-- 다이얼로그용 글로벌 스타일 -->
+<style>
+.preview-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  padding: 20px 24px !important;
+  border-bottom: none !important;
+}
+
+.preview-dialog .el-dialog__title {
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+/* 3. X 버튼 테두리 제거 */
+.preview-dialog .el-dialog__headerbtn {
+  top: 15px !important;
+  right: 15px !important;
+  width: 40px !important;
+  height: 40px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px !important;
+}
+
+.preview-dialog .el-dialog__headerbtn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.1) !important;
+}
+
+/* 4. 넘버드 리스트 여백 증가 */
+.preview-body ol {
+  padding-left: 50px !important;
+  margin: 16px 0;
+}
+
+.preview-body ul {
+  padding-left: 45px !important;
+  margin: 16px 0;
+}
+
+.preview-dialog .el-dialog__close {
+  color: white !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  opacity: 0.8 !important;
+}
+
+.preview-dialog .el-dialog__close:hover {
+  opacity: 1 !important;
+}
 </style>

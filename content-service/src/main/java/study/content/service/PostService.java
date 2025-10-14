@@ -12,11 +12,9 @@ import study.common.lib.response.PageResponse;
 import study.content.dto.post.PostRequest;
 import study.content.dto.post.PostResponse;
 import study.content.entity.Comment;
+import study.content.entity.Like;
 import study.content.entity.Post;
-import study.content.repository.CommentLikeRepository;
-import study.content.repository.CommentRepository;
-import study.content.repository.PostLikeRepository;
-import study.content.repository.PostRepository;
+import study.content.repository.*;
 
 import java.util.List;
 import java.util.function.Function;
@@ -29,8 +27,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
-    private final CommentLikeRepository commentLikeRepository;
-    private final PostLikeRepository postLikeRepository;
+    private final LikeRepository likeRepository;
 
     /**
      * 게시글 생성
@@ -142,7 +139,7 @@ public class PostService {
         // 3. 각 댓글의 좋아요 물리 삭제
         long totalCommentLikesDeleted = 0;
         for (Comment comment : allComments) {
-            long likesDeleted = commentLikeRepository.deleteByCommentId(comment.getId());
+            long likesDeleted = likeRepository.deleteByTargetIdAndTargetType(comment.getId(), Like.TargetType.COMMENT);
             totalCommentLikesDeleted += likesDeleted;
             comment.delete();
         }
@@ -153,7 +150,7 @@ public class PostService {
         }
 
         // 5. 게시글 좋아요 물리 삭제
-        long postLikesDeleted = postLikeRepository.deleteByPostId(id);
+        long postLikesDeleted = likeRepository.deleteByTargetIdAndTargetType(id, Like.TargetType.POST);
 
         // 6. 게시글 soft delete
         post.delete();
