@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import study.auth.dto.LoginRequest;
 import study.auth.dto.LoginResponse;
 import study.auth.service.AuthService;
+import study.auth.service.UserService;
 
 @Slf4j
 @RestController
@@ -16,6 +17,7 @@ import study.auth.service.AuthService;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
     /**
      * 로그인 API
@@ -27,15 +29,10 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         log.info("Login attempt for username: {}", request.getUsername());
 
-        try {
-            LoginResponse loginResponse = authService.login(request);
-            return ResponseEntity.ok(loginResponse);
+        LoginResponse loginResponse = authService.login(request);
 
-        } catch (Exception e) {
-            log.error("Login failed for username: {}", request.getUsername(), e);
-            return ResponseEntity.badRequest()
-                    .body(LoginResponse.failure("로그인 실패: " + e.getMessage()));
-        }
+        log.info("Login success - username: {}", request.getUsername());
+        return ResponseEntity.ok(loginResponse);
     }
 
     /**
@@ -46,19 +43,15 @@ public class AuthController {
      */
     @GetMapping("/validate")
     public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String authHeader) {
-        log.info("Token validation request");
+        log.debug("Token validation request");
 
-        try {
-            // "Bearer " 접두사 제거
-            String token = authHeader.replace("Bearer ", "");
-            boolean isValid = authService.validateToken(token);
+        // "Bearer " 접두사 제거
+        String token = extractToken(authHeader);
+        boolean isValid = authService.validateToken(token);
 
-            log.info("Token validation result: {}", isValid);
-            return ResponseEntity.ok(isValid);
-        } catch (Exception e) {
-            log.error("Token validation failed: {}", e.getMessage());
-            return ResponseEntity.ok(false);
-        }
+        log.debug("Token validation result: {}", isValid);
+        return ResponseEntity.ok(isValid);
+
     }
 
     /**
@@ -69,20 +62,22 @@ public class AuthController {
      */
     @GetMapping("/user")
     public ResponseEntity<String> getUserFromToken(@RequestHeader("Authorization") String authHeader) {
-        log.info("Get user from token request");
+        log.debug("Get user from token request");
 
-        try {
-            String token = authHeader.replace("Bearer ", "");
-            String username = authService.getUsernameFromToken(token);
+        String token = extractToken(authHeader);
+        String username = authService.getUsernameFromToken(token);
 
-            log.info("User extracted from token: {}", username);
-            return ResponseEntity.ok(username);
-        } catch (Exception e) {
-            log.error("Failed to extract user from token: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body("Invalid token");
-        }
+        log.debug("User extracted from token: {}", username);
+        return ResponseEntity.ok(username);
+
     }
+
+//    @PostMapping("/signup")
+//    @ResponseStatus(HttpStatus.CREATED)
+//    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
+//
+//    }
+
 
     /**
      * 서비스 상태 확인 API(헬스체크)
@@ -92,5 +87,18 @@ public class AuthController {
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("Auth Service is running");
+    }
+
+    /**
+     * Authorization 헤더에서 토큰 추출
+     *
+     * @param authHeader Authorization 헤더
+     * @return 순수 토큰 문자열
+     */
+    private String extractToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("유효하지 않은 Authorization 헤더입니다.");
+        }
+        return authHeader.substring(7); // "Bearer " 제거
     }
 }
