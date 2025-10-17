@@ -19,6 +19,10 @@ import study.content.repository.*;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * 게시글 비즈니스 로직 처리 Service
+ * 게시글 CRUD, 검색, 인기 게시글 조회 등의 비즈니스 로직 담당
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -32,13 +36,13 @@ public class PostService {
     /**
      * 게시글 생성
      *
-     * @param request
-     * @param author
-     * @return
+     * @param request 게시글 생성 요청
+     * @param author  작성자
+     * @return 생성된 게시글 정보
      */
     @Transactional
     public PostResponse createPost(PostRequest request, String author) {
-        log.info("Creating post with title: {} by author: {}", request.getTitle(), author);
+        log.info("게시글 생성 - title: {}, author: {}", request.getTitle(), author);
 
         Post post = Post.builder()
                 .title(request.getTitle())
@@ -48,20 +52,21 @@ public class PostService {
                 .build();
 
         Post savedPost = postRepository.save(post);
-        log.info("Post created with id: {}", savedPost.getId());
+        log.info("게시글 생성 완료 - postId: {}", savedPost.getId());
 
         return PostResponse.from(savedPost);
     }
 
     /**
      * 게시글 목록 조회(페이징)
+     * 활성 상태의 게시글만 조회, 최신순으로 정렬
      *
-     * @param page
-     * @param size
-     * @return
+     * @param page 페이지 번호(0부터 시작)
+     * @param size 페이지 크기
+     * @return 게시글 목록
      */
     public PageResponse<PostResponse> getPosts(int page, int size) {
-        log.info("Fetching posts - page: {}, size: {}", page, size);
+        log.debug("게시글 목록 조회 - page: {}, size: {}", page, size);
 
         return getPostsWithPaging(page, size, postRepository::findAllActivePosts);
     }
@@ -69,12 +74,14 @@ public class PostService {
     /**
      * 게시글 상세 조회(조회수 증가)
      *
-     * @param id
-     * @return
+     * @param id          게시글 ID
+     * @param currentUser 현재 사용자 (비로그인 시 null)
+     * @return 게시글 상세 정보
      */
     @Transactional
     public PostResponse getPost(String id, String currentUser) {
-        log.info("Fetching post with id: {}", id);
+        log.debug("게시글 상세 조회 - postId: {}, viewer: {}",
+                id, currentUser != null ? currentUser : "비로그인");
 
         Post post = findActivePostById(id);
 
@@ -82,11 +89,11 @@ public class PostService {
         post.increaseViewCount();
         postRepository.save(post);
 
-        log.info("Post viewed - id: {}, new view count: {}", id, post.getViewCount());
+        log.debug("조회수 증가 - postId: {}, viewCount: {}", id, post.getViewCount());
 
         PostResponse response = PostResponse.from(post, currentUser);
 
-        // 댓글 수 별도 조회
+        // 댓글 수 조회
         long commentCount = commentRepository.countByPostId(id);
         response.setCommentCount(commentCount);
 
@@ -94,26 +101,57 @@ public class PostService {
     }
 
     /**
-     * 게시글 수정
+     * 게시글 검색
+     * 제목과 내용에서 키워드를 검색
      *
-     * @param id
-     * @param request
-     * @param author
-     * @return
+     * @param keyword 검색 키워드
+     * @param page    페이지 번호
+     * @param size    페이지 크기
+     * @return 검색된 게시글 목록
+     */
+    public PageResponse<PostResponse> searchPosts(String keyword, int page, int size) {
+        log.info("게시글 검색 - keyword: {}, page: {}, size: {}", keyword, page, size);
+
+        return getPostsWithPaging(page, size, pageable -> postRepository.findByTitleOrContentContaining(keyword, pageable));
+    }
+
+    /**
+     * 인기 게시글 조회(조회수 기준 Top10)
+     *
+     * @return 인기 게시글 목록 최대 10개
+     */
+    public List<PostResponse> getPopularPosts() {
+        log.debug("인기 게시글 조회");
+
+        List<Post> popularPosts = postRepository.findTop10ByOrderByViewCountDesc();
+
+        return popularPosts.stream()
+                .map(PostResponse::from)
+                .toList();
+    }
+
+    /**
+     * 게시글 수정
+     * 작성자만 수정가능
+     *
+     * @param id      게시글 ID
+     * @param request 수정 요청
+     * @param author  요청자
+     * @return 수정된 게시글 정보
      */
     @Transactional
     public PostResponse updatePost(String id, PostRequest request, String author) {
-        log.info("Updating post with id: {} by author: {}", id, author);
+        log.info("게시글 수정 - postId: {}, author: {}", id, author);
 
         Post post = findActivePostById(id);
         validateAuthor(post, author);
 
         post.updatePost(request.getTitle(), request.getContent(), request.getCategory());
 
-        Post updatePost = postRepository.save(post);
-        log.info("Post updated - id: {}", updatePost.getId());
+        Post updatedPost = postRepository.save(post);
+        log.info("게시글 수정 완료 - postId: {}", updatedPost.getId());
 
-        return PostResponse.from(updatePost);
+        return PostResponse.from(updatedPost);
     }
 
     /**
@@ -126,7 +164,7 @@ public class PostService {
      */
     @Transactional
     public void deletePost(String id, String author) {
-        log.info("Deleting post with all related data - id: {} by author: {}", id, author);
+        log.info("게시글 삭제 시작 - postId: {}, author: {}", id, author);
 
         // 1. 게시글 존재 및 권한 확인
         Post post = findActivePostById(id);
@@ -134,59 +172,39 @@ public class PostService {
 
         // 2. 모든 댓글 조회 (부모댓글 + 대댓글)
         List<Comment> allComments = commentRepository.findAllActiveCommentsByPostId(id);
-        log.info("Found {} comments to delete for post: {}", allComments.size(), id);
+        log.debug("삭제 대상 댓글 수: {}", allComments.size());
 
         // 3. 각 댓글의 좋아요 물리 삭제
         long totalCommentLikesDeleted = 0;
         for (Comment comment : allComments) {
-            long likesDeleted = likeRepository.deleteByTargetIdAndTargetType(comment.getId(), Like.TargetType.COMMENT);
-            totalCommentLikesDeleted += likesDeleted;
+
+            // 3-1. 댓글 좋아요 물리 삭제
+            long deleted = likeRepository.deleteByTargetIdAndTargetType(comment.getId(), Like.TargetType.COMMENT);
+            totalCommentLikesDeleted += deleted;
+
+            // 3-2. 댓글 소프트 삭제
             comment.delete();
         }
 
-        // 4. 모든 댓글 일괄 저장 (soft delete 반영)
+        // 3-3. 댓글 일괄 저장
         if (!allComments.isEmpty()) {
             commentRepository.saveAll(allComments);
         }
 
-        // 5. 게시글 좋아요 물리 삭제
+        log.debug("댓글 및 댓글 좋아요 처리 완료 - 댓글: {}개, 좋아요: {}개",
+                allComments.size(), totalCommentLikesDeleted);
+
+        // 4. 게시글 좋아요 물리 삭제
         long postLikesDeleted = likeRepository.deleteByTargetIdAndTargetType(id, Like.TargetType.POST);
 
-        // 6. 게시글 soft delete
+        log.debug("게시글 좋아요 삭제 완료: {}개", postLikesDeleted);
+
+        // 5. 게시글 soft delete
         post.delete();
         postRepository.save(post);
 
-        log.info("Post deletion completed - postId: {}, comments: {}, commentLikes: {}, postLikes: {}",
+        log.info("게시글 삭제 완료 - postId: {}, 댓글: {}개, 댓글좋아요: {}개, 게시글좋아요: {}개",
                 id, allComments.size(), totalCommentLikesDeleted, postLikesDeleted);
-    }
-
-    /**
-     * 게시글 검색
-     *
-     * @param keyword
-     * @param page
-     * @param size
-     * @return
-     */
-    public PageResponse<PostResponse> searchPosts(String keyword, int page, int size) {
-        log.info("Searching posts with keyword: {}", page);
-
-        return getPostsWithPaging(page, size, pageable -> postRepository.findByTitleOrContentContaining(keyword, pageable));
-    }
-
-    /**
-     * 인기 게시글 조회(조회수 기준)
-     *
-     * @return
-     */
-    public List<PostResponse> getPopularPosts() {
-        log.info("Fetching popular posts");
-
-        List<Post> popularPosts = postRepository.findTop10ByOrderByViewCountDesc();
-
-        return popularPosts.stream()
-                .map(PostResponse::from)
-                .toList();
     }
 
     // ==================================================== 프라이빗 헬퍼 메서드 ====================================================

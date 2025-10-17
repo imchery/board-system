@@ -1,24 +1,66 @@
 // ======================= 백엔드 공통 응답 타입 =======================
+
+/**
+ * ResponseVO - 백엔드 공통 응답 타입
+ * 사용 예시:
+ * - ResponseVO<PostResponse> - 단일 게시글
+ * - ResponseVO<PageResponse<PostResponse>> - 게시글 목록
+ * - ResponseVO<void> - 데이터 없는 응답 (삭제 등)
+ */
 export interface ResponseVO<T = any> {
+    /* 성공 여부 */
     result: boolean
+    /* 응답메시지 */
     message: string
+    /* 응답 데이터(제네릭) */
     data: T
+    /* Validation 에러 목록 (있을 경우에만) */
+    fieldErrors?: FieldErrorDetail[]
+    /* 응답 생성 시간 */
     timestamp: number
 }
 
+/**
+ * Validation 에러 상세 정보
+ * @Valid 검증 실패 시 어떤 필드가 잘못됐는지 알려주는 타입
+ */
+export interface FieldErrorDetail {
+    /* 에러가 발생한 필드명 */
+    field: string
+    /* 에러 메시지 */
+    message: string
+    /* 거부된 입력값 */
+    rejectedValue: any
+}
+
+/**
+ * 페이징 응답 타입
+ */
 export interface PageResponse<T> {
+    /* 실제 데이터 배열 */
     content: T[]
+    /* 현재 페이지 번호 (0부터 시작) */
     page: number
+    /* 페이지 크기 */
     size: number
+    /* 전체 요소 수 */
     totalElements: number
+    /* 전체 페이지 수 */
     totalPages: number
+    /* 첫 페이지 여부 */
     first: boolean
+    /* 마지막 페이지 여부 */
     last: boolean
+    /* 다음 페이지 존재 여부 */
     hasNext: boolean
+    /* 이전 페이지 존재 여부 */
     hasPrevious: boolean
 }
 
 // ======================= 게시글 타입 =======================
+/**
+ * 게시글 응답 타입
+ */
 export interface PostResponse {
     id: string
     title: string
@@ -33,7 +75,20 @@ export interface PostResponse {
     isLikedByCurrentUser?: boolean
 }
 
+/**
+ * 게시글 생성/수정 요청 타입
+ */
+export interface PostRequest {
+    title: string
+    content: string
+    category?: string
+}
+
 // ======================= 댓글 타입 =======================
+
+/**
+ * 댓글 응답 타입
+ */
 export interface CommentResponse {
     id: string
     postId: string
@@ -53,12 +108,18 @@ export interface CommentResponse {
     replyCount?: number      // 대댓글 개수
 }
 
+/**
+ * 댓글 생성 요청 타입
+ */
 export interface CommentRequest {
     postId: string
     content: string
     parentCommentId?: string // 대댓글용 (null 이면 최상위 댓글)
 }
 
+/**
+ * 댓글 수정 요청 타입
+ */
 export interface CommentUpdateRequest {
     content: string
 }
@@ -67,7 +128,7 @@ export interface CommentUpdateRequest {
 export interface ApiError {
     response?: {
         status: number
-        data?: any
+        data?: ResponseVO<any>
     }
     message: string
 }
@@ -84,16 +145,7 @@ export interface LoginResponse {
     message: string
 }
 
-// ======================= 댓글 좋아요 상태 관리 타입 =======================
-
-/**
- * 댓글 좋아요 토글 API 응답
- */
-export interface CommentLikeResponse {
-    id: string
-    likeCount: number
-    isLikedByCurrentUser: boolean
-}
+// ======================= 좋아요 상태 관리 타입 =======================
 
 /**
  * 좋아요 토글 API 응답

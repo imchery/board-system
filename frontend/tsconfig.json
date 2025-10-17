@@ -15,10 +15,13 @@
     "jsx": "preserve",
 
     /* Linting */
-    "strict": true,
+    "strict": true, // 타입 안정성 최대화
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
+
+    "noImplicitAny": true, // any 타입 경고
+    "strictNullChecks": true, // null/undefined 체크
 
     /* Path mapping */
     "baseUrl": ".",
