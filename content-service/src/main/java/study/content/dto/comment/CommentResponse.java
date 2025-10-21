@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import study.content.entity.Comment;
 
+/**
+ * 댓글 응답 DTO
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -42,11 +45,12 @@ public class CommentResponse {
 
     /**
      * 기본 댓글 정보만 포함한 DTO 변환
+     * 좋아요 정보는 NULL로 설정
      *
      * @param comment 댓글 엔티티
      * @return 기본정보만 포함된 CommentResponse
      */
-    public static CommentResponse form(Comment comment) {
+    public static CommentResponse from(Comment comment) {
         return CommentResponse.builder()
                 .id(comment.getId())
                 .postId(comment.getPostId())

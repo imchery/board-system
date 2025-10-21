@@ -93,7 +93,7 @@ public class UserService {
                 page, size,
                 sortType.toMongoSort(),
                 pageable -> commentRepository.findByAuthor(username, pageable),
-                CommentResponse::form
+                CommentResponse::from
         );
         log.info("내가 쓴 댓글 조회 완료: username: {}, 총 {}개", username, result.getTotalElements());
         return result;

@@ -21,6 +21,10 @@ import study.content.repository.PostRepository;
 
 import java.util.List;
 
+/**
+ * 댓글 비즈니스 로직 처리 Service
+ * 댓글 CRUD, 대댓글 관리, 좋아요 정보 조회 등의 비즈니스 로직 담당
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -36,15 +40,16 @@ public class CommentService {
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * 댓글 생성
+     * 댓글 생성 (댓글 또는 대댓글)
      *
-     * @param request
-     * @param author
-     * @return
+     * @param request 댓글 생성 요청
+     * @param author  작성자
+     * @return 생성된 댓글 정보
      */
     @Transactional
     public CommentResponse createComment(CommentRequest request, String author) {
-        log.info("Creating comment for post: {} by author: {}", request.getPostId(), author);
+        log.info("댓글 생성 - postId: {}, author: {}, isReply: {}",
+                request.getPostId(), author, request.getParentCommentId() != null);
 
         // 1. 게시글 존재 여부 확인
         validatePostExists(request.getPostId());
@@ -62,22 +67,23 @@ public class CommentService {
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
-        log.info("Comment created with id: {}", savedComment.getId());
+        log.info("댓글 생성 완료 - commentId: {}", savedComment.getId());
 
-        return CommentResponse.form(savedComment);
+        return CommentResponse.from(savedComment);
     }
 
     /**
      * 댓글 수정
+     * 작성자만 수정 가능
      *
-     * @param commentId
-     * @param request
-     * @param author
-     * @return
+     * @param commentId 댓글 ID
+     * @param request   수정요청
+     * @param author    요청자
+     * @return 수정된 댓글 정보
      */
     @Transactional
     public CommentResponse updateComment(String commentId, CommentUpdateRequest request, String author) {
-        log.info("Updating comment with id: {} by author: {}", commentId, author);
+        log.info("댓글 수정 - commentId: {}, author: {}", commentId, author);
 
         // 1. ID로 활성 댓글 조회
         Comment comment = findActiveCommentById(commentId);
@@ -89,19 +95,23 @@ public class CommentService {
         comment.updateContent(request.getContent());
         Comment updatedComment = commentRepository.save(comment);
 
-        log.info("Comment updated with id: {}", updatedComment.getId());
-        return CommentResponse.form(updatedComment);
+        log.info("댓글 수정 완료 - commentId: {}", updatedComment.getId());
+        return CommentResponse.from(updatedComment);
     }
 
     /**
-     * 댓글 삭제 (Soft Delete)
+     * 댓글 삭제 (Soft Delete + 연관 데이터 정리)
+     * 삭제 순서:
+     * 부모 댓글인 경우: 모든 대댓글도 함께 삭제
+     * 각 댓글의 좋아요 물리 삭제
+     * 댓글 소프트 삭제
      *
-     * @param commentId
-     * @param author
+     * @param commentId 댓글 ID
+     * @param author    요청자
      */
     @Transactional
     public void deleteComment(String commentId, String author) {
-        log.info("Deleting comment id: {} by author: {}", commentId, author);
+        log.info("댓글 삭제 시작 - commentId: {}, author: {}", commentId, author);
 
         // 1. ID로 활성 댓글 조회
         Comment comment = findActiveCommentById(commentId);
@@ -109,32 +119,41 @@ public class CommentService {
         // 2. 권한 검증
         validateAuthor(comment, author);
 
+        long totalLikesDeleted = 0;
+
         // 3. 부모 댓글인 경우 모든 대댓글 처리
         if (!comment.isReply()) {
             List<Comment> replies = commentRepository.findActiveRepliesByParentId(commentId);
 
+            log.debug("삭제 대상 대댓글 수: {}", replies.size());
+
             for (Comment reply : replies) {
                 // 각 대댓글의 좋아요 물리 삭제
-                long replyLikesDeleted = likeRepository.deleteByTargetIdAndTargetType(reply.getId(), Like.TargetType.COMMENT);
-                reply.delete(); // 대댓글 soft delete
-                log.debug("Reply deleted - id: {}, likes deleted: {}", reply.getId(), replyLikesDeleted);
+                totalLikesDeleted += likeRepository.deleteByTargetIdAndTargetType(
+                        reply.getId(),
+                        Like.TargetType.COMMENT
+                );
+                reply.delete();
             }
 
             if (!replies.isEmpty()) {
                 commentRepository.saveAll(replies);
-                log.info("Cascade deleted {} replies for comment: {}", replies.size(), commentId);
             }
+
+            log.debug("대댓글 처리 완료 - 댓글: {}개, 좋아요: {}개",
+                    replies.size(), totalLikesDeleted);
         }
 
         // 4. 원본 댓글 좋아요 물리 삭제
-        long deletedLikes = likeRepository.deleteByTargetIdAndTargetType(commentId, Like.TargetType.COMMENT);
+        long commentLikesDeleted = likeRepository.deleteByTargetIdAndTargetType(commentId, Like.TargetType.COMMENT);
+        totalLikesDeleted += commentLikesDeleted;
 
         // 5. 원본 댓글 soft delete
         comment.delete();
         commentRepository.save(comment);
 
-        log.info("Comment deletion completed - commentId: {}, total likes deleted: {}",
-                commentId, deletedLikes);
+        log.info("댓글 삭제 완료 - commentId: {}, 총 좋아요 삭제: {}개",
+                commentId, totalLikesDeleted);
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -142,18 +161,20 @@ public class CommentService {
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * 특정 게시글의 최상위 댓글 목록 조회 (페이징, 정렬)
+     * 특정 게시글의 최상위 댓글 목록 조회 (페이징 + 정렬 + 좋아요 정보)
      *
-     * @param postId
-     * @param page
-     * @param size
-     * @return
+     * @param postId          게시글 ID
+     * @param page            페이지 번호
+     * @param size            페이지 크기
+     * @param sort            정렬 방식 (LATEST, OLDEST)
+     * @param currentUsername 현재 사용자(null 가능)
+     * @return 댓글 목록 (좋아요 정보 포함)
      */
     public PageResponse<CommentResponse> getRootComments(
             String postId, int page, int size, String sort, String currentUsername
     ) {
-        log.info("Fetching root comments with likes for post: {} - page: {}, size: {}, sort: {}, user: {}",
-                postId, page, size, sort, currentUsername);
+        log.debug("최상위 댓글 조회 - postId: {}, page: {}, size: {}, sort: {}, user: {}",
+                postId, page, size, sort, currentUsername != null ? currentUsername : "비로그인");
 
         // 1. 게시글 존재 여부 확인
         validatePostExists(postId);
@@ -165,7 +186,7 @@ public class CommentService {
         PageResponse<CommentResponse> basicComments = BasePagingUtil.createPageResponse(
                 page, size, sortType.toMongoSort(),
                 pageable -> commentRepository.findRootCommentByPostId(postId, pageable),
-                CommentResponse::form
+                CommentResponse::from
         );
 
         // 4. 각 댓글에 좋아요 정보 추가
@@ -179,19 +200,21 @@ public class CommentService {
     }
 
     /**
-     * 특정 댓글의 대댓글 목록 조회 (페이징)
+     * 특정 댓글의 대댓글 목록 조회 (페이징 + 좋아요 정보)
      *
-     * @param postId
-     * @param parentCommentId
-     * @param page
-     * @param size
-     * @return
+     * @param postId          게시글 ID
+     * @param parentCommentId 부모 댓글 ID
+     * @param page            페이지 정보
+     * @param size            페이지 크기
+     * @param currentUsername 현재 사용자(null 가능)
+     * @return 대댓글 목록 (쫗아요 정보 포함)
      */
     public PageResponse<CommentResponse> getReplies(
             String postId, String parentCommentId, int page, int size, String currentUsername) {
 
-        log.info("Fetching replies with likes - postId: {}, parentCommentId: {}, page: {}, size: {}, user: {}",
-                postId, parentCommentId, page, size, currentUsername);
+        log.debug("대댓글 조회 - postId: {}, parentId: {}, page: {}, size: {}, user: {}",
+                postId, parentCommentId, page, size,
+                currentUsername != null ? currentUsername : "비로그인");
 
         // 1. 게시글 존재 및 부모 댓글 존재 확인
         validateParentCommentExists(postId, parentCommentId);
@@ -200,7 +223,7 @@ public class CommentService {
         PageResponse<CommentResponse> basicReplies = BasePagingUtil.createUnsortedPageResponse(
                 page, size,
                 pageable -> commentRepository.findRepliesByParentId(postId, parentCommentId, pageable),
-                CommentResponse::form
+                CommentResponse::from
         );
 
         // 3. 각 댓글에 좋아요 정보 추가
@@ -220,7 +243,7 @@ public class CommentService {
     /**
      * 게시글 존재 여부 확인
      *
-     * @param postId
+     * @param postId 게시글 ID
      */
     private void validatePostExists(String postId) {
         if (postRepository.findActivePostById(postId)
@@ -232,8 +255,8 @@ public class CommentService {
     /**
      * 부모 댓글 존재 여부 및 게시글 일치 확인
      *
-     * @param postId
-     * @param parentCommentId
+     * @param postId          게시글 ID
+     * @param parentCommentId 부모 댓글 ID
      */
     private void validateParentCommentExists(String postId, String parentCommentId) {
         Comment parentComment = findActiveCommentById(parentCommentId);
@@ -251,23 +274,25 @@ public class CommentService {
     /**
      * 활성 댓글 조회 (공통 로직)
      *
-     * @param commentId
-     * @return
+     * @param commentId 댓글 ID
+     * @return 활성 상태의 댓글 Entity
      */
     private Comment findActiveCommentById(String commentId) {
         return commentRepository.findActiveCommentById(commentId)
-                .orElseThrow(() -> new BaseException(ErrorCode.COMMENT_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(ErrorCode.COMMENT_NOT_FOUND, "댓글을 찾을 수 없습니다. ID: " + commentId));
     }
 
     /**
-     * 작성자 권한 검증
+     * 작성자 권한 검증 (공통 로직)
      *
-     * @param comment
-     * @param author
+     * @param comment 댓글 Entity
+     * @param author  요청자
      */
     private void validateAuthor(Comment comment, String author) {
         if (!comment.isAuthor(author)) {
-            throw new BaseException(ErrorCode.COMMENT_ACCESS_DENIED);
+            log.warn("권한 없는 접근 시도 - commentId: {}, author: {}, requester: {}",
+                    comment.getId(), comment.getAuthor(), author);
+            throw new BaseException(ErrorCode.COMMENT_ACCESS_DENIED, "댓글에 대한 권한이 없습니다.");
         }
     }
 
@@ -277,7 +302,7 @@ public class CommentService {
 
     /**
      * 댓글에 좋아요 정보를 추가하는 헬퍼 메서드
-     * 기존 CommentResponse에 좋아요 정보만 추가
+     * 기존 CommentResponse에 좋아요 개수와 현재 사용자의 좋아요 여부 추가
      *
      * @param comment         기본 댓글 정보
      * @param currentUsername 현재 사용자명(null 가능)

@@ -30,9 +30,11 @@ public class PostController {
 
     /**
      * 게시글 생성
+     * 인증된 사용자만 게시글 생성 가능
      *
-     * @param request
-     * @return
+     * @param request     게시글 생성 요청 (제목, 내용, 카테고리 등)
+     * @param httpRequest HTTP 요청(JWT 토큰에서 추출한 username 포함)
+     * @return 생성된 게시글 정보
      */
     @PostMapping
     public ResponseVO<PostResponse> createPost(
@@ -76,10 +78,11 @@ public class PostController {
      */
     @GetMapping("/{id}")
     public ResponseVO<PostResponse> getPost(@PathVariable String id, HttpServletRequest httpRequest) {
-        String username = extractUsername(httpRequest);
+
+        String username = (String) httpRequest.getAttribute("username");
 
         log.info("게시글 상세 조회 - postId: {}, viewer: {}",
-                id, username);
+                id, username != null ? username : "비로그인");
 
         PostResponse post = postService.getPost(id, username);
         return ResponseVO.ok(post);
@@ -174,10 +177,13 @@ public class PostController {
     private String extractUsername(HttpServletRequest request) {
         String username = (String) request.getAttribute("username");
 
-//        if (username == null) {
-//            log.warn("인증되지 않은 요청");
-//            throw new BaseException(ErrorCode.UNAUTHORIZED);
-//        }
+        if (username == null) {
+            log.warn("인증되지 않은 요청");
+            throw new study.common.lib.exception.BaseException(
+                    study.common.lib.exception.ErrorCode.UNAUTHORIZED
+            );
+        }
+
         return username;
     }
 }
