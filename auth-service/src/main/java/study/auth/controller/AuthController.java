@@ -3,10 +3,12 @@ package study.auth.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import study.auth.dto.LoginRequest;
 import study.auth.dto.LoginResponse;
+import study.auth.dto.SignupRequest;
+import study.auth.dto.SignupResponse;
 import study.auth.service.AuthService;
 import study.auth.service.UserService;
 import study.common.lib.exception.BaseException;
@@ -41,6 +43,55 @@ public class AuthController {
 
         log.info("로그인 성공 - username: {}", request.getUsername());
         return ResponseVO.ok(loginResponse);
+    }
+
+    /**
+     * 회원가입
+     * 새로운 사용자 계정 생성
+     *
+     * @param request 회원가입 요청(username, password, email, nickname)
+     * @return 회원가입 완료 정보
+     */
+    @PostMapping("/signup")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseVO<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
+        log.info("회원가입 요청 - username: {}", request.getUsername());
+        SignupResponse response = userService.signup(request);
+
+        log.info("회원가입 완료 - username: {}", request.getUsername());
+
+        return ResponseVO.ok(response);
+    }
+
+    /**
+     * 아이디 중복 체크
+     * 회원가입 시 아이디 사용 가능 여부 확인
+     *
+     * @param username 확인할 아이디
+     * @return 사용 가능 여부(true: 사용가능, false: 중복)
+     */
+    @GetMapping("/check/username")
+    public ResponseVO<Boolean> checkUsername(@RequestParam String username) {
+        log.debug("아이디 중복 체크 - username: {}", username);
+
+        boolean available = userService.checkUsernameDuplicate(username);
+        String message = available ? "사용 가능한 아이디입니다" : "이미 사용 중인 아이디입니다";
+        return ResponseVO.ok(message, available);
+    }
+
+    /**
+     * 이메일 중복 체크
+     * 회원가입 시 이메일 사용 가능 여부 확인
+     * @param email
+     * @return
+     */
+    @GetMapping("/check/email")
+    public ResponseVO<Boolean> checkEmail(@RequestParam String email) {
+        log.debug("이메일 중복 체크 - email: {}", email);
+
+        boolean available = userService.checkEmailDuplicate(email);
+        String message = available ? "사용 가능한 이메일입니다" : "이미 사용 중인 이메일입니다";
+        return ResponseVO.ok(message, available);
     }
 
     /**
@@ -81,13 +132,6 @@ public class AuthController {
         return ResponseVO.ok(username);
 
     }
-
-//    @PostMapping("/signup")
-//    @ResponseStatus(HttpStatus.CREATED)
-//    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
-//
-//    }
-
 
     /**
      * 서비스 상태 확인 API(헬스체크)
