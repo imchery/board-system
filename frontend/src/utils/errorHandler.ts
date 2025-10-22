@@ -96,7 +96,7 @@ export const handleApiError = (
  */
 export const handlePostApiError = (
     error: any,
-    context: 'list' | 'detail' | 'create' | 'edit'  // ✅ 기존 방식 유지!
+    context: 'list' | 'detail' | 'create' | 'edit'
 ) => {
     const contextMessages = {
         list: '게시글 목록을 불러오는데 실패했습니다',

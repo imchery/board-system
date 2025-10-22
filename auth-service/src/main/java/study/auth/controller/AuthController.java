@@ -55,12 +55,9 @@ public class AuthController {
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseVO<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
-        log.info("회원가입 요청 - username: {}", request.getUsername());
-        SignupResponse response = userService.signup(request);
+        log.debug("회원가입 API 호출 - username: {}", request.getUsername());
 
-        log.info("회원가입 완료 - username: {}", request.getUsername());
-
-        return ResponseVO.ok(response);
+        return ResponseVO.ok(userService.signup(request));
     }
 
     /**
@@ -72,8 +69,6 @@ public class AuthController {
      */
     @GetMapping("/check/username")
     public ResponseVO<Boolean> checkUsername(@RequestParam String username) {
-        log.debug("아이디 중복 체크 - username: {}", username);
-
         boolean available = userService.checkUsernameDuplicate(username);
         String message = available ? "사용 가능한 아이디입니다" : "이미 사용 중인 아이디입니다";
         return ResponseVO.ok(message, available);
@@ -87,8 +82,6 @@ public class AuthController {
      */
     @GetMapping("/check/email")
     public ResponseVO<Boolean> checkEmail(@RequestParam String email) {
-        log.debug("이메일 중복 체크 - email: {}", email);
-
         boolean available = userService.checkEmailDuplicate(email);
         String message = available ? "사용 가능한 이메일입니다" : "이미 사용 중인 이메일입니다";
         return ResponseVO.ok(message, available);

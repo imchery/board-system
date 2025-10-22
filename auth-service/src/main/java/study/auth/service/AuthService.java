@@ -3,12 +3,17 @@ package study.auth.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import study.auth.dto.LoginRequest;
 import study.auth.dto.LoginResponse;
+import study.auth.entity.User;
+import study.auth.repository.UserRepository;
 import study.common.lib.config.JwtTokenService;
 import study.common.lib.exception.BaseException;
 import study.common.lib.exception.ErrorCode;
+
+import java.time.LocalDateTime;
 
 /**
  * 인증 비즈니스 로직 처리 Service
@@ -20,12 +25,15 @@ import study.common.lib.exception.ErrorCode;
 public class AuthService {
 
     private final JwtTokenService jwtTokenService;
+    private final UserRepository userRepository;
 
     @Value("${auth.admin.username}")
     private String adminUsername;
 
     @Value("${auth.admin.password}")
     private String adminPassword;
+
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 로그인 처리
@@ -38,18 +46,35 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         log.info("로그인 처리 시작 - username: {}", request.getUsername());
 
-        // 사용자 인증
-        if (!isValidUser(request.getUsername(), request.getPassword())) {
-            log.warn("로그인 실패 - 잘못된 인증 정보: username={}", request.getUsername());
-            throw new BaseException(
-                    ErrorCode.INVALID_CREDENTIALS, "아이디 또는 비밀번호가 틀렸습니다."
-            );
+        // 1. DB에서 사용자 조회
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> {
+                    log.warn("로그인 실패 - 존재하지 않는 사용자: {}", request.getUsername());
+                    return new BaseException(ErrorCode.INVALID_CREDENTIALS);
+                });
+
+        // 2. 계정 상태 확인
+        if (!"ACTIVE".equals(user.getStatus())) {
+            log.warn("로그인 실패 - 비활성 계정: username={}, status={}",
+                    user.getUsername(), user.getStatus());
+            throw new BaseException(ErrorCode.USER_DISABLED, "비활성화된 계정입니다.");
         }
 
-        // JWT 토큰 생성
-        String token = jwtTokenService.generateToken(request.getUsername());
-        log.info("JWT 토큰 생성 완료 - username: {}", request.getUsername());
-        return LoginResponse.success(token, request.getUsername());
+        // 3. 비밀번호 검증 (암호화된 비밀번호와 비교)
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.warn("로그인 실패 - 잘못된 비밀번호: username={}", request.getUsername());
+            throw new BaseException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
+        // 4. 마지막 로그인 시간 업데이트
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        // 5. JWT 토큰 생성
+        String token = jwtTokenService.generateToken(user.getUsername());
+        log.info("로그인 성공 - username: {}", user.getUsername());
+
+        return LoginResponse.success(token, user.getUsername());
     }
 
     /**
@@ -85,10 +110,9 @@ public class AuthService {
         if (!validateToken(token)) {
             log.warn("유효하지 않은 토큰으로 사용자 정보 추출 시도");
             throw new BaseException(
-                    ErrorCode.INVALID_TOKEN,
-                    "유효하지 않거나 만료된 토큰입니다."
+                    ErrorCode.INVALID_TOKEN
             );
         }
-        throw new RuntimeException("Invalid or expired token");
+        return jwtTokenService.getUsernameFromToken(token);
     }
 }

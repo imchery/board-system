@@ -8,14 +8,13 @@ import lombok.RequiredArgsConstructor;
  * ErrorCode를 포함하여 통일된 예외 처리
  */
 @Getter
-@RequiredArgsConstructor
 public class BaseException extends RuntimeException {
 
     private final ErrorCode errorCode;
 
-    public BaseException(Exception errorCode) {
+    public BaseException(ErrorCode errorCode) {
         super(errorCode.getMessage());
-        this.errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+        this.errorCode = errorCode;
     }
 
     public BaseException(ErrorCode errorCode, String message) {
