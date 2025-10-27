@@ -1,5 +1,5 @@
 import axios from "axios";
-import {LoginRequest, LoginResponse} from "@/types/api.ts";
+import {LoginRequest, LoginResponse, ResponseVO, SignupRequest, SignupResponse} from "@/types/api.ts";
 
 // 백엔드 API 기본 설정
 const API_BASE_URL = 'http://localhost:9081';
@@ -52,6 +52,41 @@ export const authApi = {
     // 헬스 체크
     health: async (): Promise<string> => {
         return await authClient.get('/auth/health')
+    },
+
+    // ===== 회원가입 관련 =====
+
+    /**
+     * 회원가입
+     * @param signupData
+     */
+    signup: async (signupData: SignupRequest): Promise<ResponseVO<SignupResponse>> => {
+        return await authClient.post('/auth/signup', signupData)
+    },
+
+    /**
+     * 아이디 중복 체크
+     * true: 사용가능, false: 이미 사용 중
+     * @param username 확인할 아이디
+     */
+    checkUsername: async (username: string): Promise<boolean> => {
+        const response: ResponseVO<boolean> = await authClient.get(
+            `/auth/check/username?=${username}`
+        )
+        return response.data
+    },
+
+    /**
+     * 이메일 중복 체크
+     * true: 사용가능, false: 이미 사용 중
+     * @param email 확인할 이메일
+     */
+    checkEmail: async (email: string): Promise<boolean> => {
+        const resposne: ResponseVO<boolean> = await authClient.get(
+            `/auth/check/email?=${email}`
+        )
+        return resposne.data
     }
+
 }
 

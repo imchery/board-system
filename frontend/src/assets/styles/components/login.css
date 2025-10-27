@@ -71,3 +71,22 @@
         font-size: 20px;
     }
 }
+
+/* 회원가입 링크 스타일 추가 */
+.signup-link {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.signup-link .el-button {
+    color: #667eea;
+    font-weight: bold;
+    padding: 0 5px;
+}
+
+.signup-link .el-button:hover {
+    color: #764ba2;
+}

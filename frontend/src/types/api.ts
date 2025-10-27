@@ -166,3 +166,33 @@ export interface UserStatsResponse {
     postCount: number
     commentCount: number
 }
+
+// ======================= 회원가입 타입 =======================
+
+/**
+ * 회원가입 요청
+ */
+export interface SignupRequest {
+    username: string
+    password: string
+    email: string
+    nickname: string
+}
+
+/**
+ * 회원가입 응답
+ */
+export interface SignupResponse {
+    username: string
+    email: string
+    nickname: string
+    message: string
+}
+
+/**
+ * 중복 체크 응답
+ */
+export interface DuplicateRequest {
+    available: boolean // true: 사용 가능, false: 중복
+    message: string
+}

@@ -4,7 +4,7 @@
       <el-header class="header-content">
         <!--    로고/브랜드 영역    -->
         <div class="brand-section">
-          <router-link to="/" class="brand-link">
+          <router-link to="/posts" class="brand-link">
             <div class="brand-content">
               <span class="brand-text">Board System</span>
             </div>
@@ -62,6 +62,11 @@
                 <UserFilled/>
               </el-icon>
               로그인
+            </el-button>
+
+            <!-- 회원가입 버튼 -->
+            <el-button type="primary" @click="goToSignup" class="signup-btn">
+              회원가입
             </el-button>
           </div>
         </div>
@@ -129,6 +134,11 @@ const handleLoggout = async () => {
 // 로그인 페이지로 이동
 const goToLogin = () => {
   router.push('/login')
+}
+
+// 회원가입 페이지로 이동
+const goToSignup = () => {
+  router.push('/signup')
 }
 </script>
 

@@ -5,7 +5,7 @@
         <div class="login-box">
           <!-- 로고 영역 -->
           <div class="logo-section">
-            <h2>📝 Board System</h2>
+            <h2>Board System</h2>
             <p>로그인하여 게시판을 이용해보세요</p>
           </div>
 
@@ -64,6 +64,12 @@
               </el-button>
             </el-form-item>
           </el-form>
+
+          <!-- 회원가입 링크 추가 -->
+          <div class="signup-link">
+            <span>아직 계정이 없으신가요?</span>
+            <el-button type="text" @click="goToSignup">회원가입</el-button>
+          </div>
 
           <!-- 기본 계정 안내 -->
           <div class="demo-info">
@@ -145,6 +151,11 @@ const handleLogin = async () => {
   } catch (error) {
     handleAuthApiError(error)
   }
+}
+
+// 회원가입 페이지로 이동
+const goToSignup = () => {
+  router.push('/signup')
 }
 
 // 컴포넌트가 마운트될 때 이미 로그인된 상태면 리다이렉트

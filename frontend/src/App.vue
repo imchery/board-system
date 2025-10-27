@@ -10,7 +10,7 @@
 
     <!--  메인 앱  -->
     <div v-else class="app-layout">
-      <!--   헤더(홈, 로그인 페이지가 아닐 때만 표시)   -->
+      <!--   헤더(홈, 로그인 페이지, 회원가입이 아닐 때만 표시)   -->
       <Header v-if="!isSpecialPage"/>
 
       <!--   메인 콘텐츠   -->
@@ -25,7 +25,7 @@
 import {useAuthStore} from "@/stores/auth.ts";
 import {Loading} from "@element-plus/icons-vue";
 import {computed, onMounted} from "vue";
-import Header from "@/components/Header.vue";
+import Header from "@/components/common/Header.vue";
 import {useRoute} from "vue-router";
 
 // Router & Auth Store
@@ -34,7 +34,7 @@ const authStore = useAuthStore()
 
 // 로그인 페이지인지 확인
 const isSpecialPage = computed(() => {
-  return route.path === '/login' || route.path === '/'
+  return route.path === '/login' || route.path === '/' || route.path === '/signup'
 })
 
 // 앱 시작 시 인증 상태 초기화
