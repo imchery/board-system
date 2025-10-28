@@ -24,6 +24,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 
+    // E-mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
     // Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
