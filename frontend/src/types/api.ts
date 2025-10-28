@@ -140,8 +140,10 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-    token: string | null
-    username: string | null
+    data?: {
+        token: string
+        username: string
+    }
     message: string
 }
 

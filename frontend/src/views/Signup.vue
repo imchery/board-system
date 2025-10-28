@@ -40,7 +40,7 @@
             </el-form-item>
 
             <!-- 비밀번호 입력 -->
-            <el-form-item label="비밀번호" props="password" required>
+            <el-form-item label="비밀번호" prop="password" required>
               <el-input
                   v-model="signupForm.password"
                   type="password"
@@ -50,9 +50,9 @@
             </el-form-item>
 
             <!-- 비밀번호 확인 -->
-            <el-form-item label="비밀번호 확인" props="passwordConfirm" required>
+            <el-form-item label="비밀번호 확인" prop="passwordConfirm" required>
               <el-input
-                  v-model="signupForm.password"
+                  v-model="signupForm.passwordConfirm"
                   type="password"
                   placeholder="비밀번호를 다시 입력해주세요"
                   show-password
@@ -146,8 +146,8 @@ const signupRules: FormRules = {
     {required: true, message: '아이디를 입력해주세요', trigger: 'blur'},
     {min: 4, max: 20, message: '아이디는 4-20자 사이여야 합니다', trigger: 'blur'},
     {
-      pattern: /^[a-zA-Z0-9]+$/,
-      message: '영문과 숫자만 사용 가능합니다',
+      pattern: /^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]+$/,
+      message: '영문과 숫자를 모두 포함해야 합니다',
       trigger: 'blur'
     },
   ],
@@ -164,7 +164,7 @@ const signupRules: FormRules = {
     {required: true, message: '비밀번호 확인을 입력해주세요', trigger: 'blur'},
     {
       validator: (rule, value, callback) => {
-        if (value != signupForm.password) {
+        if (value !== signupForm.password) {
           callback(new Error('비밀번호가 일치하지 않습니다'))
         } else {
           callback()
@@ -187,9 +187,22 @@ const signupRules: FormRules = {
 // ===================== 아이디 중복 체크 =====================
 const handleUsernameBlur = async () => {
   // 아이디 형식 검증 먼저
-  if (!signupForm.username) return
-  if (signupForm.username.length < 4 || signupForm.username.length > 20) return
-  if (!/^[a-zA-Z0-9]+$/.test(signupForm.username)) return
+  if (!signupForm.username) {
+    usernameCheckStatus.value = ''
+    usernameMessage.value = ''
+    return
+  }
+
+  if (signupForm.username.length < 4 || signupForm.username.length > 20) {
+    usernameCheckStatus.value = ''
+    usernameMessage.value = ''
+    return
+  }
+  if (!/^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]+$/.test(signupForm.username)) {
+    usernameCheckStatus.value = ''
+    usernameMessage.value = ''
+    return
+  }
 
   try {
     const available = await authApi.checkUsername(signupForm.username)
@@ -211,8 +224,18 @@ const handleUsernameBlur = async () => {
 // ===================== 이메일 중복 체크 =====================
 const handleEmailBlur = async () => {
   // 이메일 형식 검증 먼저
-  if (!signupForm.email) return
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupForm.email)) return
+  if (!signupForm.email) {
+    emailCheckStatus.value = ''
+    emailMessage.value = ''
+    return
+  }
+
+  // 이메일 형식이 틀리면 중복 체크 X
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupForm.email)) {
+    emailCheckStatus.value = ''
+    emailMessage.value = ''
+    return
+  }
 
   try {
     const available = await authApi.checkEmail(signupForm.email)
@@ -245,7 +268,7 @@ const handleSignup = async () => {
     return
   }
 
-  if (emailMessage.value !== 'success') {
+  if (usernameCheckStatus.value !== 'success') {
     ElMessage.warning('이메일 중복 체크를 완료해주세요')
     return
   }

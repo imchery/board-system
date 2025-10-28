@@ -98,6 +98,7 @@ import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import {handleAuthApiError} from "@/utils/errorHandler.ts";
+import {LoginRequest} from "@/types/api.ts";
 
 // Vue Router & Auth Store
 const router = useRouter()
@@ -133,11 +134,13 @@ const handleLogin = async () => {
   if (!isValid) return
 
   try {
-    // 스토어를 통한 로그인
-    const result = await authStore.login({
+    const request: LoginRequest = {
       username: loginForm.username,
       password: loginForm.password
-    })
+    }
+
+    // 스토어를 통한 로그인
+    const result = await authStore.login(request)
 
     if (result.success) {
       ElMessage.success(result.message || '로그인 성공!')

@@ -62,16 +62,16 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             const response = await authApi.login(loginData)
 
-            if (response.token && response.username) {
+            if (response.data?.token && response.data?.username) {
                 // 상태 업데이트
-                token.value = response.token
-                username.value = response.username
+                token.value = response.data.token
+                username.value = response.data.username
 
                 // localStorage 저장
-                localStorage.setItem('token', response.token)
-                localStorage.setItem('username', response.username)
+                localStorage.setItem('token', response.data.token)
+                localStorage.setItem('username', response.data.username)
 
-                console.log('로그인 성공:', response.username)
+                console.log('로그인 성공:', response.data.username)
                 return {success: true, message: response.message}
             } else {
                 return {success: false, message: response.message || '로그인에 실패했습니다'}

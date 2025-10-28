@@ -71,7 +71,7 @@ export const authApi = {
      */
     checkUsername: async (username: string): Promise<boolean> => {
         const response: ResponseVO<boolean> = await authClient.get(
-            `/auth/check/username?=${username}`
+            `/auth/check/username?username=${username}`
         )
         return response.data
     },
@@ -83,7 +83,7 @@ export const authApi = {
      */
     checkEmail: async (email: string): Promise<boolean> => {
         const resposne: ResponseVO<boolean> = await authClient.get(
-            `/auth/check/email?=${email}`
+            `/auth/check/email?email=${email}`
         )
         return resposne.data
     }
