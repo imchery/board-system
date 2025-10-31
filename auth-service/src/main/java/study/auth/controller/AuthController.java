@@ -5,11 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import study.auth.dto.LoginRequest;
-import study.auth.dto.LoginResponse;
-import study.auth.dto.SignupRequest;
-import study.auth.dto.SignupResponse;
+import study.auth.dto.*;
 import study.auth.service.AuthService;
+import study.auth.service.EmailService;
 import study.auth.service.UserService;
 import study.common.lib.exception.BaseException;
 import study.common.lib.exception.ErrorCode;
@@ -27,6 +25,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final EmailService emailService;
 
     /**
      * 로그인
@@ -77,6 +76,7 @@ public class AuthController {
     /**
      * 이메일 중복 체크
      * 회원가입 시 이메일 사용 가능 여부 확인
+     *
      * @param email
      * @return
      */
@@ -85,6 +85,34 @@ public class AuthController {
         boolean available = userService.checkEmailDuplicate(email);
         String message = available ? "사용 가능한 이메일입니다" : "이미 사용 중인 이메일입니다";
         return ResponseVO.ok(message, available);
+    }
+
+    /**
+     * 이메일 인증 코드 발송
+     *
+     * @param request
+     * @return
+     */
+    @PostMapping("/email/send")
+    public ResponseVO<Void> sendVerificationCode(@RequestBody EmailVerificationRequest request) {
+
+        log.info("인증 코드 발송 요청 - email: {}", request.getEmail());
+
+        emailService.sendVerificationCode(request.getEmail());
+        return ResponseVO.ok("인증 코드가 발송되었습니다.", null);
+    }
+
+    /**
+     * 이메일 인증 코드 확인
+     * @param request
+     * @return
+     */
+    @PostMapping("/email/verify")
+    public ResponseVO<Boolean> verifyCode(@RequestBody EmailVerificationCheckRequest request) {
+        log.info("인증 코드 확인 요청 - email: {}", request.getEmail());
+
+        boolean verified = emailService.verifyCode(request.getEmail(), request.getCode());
+        return ResponseVO.ok("이메일 인증이 완료되었습니다.", verified);
     }
 
     /**

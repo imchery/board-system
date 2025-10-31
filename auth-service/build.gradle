@@ -24,8 +24,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
     // E-mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // Thymeleaf
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
     // Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'

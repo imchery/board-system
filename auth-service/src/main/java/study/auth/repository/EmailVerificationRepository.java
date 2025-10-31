@@ -15,6 +15,7 @@ public interface EmailVerificationRepository extends MongoRepository<EmailVerifi
 
     /**
      * 이메일로 가장 최근 인증 정보 조회
+     * createdAt 기준 내림차순 정렬 후 첫 번째 항목 반환
      *
      * @param email 이메일
      * @return 인증정보

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이메일 인증</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
+<table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+        <td align="center" style="padding: 40px 0;">
+            <table role="presentation"
+                   style="width: 600px; border-collapse: collapse; background-color: white; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <!-- 헤더 -->
+                <tr>
+                    <td style="padding: 40px 40px 20px; text-align: center;">
+                        <h1 style="margin: 0; color: #667eea; font-size: 28px;">Board System</h1>
+                        <p style="margin: 10px 0 0; color: #666; font-size: 16px;">이메일 인증을 완료해주세요</p>
+                    </td>
+                </tr>
+
+                <!-- 본문 -->
+                <tr>
+                    <td style="padding: 0 40px;">
+                        <p style="margin: 0 0 15px; color: #333; line-height: 1.6;">안녕하세요!</p>
+                        <p style="margin: 0 0 30px; color: #333; line-height: 1.6;">
+                            회원가입을 환영합니다. 아래 인증 코드를 입력하여 이메일 인증을 완료해주세요.
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- 인증 코드 박스 -->
+                <tr>
+                    <td style="padding: 0 40px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                        color: white;
+                                        font-size: 32px;
+                                        font-weight: bold;
+                                        text-align: center;
+                                        padding: 25px;
+                                        border-radius: 8px;
+                                        letter-spacing: 8px;
+                                        margin: 0 0 30px;">
+                            <span th:text="${code}">123456</span>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- 안내 사항 -->
+                <tr>
+                    <td style="padding: 0 40px 30px;">
+                        <p style="margin: 0 0 10px; color: #333;">
+                            <strong>⏰ 유효 시간:</strong>
+                            <span th:text="${expirationMinutes}">30</span>분
+                        </p>
+                        <p style="margin: 0 0 15px; color: #333;"><strong>⚠️ 주의사항:</strong></p>
+                        <ul style="margin: 0; padding-left: 20px; color: #666; line-height: 1.8;">
+                            <li>인증 코드는 타인에게 절대 공유하지 마세요</li>
+                            <li>유효 시간 내에 인증을 완료해주세요</li>
+                            <li>본인이 요청하지 않았다면 이 메일을 무시하세요</li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <!-- 푸터 -->
+                <tr>
+                    <td style="padding: 30px 40px; border-top: 1px solid #eee; text-align: center;">
+                        <p style="margin: 0 0 5px; color: #999; font-size: 12px;">
+                            본 메일은 발신 전용입니다. 문의사항은 고객센터를 이용해주세요.
+                        </p>
+                        <p style="margin: 0; color: #999; font-size: 12px;">
+                            &copy; 2025 Board System. All rights reserved.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
