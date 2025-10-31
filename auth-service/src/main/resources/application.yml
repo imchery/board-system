@@ -1,24 +1,28 @@
-# ===== ?????? ?? ?? =====
+# ===== 애플리케이션 기본 설정 =====
 spring:
   application:
     name: auth-service
 
-  # ===== MongoDB ?? =====
+  # ===== MongoDB/Redis 설정 =====
   data:
     mongodb:
       uri: mongodb://localhost:27017/board-system
       database: board-system
 
-  # ===== Jackson ?? =====
+    redis:
+      host: localhost
+      port: 6379
+
+  # ===== Jackson 설정 =====
   jackson:
     default-property-inclusion: non_null
 
-  # ===== ??? ?? (Gmail) =====
+  # ===== 이메일 실정 (Gmail) =====
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:testEmail@gmail.com}
-    password: ${MAIL_PASSWORD:testAppPassword}
+    username: ${MAIL_USERNAME:testEmail@gmail.com} # 환경변수 또는 기본값
+    password: ${MAIL_PASSWORD:testAppPassword} # 환경변수 또는 기본값
     properties:
       mail:
         smtp:
@@ -29,34 +33,42 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-    # ??? ??? ??
+    # 이메일 발송자 정보
     default-encoding: UTF-8
 
-# ===== ?? ?? =====
+  # ===== Thymeleaf 설정 =====
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+
+# ===== 서버 포트 =====
 server:
   port: 9081
 
-# ===== JWT ?? =====
+# ===== JWT 설정 =====
 jwt:
   secret: mySecretKeyForBoardSystemMSAProject2025
-  expiration: 86400000  # 24?? (???)
+  expiration: 86400000
 
-# ===== ?? ?? =====
+# ===== 로깅 설정 =====
 logging:
   level:
     org.springframework: INFO
     study: DEBUG
 
-# ===== ??? ?? ?? =====
+# ===== 관리자 계정 설정 =====
 auth:
   admin:
     username: ${ADMIN_USERNAME:admin}
     password: ${ADMIN_PASSWORD:admin123}
 
-# ===== ??? ?? ?? =====
+# ===== 이메일 인증 설정 =====
 email:
   verification:
-    code-length: 6              # ?? ?? ??
-    expiration-minutes: 30      # ?? ?? (?)
-    from-name: Board System     # ??? ??
-    from-email: ${MAIL_USERNAME:noreply@boardsystem.com}
+    code-length: 6
+    expiration-minutes: 30
+    from-name: Board System
+    from-email: ${MAIL_USERNAME:testEmail@gmail.com}
