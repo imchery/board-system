@@ -268,7 +268,7 @@ public class EmailService {
     private String buildEmailContent(String code) {
         Context context = new Context();
         context.setVariable("code", code);
-        context.setVariable("verificationCode", emailProperties.getExpirationMinutes());
+        context.setVariable("expirationMinutes", emailProperties.getExpirationMinutes());
 
         return templateEngine.process("email-verification", context);
     }

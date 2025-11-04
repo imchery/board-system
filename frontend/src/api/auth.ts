@@ -86,7 +86,23 @@ export const authApi = {
             `/auth/check/email?email=${email}`
         )
         return resposne.data
-    }
+    },
 
+    /**
+     * 이메일 인증 코드 발송
+     * @param email 인증받을 이메일
+     */
+    sendVerifivationCode: async (email: string): Promise<ResponseVO<void>> => {
+        return await authClient.post('/auth/email/send', {email})
+    },
+
+    /**
+     * 이메일 인증 코드 검증
+     * @param email 이메일
+     * @param code 6자리 인증코드
+     */
+    verifyCode: async (email: string, code: string): Promise<ResponseVO<boolean>> => {
+        return await authClient.post('/auth/email/verify', {email, code})
+    }
 }
 

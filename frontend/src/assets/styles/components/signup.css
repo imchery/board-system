@@ -76,3 +76,58 @@
     color: #667eea;
     font-weight: bold;
 }
+
+/* 이메일 인증 관련 */
+.email-input-wrapper,
+.verification-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.email-input-wrapper .el-input,
+.verification-input-wrapper .el-input {
+    flex: 1;
+}
+
+.send-code-btn,
+.verify-btn {
+    white-space: nowrap;
+    min-width: 140px;
+}
+
+.verification-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.timer {
+    color: #ff6b6b;
+    font-weight: 600;
+}
+
+.timer-ready {
+    color: #67C23A;
+    font-weight: 600;
+}
+
+:deep(.check-message) {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+:deep(.check-message.success) {
+    color: #67C23A;
+}
+
+:deep(.check-message.error) {
+    color: #F56C6C;
+}
+
+:deep(.check-message.idle) {
+    color: #909399;
+}
