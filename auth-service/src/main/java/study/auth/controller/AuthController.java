@@ -45,6 +45,20 @@ public class AuthController {
     }
 
     /**
+     * 아이디 찾기
+     * 이메일 인증 후 아이디 확인
+     *
+     * @param request 아이디 찾기 요청(이메일, 인증코드)
+     * @return 찾은 아이디(일부 가려짐)
+     */
+    @PostMapping("/find/username")
+    public ResponseVO<FindUsernameResponse> findUsername(@Valid @RequestBody FindUsernameRequest request) {
+        log.info("아이디 찾기 API 호출 - email: {}", request.getEmail());
+        FindUsernameResponse response = authService.findUsername(request);
+        return ResponseVO.ok("아이디를 찾았습니다.", response);
+    }
+
+    /**
      * 회원가입
      * 새로운 사용자 계정 생성
      *
@@ -104,6 +118,7 @@ public class AuthController {
 
     /**
      * 이메일 인증 코드 확인
+     *
      * @param request
      * @return
      */

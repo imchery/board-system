@@ -133,7 +133,7 @@ export interface ApiError {
     message: string
 }
 
-// ======================= 인증 타입 =======================
+// ======================= 로그인 타입 =======================
 export interface LoginRequest {
     username: string
     password: string
@@ -145,6 +145,23 @@ export interface LoginResponse {
         username: string
     }
     message: string
+}
+
+// ======================= 아이디/비밀번호 찾기 타입 =======================
+/**
+ * 아이디 찾기 요청
+ */
+export interface FindUserRequest {
+    email: string
+    verificationCode: string
+}
+
+/**
+ * 아이디 찾기 응답
+ */
+export interface FindUserResponse {
+    username: string
+    maskedUsername: string
 }
 
 // ======================= 좋아요 상태 관리 타입 =======================

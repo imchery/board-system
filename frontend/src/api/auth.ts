@@ -1,5 +1,5 @@
 import axios from "axios";
-import {LoginRequest, LoginResponse, ResponseVO, SignupRequest, SignupResponse} from "@/types/api.ts";
+import {FindUserResponse, LoginRequest, LoginResponse, ResponseVO, SignupRequest, SignupResponse} from "@/types/api.ts";
 
 // 백엔드 API 기본 설정
 const API_BASE_URL = 'http://localhost:9081';
@@ -29,6 +29,16 @@ export const authApi = {
     // 로그인
     login: async (loginData: LoginRequest): Promise<LoginResponse> => {
         return await authClient.post('/auth/login', loginData)
+    },
+
+    // 아이디 찾기
+    findUsername: async (
+        email: string,
+        verificationCode: string
+    ): Promise<ResponseVO<FindUserResponse>> => {
+        return await authClient.post('/auth/find/username', {
+            email, verificationCode
+        })
     },
 
     // 토큰 검증
@@ -82,17 +92,17 @@ export const authApi = {
      * @param email 확인할 이메일
      */
     checkEmail: async (email: string): Promise<boolean> => {
-        const resposne: ResponseVO<boolean> = await authClient.get(
+        const response: ResponseVO<boolean> = await authClient.get(
             `/auth/check/email?email=${email}`
         )
-        return resposne.data
+        return response.data
     },
 
     /**
      * 이메일 인증 코드 발송
      * @param email 인증받을 이메일
      */
-    sendVerifivationCode: async (email: string): Promise<ResponseVO<void>> => {
+    sendVerificationCode: async (email: string): Promise<ResponseVO<void>> => {
         return await authClient.post('/auth/email/send', {email})
     },
 

@@ -51,20 +51,6 @@
     margin-top: 10px;
 }
 
-.check-message {
-    font-size: 12px;
-    margin-top: 5px;
-    display: block;
-}
-
-.check-message.success {
-    color: #67C23A;
-}
-
-.check-message.error {
-    color: #F56C6C;
-}
-
 .login-link {
     text-align: center;
     margin-top: 20px;

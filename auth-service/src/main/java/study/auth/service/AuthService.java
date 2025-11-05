@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import study.auth.dto.FindUsernameRequest;
+import study.auth.dto.FindUsernameResponse;
 import study.auth.dto.LoginRequest;
 import study.auth.dto.LoginResponse;
 import study.auth.entity.User;
@@ -34,6 +36,8 @@ public class AuthService {
     private String adminPassword;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final EmailService emailService;
 
     /**
      * 로그인 처리
@@ -75,6 +79,40 @@ public class AuthService {
         log.info("로그인 성공 - username: {}", user.getUsername());
 
         return LoginResponse.success(token, user.getUsername());
+    }
+
+    /**
+     * 아이디 찾기
+     * 이메일로 사용자 찾아서 아이디 반환
+     *
+     * @param request 아이디 찾기 요청 (이메일 + 인증코드)
+     * @return 찾은 아이디 정보
+     */
+    public FindUsernameResponse findUsername(FindUsernameRequest request) {
+        log.info("아이디 찾기 요청 - email: {}", request.getEmail());
+
+        // 1. 이메일 인증 확인
+        boolean verified = emailService.verifyCode(request.getEmail(), request.getVerificationCode());
+        if (!verified) {
+            throw new BaseException(ErrorCode.INVALID_CREDENTIALS, "이메일 인증에 실패했습니다");
+        }
+
+        // 2. 이메일로 사용자 찾기
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BaseException(
+                        ErrorCode.USER_NOT_FOUND,
+                        "해당 이메일로 가입된 계정이 없습니다"
+                ));
+
+        // 3. 응답 생성(일부 가린 아이디)
+        String maskedUsername = FindUsernameResponse.maskUsername(user.getUsername());
+
+        log.info("아이디 찾기 성공 - email: {}, username: {}", request.getEmail(), maskedUsername);
+
+        return FindUsernameResponse.builder()
+                .username(user.getUsername())
+                .maskedUsername(maskedUsername)
+                .build();
     }
 
     /**

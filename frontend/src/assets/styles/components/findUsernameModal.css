@@ -1,0 +1,59 @@
+.find-step {
+    padding: 20px 0;
+}
+
+.step-description {
+    color: #606266;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.email-input-wrapper {
+    display: flex;
+    gap: 10px;
+}
+
+.email-input-wrapper .el-input {
+    flex: 1;
+}
+
+.timer-info {
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.timer {
+    color: #ff6b6b;
+    font-weight: 600;
+}
+
+.timer-expired {
+    color: #909399;
+}
+
+.find-result {
+    padding: 20px 0;
+}
+
+.username-display {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.username-display p {
+    color: #606266;
+    margin: 8px 0;
+}
+
+.username-display h3 {
+    font-size: 28px;
+    color: #409EFF;
+    margin: 16px 0;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.help-text {
+    font-size: 14px;
+    color: #909399;
+}
