@@ -76,9 +76,14 @@ export const useAuthStore = defineStore('auth', () => {
             } else {
                 return {success: false, message: response.message || '로그인에 실패했습니다'}
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('로그인 에러:', error)
-            return {success: false, message: '로그인 중 오류가 발생했습니다'}
+
+            const errorMessage = error.response?.data?.message
+                || error.message
+                || '아이디 또는 비밀번호가 일치하지 않습니다'
+
+            return {success: false, message: errorMessage}
         } finally {
             isLoading.value = false
         }

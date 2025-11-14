@@ -65,6 +65,17 @@
             </el-form-item>
           </el-form>
 
+          <!-- 아이디/비밀번호 찾기 링크 -->
+          <div class="account-help">
+            <el-button type="text" @click="showFindUsernameModal">
+              아이디 찾기
+            </el-button>
+            <span class="divider">|</span>
+            <el-button type="text" @click="showFindPasswordModal">
+              비밀번호 찾기
+            </el-button>
+          </div>
+
           <!-- 회원가입 링크 추가 -->
           <div class="signup-link">
             <span>아직 계정이 없으신가요?</span>
@@ -88,17 +99,20 @@
         </div>
       </el-main>
     </el-container>
+
+    <FindUsernameModal v-model:visible="findUsernameVisible"/>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
-import { useAuthStore } from '@/stores/auth'
+import {ref, reactive, onMounted} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage, type FormInstance, type FormRules} from 'element-plus'
+import {User, Lock} from '@element-plus/icons-vue'
+import {useAuthStore} from '@/stores/auth'
 import {handleAuthApiError} from "@/utils/errorHandler.ts";
 import {LoginRequest} from "@/types/api.ts";
+import FindUsernameModal from "@/views/FindUsernameModal.vue";
 
 // Vue Router & Auth Store
 const router = useRouter()
@@ -106,6 +120,7 @@ const authStore = useAuthStore()
 
 // 반응형 데이터
 const loginFormRef = ref<FormInstance>()
+const findUsernameVisible = ref(false)
 
 // 로그인 폼 데이터
 const loginForm = reactive({
@@ -116,12 +131,12 @@ const loginForm = reactive({
 // 폼 검증 규칙
 const loginRules: FormRules = {
   username: [
-    { required: true, message: '사용자명을 입력해주세요', trigger: 'blur' },
-    { min: 2, max: 20, message: '사용자명은 2-20자 사이여야 합니다', trigger: 'blur' }
+    {required: true, message: '사용자명을 입력해주세요', trigger: 'blur'},
+    {min: 2, max: 20, message: '사용자명은 4-20자 사이여야 합니다', trigger: 'blur'}
   ],
   password: [
-    { required: true, message: '비밀번호를 입력해주세요', trigger: 'blur' },
-    { min: 6, max: 20, message: '비밀번호는 6-20자 사이여야 합니다', trigger: 'blur' }
+    {required: true, message: '비밀번호를 입력해주세요', trigger: 'blur'},
+    {min: 6, max: 20, message: '비밀번호는 8-20자 사이여야 합니다', trigger: 'blur'}
   ]
 }
 
@@ -154,6 +169,14 @@ const handleLogin = async () => {
   } catch (error) {
     handleAuthApiError(error)
   }
+}
+
+const showFindUsernameModal = () => {
+  findUsernameVisible.value = true
+}
+
+const showFindPasswordModal = () => {
+  ElMessage.info('비밀번호 찾기는 곧 준비됩니다!')
 }
 
 // 회원가입 페이지로 이동

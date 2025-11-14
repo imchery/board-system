@@ -206,7 +206,7 @@ const emailVerification = reactive({
   code: '',         // 입력한 인증 코드
   verified: false,  // 인증 완료 여부
   timer: 180,       // 유효시간 3분
-  canResend: false, // 재발송 가능 여부
+  canResend: true, // 재발송 가능 여부
   sending: false,   // 발송 중
   verifying: false, // 검증 중
 })

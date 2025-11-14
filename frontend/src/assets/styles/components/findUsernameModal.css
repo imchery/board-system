@@ -20,11 +20,28 @@
 .timer-info {
     margin-top: 8px;
     font-size: 14px;
+    min-height: 20px; /* 높이 고정 추가 */
 }
 
 .timer {
     color: #ff6b6b;
     font-weight: 600;
+}
+
+/* 인풋 높이 통일 추가 */
+:deep(.el-input__wrapper) {
+    min-height: 40px;
+}
+
+/* 폼 아이템 간격 추가 */
+:deep(.el-form-item) {
+    margin-bottom: 24px;
+}
+
+:deep(.el-form-item__label) {
+    font-weight: 500;
+    color: #606266;
+    margin-bottom: 8px;
 }
 
 .timer-expired {

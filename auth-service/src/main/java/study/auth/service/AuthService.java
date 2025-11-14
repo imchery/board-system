@@ -5,16 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import study.auth.dto.FindUsernameRequest;
-import study.auth.dto.FindUsernameResponse;
-import study.auth.dto.LoginRequest;
-import study.auth.dto.LoginResponse;
+import study.auth.dto.*;
 import study.auth.entity.User;
 import study.auth.repository.UserRepository;
 import study.common.lib.config.JwtTokenService;
 import study.common.lib.exception.BaseException;
 import study.common.lib.exception.ErrorCode;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 /**
@@ -132,7 +130,7 @@ public class AuthService {
      * 토큰 유효성 및 만료 확인
      *
      * @param token JWT 토큰
-     * @return 유효성(true,
+     * @return 유효성(true, false)
      */
     public boolean validateToken(String token) {
         return jwtTokenService.validateToken(token) && !jwtTokenService.isTokenExpired(token);
@@ -152,5 +150,115 @@ public class AuthService {
             );
         }
         return jwtTokenService.getUsernameFromToken(token);
+    }
+
+    /**
+     * 비밀번호 재설정 (임시 비밀번호 발급)
+     *
+     * @param request 비밀번호 재설정 요청
+     * @return 재설정 완료 정보
+     */
+    public ResetPasswordResponse resetPassword(ResetPasswordRequest request) {
+        log.info("비밀번호 재설정 요청 - username: {}, email: {}",
+                request.getUsername(), request.getEmail());
+
+        // 1. 이메일 인증 확인
+        boolean verified = emailService.verifyCode(request.getEmail(), request.getVerificationCode());
+        if (!verified) {
+            throw new BaseException(ErrorCode.INVALID_CREDENTIALS, "이메일 인증에 실패했습니다");
+        }
+
+        // 2. 아이디 + 이메일로 사용자 찾기
+        User user = userRepository.findByUsernameAndEmail(request.getUsername(), request.getEmail())
+                .orElseThrow(() -> new BaseException(
+                        ErrorCode.USER_NOT_FOUND,
+                        "일치하는 회원 정보를 찾을 수 없습니다"
+                ));
+
+        // 3. 임시 비밀번호 생성 (8자리, 영문+숫자+특수문자)
+        String temporaryPassword = generateTemporaryPassword();
+        log.info("임시 비밀번호 생성 완료 - username: {}", request.getUsername());
+
+        // 4. 비밀번호 암호화 후 저장
+        user.setPassword(passwordEncoder.encode(temporaryPassword));
+        userRepository.save(user);
+        log.info("임시 비밀번호 DB 저장 완료 - username: {}", request.getUsername());
+
+        // 5. 이메일로 임시 비밀번호 발송
+        emailService.sendTemporaryPassword(request.getEmail(), temporaryPassword);
+
+        log.info("임시 비밀번호 발급 완료 - username: {}", request.getUsername());
+
+        return ResetPasswordResponse.of(request.getEmail());
+    }
+
+    /**
+     * 임시 비밀번호 생성
+     * 회원가입 규칙 준수: 영문(대소문자) + 숫자 + 특수문자 포함, 8자
+     * <p>
+     * 생성 전략:
+     * 1. 영문 대문자 2개
+     * 2. 영문 소문자 2개
+     * 3. 숫자 2개
+     * 4. 특수문자 2개
+     * 총 8자 생성 후 섞기
+     *
+     * @return 임시 비밀번호
+     */
+    private String generateTemporaryPassword() {
+        SecureRandom random = new SecureRandom();
+
+        // 문자 풀 정의
+        String upperCaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String lowerCaseLetters = "abcdefghijklmnopqrstuvwxyz";
+        String numbers = "0123456789";
+        String specialChars = "@$!%*#?&";
+
+        StringBuilder password = new StringBuilder();
+
+        // 1. 각 카테고리에서 최소 2개씩 선택(규칙 보장)
+        password.append(getRandomChar(upperCaseLetters, random, 2));
+        password.append(getRandomChar(lowerCaseLetters, random, 2));
+        password.append(getRandomChar(numbers, random, 2));
+        password.append(getRandomChar(specialChars, random, 2));
+
+        // 2. 생성된 문자를 섞기 (순서 예측 방지)
+        return shuffleString(password.toString(), random);
+    }
+
+    /**
+     * 문자열에서 랜덤 문자열 선택
+     *
+     * @param source 선택할 문자 풀
+     * @param random SecureRandom 인스턴스
+     * @param count  선택할 개수
+     * @return 선택된 문자풀
+     */
+    private String getRandomChar(String source, SecureRandom random, int count) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            result.append(source.charAt(random.nextInt(source.length())));
+        }
+        return result.toString();
+    }
+
+    /**
+     * 문자열 섞기 (Fisher-Yates 알고리즘)
+     *
+     * @param input  원본 문자열
+     * @param random SecureRandom 인스턴스
+     * @return 섞인 문자열
+     */
+    private String shuffleString(String input, SecureRandom random) {
+        char[] characters = input.toCharArray();
+
+        for (int i = characters.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+
+            char temp = characters[i];
+            characters[i] = characters[j];
+            characters[j] = temp;
+        }
+        return new String(characters);
     }
 }

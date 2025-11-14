@@ -170,6 +170,39 @@ public class AuthController {
     }
 
     /**
+     * 비밀번호 재설정 (임시 비밀번호 발급)
+     * 이메일 인증 후 임시 비밀번호 발급
+     * <p>
+     * 요청 예시:
+     * POST /auth/reset-password
+     * {
+     *      "username": "admin",
+     *      "email": "test@test.com",
+     *      "verificationCode": "123456"
+     * }
+     * 응답 예시:
+     * {
+     *      "result": true,
+     *      "message": "임시 비밀번호가 이메일로 발송되었습니다.",
+     *      "data": {
+     *                  "message": "임시 비밀번호가 이메일로 발송되었습니다.",
+     *                  "email": "t***@test.com"
+     *      }
+     * }
+     *
+     * @param request 비밀번호 재설정 요청
+     * @return 재설정 완료 정보
+     */
+    @PostMapping("/reset-password")
+    public ResponseVO<ResetPasswordResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        log.info("비밀번호 재설정 API 호출 - username: {}, email: {}",
+                request.getUsername(), request.getEmail());
+
+        ResetPasswordResponse response = authService.resetPassword(request);
+        return ResponseVO.ok("임시 비밀번호가 이메일로 발송되었습니다.", response);
+    }
+
+    /**
      * 서비스 상태 확인 API(헬스체크)
      *
      * @return

@@ -272,4 +272,46 @@ public class EmailService {
 
         return templateEngine.process("email-verification", context);
     }
+
+    /**
+     * 임시 비밀번호 이메일 발송
+     *
+     * @param to                수신자 이메일
+     * @param temporaryPassword 임시 비밀번호
+     */
+    public void sendTemporaryPassword(String to, String temporaryPassword) {
+        log.info("임시 비밀번호 이메일 발송 시작 - email: {}", to);
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "utf-8");
+
+            helper.setFrom(emailProperties.getFromEmail(), emailProperties.getFromName());
+            helper.setTo(to);
+            helper.setSubject("[" + emailProperties.getFromName() + "] 임시 비밀번호 안내");
+
+            String htmlContent = buildTemporaryPasswordEmailContent(temporaryPassword);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("임시 비밀번호 이메일 발송 완료 - email: {}", to);
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            log.error("임시 비밀번호 이메일 발송 중 오류 발생 - email: {}", to, e);
+            throw new RuntimeException("임시 비밀번호 이메일 발송에 실패했습니다", e);
+        }
+    }
+
+    /**
+     * Thymeleaf로 임시 비밀번호 이메일 HTML 생성
+     *
+     * @param temporaryPassword 임시 비밀번호
+     * @return 이메일 HTML
+     */
+    private String buildTemporaryPasswordEmailContent(String temporaryPassword) {
+        Context context = new Context();
+        context.setVariable("temporaryPassword", temporaryPassword);
+
+        return templateEngine.process("temporary-password-email", context);
+    }
+
 }

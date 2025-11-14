@@ -44,4 +44,14 @@ public interface UserRepository extends MongoRepository<User, String> {
      * @return 중복여부
      */
     boolean existsByEmail(String email);
+
+    /**
+     * 아이디와 이메일로 사용자 찾기
+     * 비밀번호 재설정 시 본인 확인용
+     *
+     * @param username 아이디
+     * @param email    이메일
+     * @return 사용자 (Optional)
+     */
+    Optional<User> findByUsernameAndEmail(String username, String email);
 }

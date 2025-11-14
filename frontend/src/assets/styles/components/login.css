@@ -90,3 +90,26 @@
 .signup-link .el-button:hover {
     color: #764ba2;
 }
+
+/* 아이디/비밀번호 찾기 */
+
+.account-help {
+    text-align: center;
+    margin: 15px 0;
+    font-size: 14px;
+}
+
+.account-help .el-button {
+    color: #667eea;
+    font-size: 14px;
+    padding: 0 8px;
+}
+
+.account-help .el-button:hover {
+    color: #764ba2;
+}
+
+.account-help .divider {
+    color: #dcdfe6;
+    margin: 0 5px;
+}
