@@ -215,3 +215,21 @@ export interface DuplicateRequest {
     available: boolean // true: 사용 가능, false: 중복
     message: string
 }
+
+// ===== 비밀번호 재설정 관련 =====
+
+/**
+ * 비밀번호 재설정 요청
+ */
+export interface ResetPasswordRequest {
+    username: string
+    email: string
+    verificationCode: string
+}
+
+/**
+ * 비밀번호 재설정 응답
+ */
+export interface ResetPasswordResponse {
+    email: string
+}

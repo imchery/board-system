@@ -113,3 +113,18 @@
     color: #dcdfe6;
     margin: 0 5px;
 }
+
+.forgot-password {
+    text-align: right;
+    margin-bottom: 16px;
+}
+
+.forgot-password .el-button {
+    padding: 0;
+    font-size: 14px;
+    color: #667eea;
+}
+
+.forgot-password .el-button:hover {
+    color: #764ba2;
+}

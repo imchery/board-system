@@ -83,23 +83,30 @@
           </div>
 
           <!-- 기본 계정 안내 -->
-          <div class="demo-info">
-            <el-alert
-                title="데모 계정"
-                type="info"
-                :closable="false"
-                show-icon
-            >
-              <template #default>
-                <p><strong>사용자명:</strong> admin</p>
-                <p><strong>비밀번호:</strong> admin123</p>
-              </template>
-            </el-alert>
-          </div>
+          <!--          <div class="demo-info">-->
+          <!--            <el-alert-->
+          <!--                title="데모 계정"-->
+          <!--                type="info"-->
+          <!--                :closable="false"-->
+          <!--                show-icon-->
+          <!--            >-->
+          <!--              <template #default>-->
+          <!--                <p><strong>사용자명:</strong> admin</p>-->
+          <!--                <p><strong>비밀번호:</strong> admin123</p>-->
+          <!--              </template>-->
+          <!--            </el-alert>-->
+          <!--          </div>-->
         </div>
       </el-main>
     </el-container>
 
+    <!--  비밀번호 찾기 모달  -->
+    <ResetPasswordModal
+        v-model:visible="resetPasswordVisible"
+        @success="handleResetPasswordSuccess"
+    />
+
+    <!--  아이디 찾기 모달  -->
     <FindUsernameModal v-model:visible="findUsernameVisible"/>
   </div>
 </template>
@@ -113,6 +120,7 @@ import {useAuthStore} from '@/stores/auth'
 import {handleAuthApiError} from "@/utils/errorHandler.ts";
 import {LoginRequest} from "@/types/api.ts";
 import FindUsernameModal from "@/views/FindUsernameModal.vue";
+import ResetPasswordModal from "@/components/auth/ResetPasswordModal.vue";
 
 // Vue Router & Auth Store
 const router = useRouter()
@@ -121,6 +129,7 @@ const authStore = useAuthStore()
 // 반응형 데이터
 const loginFormRef = ref<FormInstance>()
 const findUsernameVisible = ref(false)
+const resetPasswordVisible = ref(false)
 
 // 로그인 폼 데이터
 const loginForm = reactive({
@@ -171,12 +180,20 @@ const handleLogin = async () => {
   }
 }
 
+// 비밀번호 재설정 성공
+const handleResetPasswordSuccess = () => {
+  ElMessage.success({
+    message: '임시 비밀번호로 로그인해주세요',
+    duration: 5000
+  })
+}
+
 const showFindUsernameModal = () => {
   findUsernameVisible.value = true
 }
 
 const showFindPasswordModal = () => {
-  ElMessage.info('비밀번호 찾기는 곧 준비됩니다!')
+  resetPasswordVisible.value = true
 }
 
 // 회원가입 페이지로 이동

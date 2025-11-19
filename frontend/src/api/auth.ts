@@ -1,5 +1,13 @@
 import axios from "axios";
-import {FindUserResponse, LoginRequest, LoginResponse, ResponseVO, SignupRequest, SignupResponse} from "@/types/api.ts";
+import {
+    FindUserResponse,
+    LoginRequest,
+    LoginResponse,
+    ResetPasswordRequest, ResetPasswordResponse,
+    ResponseVO,
+    SignupRequest,
+    SignupResponse
+} from "@/types/api.ts";
 
 // 백엔드 API 기본 설정
 const API_BASE_URL = 'http://localhost:9081';
@@ -113,6 +121,14 @@ export const authApi = {
      */
     verifyCode: async (email: string, code: string): Promise<ResponseVO<boolean>> => {
         return await authClient.post('/auth/email/verify', {email, code})
+    },
+
+    /**
+     * 비밀번호 재설정 (임시 비밀번호 발급)
+     * @param data 재설정 요청 데이터
+     */
+    resetPassword: async (data: ResetPasswordRequest): Promise<ResponseVO<ResetPasswordResponse>> => {
+        return await authClient.post('/auth/email/reset-password', data)
     }
 }
 
