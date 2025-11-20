@@ -148,6 +148,9 @@ const startTimer = () => {
     if (timer.value <= 0) {
       if (timerInterval) {
         clearInterval(timerInterval)
+
+        codeSent.value = false
+        form.value.code = ''
       }
       ElMessage.warning('인증 시간이 만료되었습니다. 재발송해주세요.')
     }

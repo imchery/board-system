@@ -83,6 +83,11 @@ import {reactive, ref, watch} from "vue";
 import {ElMessage, FormInstance, FormRules} from "element-plus";
 import {authApi} from "@/api/auth.ts";
 import {ResetPasswordRequest} from "@/types/api.ts";
+import {
+  canSendVerificationCode,
+  formatRemainingTime,
+  recordVerificationCodeSent
+} from "@/utils/verificationCodeUtils.ts";
 
 // Props & Emits
 const props = defineProps<{
@@ -144,9 +149,36 @@ const handleSendCode = async () => {
   // 아이디, 이메일 검증
   if (!resetFormRef.value) return
 
+  // 1. 폼 검증 실패
   try {
     await resetFormRef.value.validateField(['username', 'email'])
   } catch {
+    return
+  }
+
+  // 2. 아이디/이메일 일치 여부 확인
+  try {
+    const verifyResponse = await authApi.verifyAccount({
+      username: resetForm.username,
+      email: resetForm.email,
+    })
+
+    if (!verifyResponse.data) {
+      ElMessage.error('아이디 또는 이메일 정보가 일치하지 않습니다')
+      return
+    }
+  } catch (error: any) {
+    const message = error.response?.data?.message || '계정 확인에 실패했습니다'
+    ElMessage.error(message)
+    return
+  }
+
+  // 3. 쿨다운 체크
+  const {canSend, remainingSeconds} = canSendVerificationCode(resetForm.email, 'resetPassword')
+
+  if (!canSend) {
+    const timeStr = formatRemainingTime(remainingSeconds)
+    ElMessage.warning(`인증 코드는 3분에 한 번만 발송할 수 있습니다. ${timeStr} 후 다시 시도해주세요.`)
     return
   }
 
@@ -156,6 +188,9 @@ const handleSendCode = async () => {
     await authApi.sendVerificationCode(resetForm.email)
     ElMessage.success('인증 코드가 이메일로 발송되었습니다')
     codeSent.value = true
+
+    // 발송 시간 기록
+    recordVerificationCodeSent(resetForm.email, 'resetPassword')
 
     // 3분 쿨다운
     startCooldown(180)
@@ -179,6 +214,9 @@ const startCooldown = (seconds: number) => {
 
     if (cooldown.value <= 0) {
       clearInterval(timer)
+      codeSent.value = false
+
+      resetForm.verificationCode = ''
     }
   }, 1000)
 }

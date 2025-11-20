@@ -81,15 +81,16 @@ public class UserService {
         return !exists;
     }
 
+
     /**
-     * 이메일 중복 체크
+     * 이메일 존재 여부
      *
-     * @param email 확인할 이메일
-     * @return 중복여부 (true: 사용가능, false: 중복)
+     * @param email 이메일
+     * @return 존재여부
      */
-    public boolean checkEmailDuplicate(String email) {
+    public boolean existsByEmail(String email) {
         boolean exists = userRepository.existsByEmail(email);
-        log.debug("이메일 중복 체크: email={}, exists={}", email, exists);
-        return !exists;
+        log.info("이메일 존재 여부 - email: {}, exists: {}", email, exists);
+        return exists;
     }
 }

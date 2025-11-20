@@ -3,10 +3,13 @@ import {
     FindUserResponse,
     LoginRequest,
     LoginResponse,
-    ResetPasswordRequest, ResetPasswordResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
     ResponseVO,
     SignupRequest,
-    SignupResponse
+    SignupResponse,
+    VerifyAccountRequest,
+    VerifyEmailRequest
 } from "@/types/api.ts";
 
 // 백엔드 API 기본 설정
@@ -129,6 +132,22 @@ export const authApi = {
      */
     resetPassword: async (data: ResetPasswordRequest): Promise<ResponseVO<ResetPasswordResponse>> => {
         return await authClient.post('/auth/email/reset-password', data)
+    },
+
+    /**
+     * 아이디/이메일 확인 (비밀번호 재설정용)
+     * @param data 확인 요청 데이터
+     */
+    verifyAccount: async (data: VerifyAccountRequest): Promise<ResponseVO<boolean>> => {
+        return await authClient.post('/auth/verify-account', data)
+    },
+
+    /**
+     * 이메일 확인(아이디 찾기용)
+     * @param data 확인 요청 데이터
+     */
+    verifyEmail: async (data: VerifyEmailRequest): Promise<ResponseVO<boolean>> => {
+        return await authClient.post('/auth/verify-email', data)
     }
 }
 

@@ -14,6 +14,7 @@ import study.common.lib.exception.ErrorCode;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * 인증 비즈니스 로직 처리 Service
@@ -260,5 +261,23 @@ public class AuthService {
             characters[j] = temp;
         }
         return new String(characters);
+    }
+
+    /**
+     * 아이디/이메일 일치 여부 확인
+     * 보안: 존재 여부만 반환 (상세 정보 노출 안 함)
+     *
+     * @param email    이메일
+     * @param username 아이디
+     * @return 일치여부
+     */
+    public boolean verifyAccountExists(String email, String username) {
+        log.info("계정 존재 확인 - username: {}, email: {}", username, email);
+
+        Optional<User> user = userRepository.findByUsernameAndEmail(username, email);
+        boolean exists = user.isPresent();
+
+        log.info("계정 존재 여부 - username: {}, exists: {}", username, exists);
+        return exists;
     }
 }

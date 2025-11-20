@@ -46,6 +46,7 @@ declare module 'vue' {
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTag: typeof import('element-plus/es')['ElTag']
+    FindUsernameModal: typeof import('./src/components/auth/FindUsernameModal.vue')['default']
     Header: typeof import('./src/components/common/Header.vue')['default']
     ResetPasswordModal: typeof import('./src/components/auth/ResetPasswordModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

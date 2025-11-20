@@ -233,3 +233,20 @@ export interface ResetPasswordRequest {
 export interface ResetPasswordResponse {
     email: string
 }
+
+// ======================= 계정 확인 요청 타입 =======================
+
+/**
+ * 계정 확인 요청
+ */
+export interface VerifyAccountRequest {
+    username: string
+    email: string
+}
+
+/**
+ * 이메일 확인 요청
+ */
+export interface VerifyEmailRequest {
+    email: string
+}

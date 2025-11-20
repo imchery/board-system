@@ -11,8 +11,6 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import study.auth.config.EmailProperties;
-import study.auth.domain.EmailVerification;
-import study.auth.repository.EmailVerificationRepository;
 
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
@@ -29,7 +27,6 @@ import java.util.stream.Collectors;
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final EmailVerificationRepository verificationRepository;
     private final TemplateEngine templateEngine;
     private final EmailProperties emailProperties;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -47,23 +44,19 @@ public class EmailService {
         // 2. 인증 코드 생성
         String code = generateVerificationCode();
 
-        // 3. 만료 시간 계산(MongoDB 저장)
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiresAt = now.plusMinutes(emailProperties.getExpirationMinutes());
+        // 3. Redis에 인증 코드 저장 (30분 후 자동 삭제)
+        String key = "verify:code:" + email;
+        redisTemplate.opsForValue()
+                .set(
+                        key,
+                        code,
+                        emailProperties.getExpirationMinutes(),
+                        TimeUnit.MINUTES
+                );
 
-        // 4. DB 저장
-        EmailVerification verification = EmailVerification.builder()
-                .email(email)
-                .code(code)
-                .createdAt(now)
-                .expiresAt(expiresAt)
-                .verified(false)
-                .build();
+        log.info("인증 코드 생성 및 Redis 저장 완료 - email: {}, code: {}", email, code);
 
-        verificationRepository.save(verification);
-        log.info("인증 코드 생성 완료 - email: {}, code: {}", email, code);
-
-        // 5. Redis에 발송 시간 저장(제한용)
+        // 4. Redis에 발송 시간 저장(제한용, 3분 후 삭제)
         saveSendTimeToRedis(email);
 
         // 5. 이메일 발송
@@ -126,30 +119,24 @@ public class EmailService {
         // 1. 재시도 횟수 체크(Redis)
         checkVerifyAttempts(email);
 
-        // 2. DB에서 조회
-        EmailVerification verification = verificationRepository.findByEmailAndCode(email, code)
-                .orElseThrow(() -> {
-                    incrementVerifyAttempts(email);
-                    return new RuntimeException("인증 코드가 일치하지 않습니다");
-                });
+        // 2. Redis에서 코드 조회
+        String key = "verify:code:" + email;
+        String saveCode = (String) redisTemplate.opsForValue()
+                .get(key);
 
         // 3. 유효성 검사
-        if (!verification.isValid(code)) {
-            // 실패 횟수 증가
+        if (saveCode == null) {
             incrementVerifyAttempts(email);
-
-            if (verification.isVerified()) {
-                throw new RuntimeException("이미 인증된 코드입니다");
-            }
-            if (verification.isExpired()) {
-                throw new RuntimeException("인증 코드가 만료되었습니다");
-            }
-            throw new RuntimeException("유효하지 않은 인증 코드입니다");
+            throw new RuntimeException("인증 코드가 만료되었거나 존재하지 앉습니다");
         }
 
-        // 4. 인증 완료 처리
-        verification.verify();
-        verificationRepository.save(verification);
+        if (!saveCode.equals(code)) {
+            incrementVerifyAttempts(email);
+            throw new RuntimeException("인증 코드가 일치하지 않습니다");
+        }
+
+        // 4. 검증 성공 -> Redis에서 코드 삭제
+        redisTemplate.delete(key);
 
         // 5. 실패 횟수 초기화
         resetVerifyAttempts(email);

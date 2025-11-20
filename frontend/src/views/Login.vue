@@ -119,7 +119,7 @@ import {User, Lock} from '@element-plus/icons-vue'
 import {useAuthStore} from '@/stores/auth'
 import {handleAuthApiError} from "@/utils/errorHandler.ts";
 import {LoginRequest} from "@/types/api.ts";
-import FindUsernameModal from "@/views/FindUsernameModal.vue";
+import FindUsernameModal from "@/components/auth/FindUsernameModal.vue";
 import ResetPasswordModal from "@/components/auth/ResetPasswordModal.vue";
 
 // Vue Router & Auth Store
@@ -167,7 +167,7 @@ const handleLogin = async () => {
     const result = await authStore.login(request)
 
     if (result.success) {
-      ElMessage.success(result.message || '로그인 성공!')
+      ElMessage.success('로그인 성공!')
 
       // 게시글 목록으로 이동
       await router.push('/posts')
