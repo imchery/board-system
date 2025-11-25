@@ -8,8 +8,8 @@
     <!--  1단계: 이메일 입력  -->
     <div v-if="step === 1" class="find-step">
       <p class="step-description">가입하신 이메일 주소로 인증 코드를 보내드립니다.</p>
-      <el-form :model="form" ref="formRef">
-        <el-form-item label="이메일">
+      <el-form :model="form" :rules="formRules" ref="formRef">
+        <el-form-item label="이메일" prop="email">
           <div class="email-input-wrapper">
             <el-input
                 v-model="form.email"
@@ -20,7 +20,7 @@
                 type="primary"
                 @click="sendCode"
                 :loading="sending"
-                :disabled="codeSent && timer > 0"
+                :disabled="!canSend"
             >
               {{ getButtonText }}
             </el-button>
@@ -28,15 +28,15 @@
         </el-form-item>
 
         <!--   인증 코드 입력 (발송 후 표시)   -->
-        <el-form-item v-if="codeSent" label="인증 코드">
+        <el-form-item v-if="codeSent" label="인증 코드" prop="code">
           <el-input
               v-model="form.code"
               placeholder="6자리 인증 코드"
               maxlength="6"
           />
           <div class="timer-info">
-            <span v-if="timer > 0" class="timer">{{ formatTime(timer) }}</span>
-            <span v-else class="timer-expired">인증 시간이 만료되었습니다</span>
+            <span v-if="cooldown > 0" class="timer">{{ formatRemainingTime(cooldown) }} 후 재발송 가능</span>
+            <span v-else class="timer-expired">재발송 가능합니다</span>
           </div>
         </el-form-item>
       </el-form>
@@ -75,10 +75,16 @@
   </el-dialog>
 </template>
 <script setup lang="ts">
-import {computed, ref} from "vue"
+import {computed, onUnmounted, ref, watch} from "vue"
 import {useRouter} from "vue-router"
-import {ElMessage} from "element-plus";
+import {ElMessage, FormRules} from "element-plus";
 import {authApi} from "@/api/auth.ts";
+import {
+  canSendVerificationCode,
+  formatRemainingTime,
+  recordVerificationCodeSent,
+  VerificationCodeType
+} from "@/utils/verificationCodeUtils.ts";
 
 interface Props {
   visible: boolean
@@ -90,6 +96,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const VERIFICATION_TYPE: VerificationCodeType = 'findUsername'
 
 // 반응형 데이터
 const dialogVisible = computed({
@@ -98,7 +105,6 @@ const dialogVisible = computed({
 })
 
 const step = ref(1) // 1. 이메일 입력, 2. 아이디 표시
-
 const form = ref({
   email: '',
   code: ''
@@ -108,15 +114,62 @@ const formRef = ref()
 const sending = ref(false)
 const loading = ref(false)
 const codeSent = ref(false)
-const timer = ref(0)
+const cooldown = ref(0)
 const foundUsername = ref('')
 
-let timerInterval: number | null = null
+let cooldownInterval: number | null = null
+
+const formRules: FormRules = {
+  email: [
+    {required: true, message: '이메일을 입력해주세요', trigger: 'blur'},
+    {type: 'email', message: '올바른 이메일 형식이 아닙니다', trigger: 'blur'},
+  ],
+  code: [
+    {required: true, message: '인증 코드를 입력해주세요', trigger: 'blur'},
+    {len: 6, message: '인증 코드는 6자리입니다', trigger: 'blur'},
+  ]
+}
+
+// 모달이 열릴 때 쿨다운 체크
+watch(() => props.visible, (newVal) => {
+  if (newVal && isValidEmail(form.value.email)) {
+    checkCooldown()
+  }
+})
+
+// 이메일 검증
+const isValidEmail = (email: string): boolean => {
+  if (!email) return false
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+// 쿨다운 체크
+const checkCooldown = () => {
+  const {canSend, remainingSeconds} = canSendVerificationCode(form.value.email, VERIFICATION_TYPE)
+
+  if (!canSend) {
+    cooldown.value = remainingSeconds
+    codeSent.value = true
+    startCooldownTimer()
+  }
+}
 
 // 인증 코드 발송
 const sendCode = async () => {
-  if (!form.value.email) {
-    ElMessage.warning('이메일을 입력해주세요')
+  if (!formRef.value) return
+
+  try {
+    await formRef.value.validateField('email')
+  } catch {
+    return
+  }
+
+  // 발송 전 쿨다운 체크
+  const {canSend, remainingSeconds} = canSendVerificationCode(form.value.email, VERIFICATION_TYPE)
+
+  if (!canSend) {
+    ElMessage.warning(`${formatRemainingTime(remainingSeconds)} 후에 재발송할 수 있습니다`)
     return
   }
 
@@ -125,8 +178,12 @@ const sendCode = async () => {
     await authApi.sendVerificationCode(form.value.email)
 
     ElMessage.success('인증 코드가 발송되었습니다')
+    // 발송 기록 저장
+    recordVerificationCodeSent(form.value.email, VERIFICATION_TYPE)
+
     codeSent.value = true
-    startTimer()
+    cooldown.value = 180
+    startCooldownTimer()
   } catch (error: any) {
     ElMessage.error(error.response?.data?.message || '인증 코드 발송에 실패했습니다')
   } finally {
@@ -135,24 +192,23 @@ const sendCode = async () => {
 }
 
 // 타이머 시작
-const startTimer = () => {
-  timer.value = 180 // 3분
-
-  if (timerInterval) {
-    clearTimeout(timerInterval)
+const startCooldownTimer = () => {
+  // 기존 타이머 정리
+  if (cooldownInterval) {
+    clearTimeout(cooldownInterval)
+    cooldownInterval = null
   }
 
-  timerInterval = window.setInterval(() => {
-    timer.value--
+  cooldownInterval = window.setInterval(() => {
+    cooldown.value--
 
-    if (timer.value <= 0) {
-      if (timerInterval) {
-        clearInterval(timerInterval)
-
-        codeSent.value = false
-        form.value.code = ''
+    if (cooldown.value <= 0) {
+      if (cooldownInterval) {
+        clearInterval(cooldownInterval)
+        cooldownInterval = null
       }
-      ElMessage.warning('인증 시간이 만료되었습니다. 재발송해주세요.')
+      codeSent.value = false
+      form.value.code = ''
     }
   }, 1000)
 }
@@ -179,9 +235,19 @@ const findUsername = async () => {
   }
 }
 
+// 발송 가능 여부
+const canSend = computed(() => {
+  if (!form.value.email) return false
+  if (sending.value) return false
+
+  const {canSend} = canSendVerificationCode(form.value.email, VERIFICATION_TYPE)
+  return canSend
+})
+
+// 버튼 텍스트
 const getButtonText = computed(() => {
   if (!codeSent.value) return '인증 코드 발송'
-  if (timer.value > 0) return `재발송 (${formatTime(timer.value)})`
+  if (cooldown.value > 0) return `재발송 (${formatRemainingTime(cooldown.value)})`
   return '재발송'
 })
 
@@ -201,27 +267,27 @@ const resetForm = () => {
   step.value = 1
   form.value = {email: '', code: ''}
   codeSent.value = false
-  timer.value = 0
+  cooldown.value = 0
   foundUsername.value = ''
 
-  if (timerInterval) {
-    clearTimeout(timerInterval)
+  if (cooldownInterval) {
+    clearTimeout(cooldownInterval)
+    cooldownInterval = null
   }
 }
 
 // 계산된 속성
 const canSubmit = computed(() => {
-  return codeSent.value && form.value.code.length === 6 && timer.value > 0
+  return codeSent.value && form.value.code.length === 6
 })
 
-// 시간 포맷팅
-const formatTime = (seconds: number) => {
-  const minutes = Math.floor(seconds / 60)
-  const secs = seconds % 60
-
-  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-
-}
+// 컴포넌트 언마운트 시 타이머 정리
+onUnmounted(() => {
+  if (cooldownInterval) {
+    clearTimeout(cooldownInterval)
+    cooldownInterval = null
+  }
+})
 </script>
 <style scoped>
 @import "@/assets/styles/components/findUsernameModal.css";

@@ -81,7 +81,7 @@
                 <!-- 인증 코드 발송 버튼 -->
                 <el-button
                     type="primary"
-                    :disabled="validation.email.status !== 'success' || !emailVerification.canResend"
+                    :disabled="!canSendCode"
                     :loading="emailVerification.sending"
                     @click="handleSendCode"
                     class="send-code-btn"
@@ -126,10 +126,10 @@
 
               <!-- 타이머 & 재발송 -->
               <div class="verification-info">
-                <span v-if="!emailVerification.verified && emailVerification.timer > 0" class="timer">
-                  ⏱재발송 가능: {{ formatTime(emailVerification.timer) }}
+                <span v-if="emailVerification.cooldown > 0" class="timer">
+                  ⏱재발송 가능: {{ formatRemainingTime(emailVerification.cooldown) }}
                 </span>
-                <span v-else-if="!emailVerification.verified && emailVerification.timer <= 0" class="timer-ready">
+                <span v-else-if="emailVerification.cooldown <= 0" class="timer-ready">
                   재발송 가능
                 </span>
               </div>
@@ -172,19 +172,26 @@
   </div>
 </template>
 <script setup lang="ts">
-import {onMounted, reactive, ref} from "vue";
+import {computed, onMounted, onUnmounted, reactive, ref} from "vue";
 import {ElMessage, FormInstance, FormRules} from "element-plus";
 import {useRouter} from 'vue-router'
 import {authApi} from "@/api/auth.ts";
 import {SignupRequest} from "@/types/api.ts";
+import {
+  canSendVerificationCode,
+  formatRemainingTime,
+  recordVerificationCodeSent,
+  VerificationCodeType
+} from "@/utils/verificationCodeUtils.ts";
 
 // ===================== 초기화 =====================
 const router = useRouter()
 const signupFormRef = ref<FormInstance>()
 const isLoading = ref(false)
+const VERIFICATION_TYPE: VerificationCodeType = 'signup'
 
 // 타이머 인터벌 ID
-let resendTimerInterval: number | null = null
+let cooldownInterval: number | null = null
 
 // 중복 체크 상태
 type ValidationState = 'idle' | 'success' | 'error'
@@ -205,8 +212,7 @@ const emailVerification = reactive({
   codeSent: false,  // 코드 발송 여부
   code: '',         // 입력한 인증 코드
   verified: false,  // 인증 완료 여부
-  timer: 180,       // 유효시간 3분
-  canResend: true, // 재발송 가능 여부
+  cooldown: 0,       // 유효시간 3분
   sending: false,   // 발송 중
   verifying: false, // 검증 중
 })
@@ -254,7 +260,7 @@ const signupRules: FormRules = {
     }
   ],
   email: [
-    {required: true, message: '이메일을 확인을 입력해주세요', trigger: 'blur'},
+    {required: true, message: '이메일을 입력해주세요', trigger: 'blur'},
     {type: 'email', message: '올바른 이메일 형식이 아닙니다', trigger: 'blur'},
   ],
   nickname: [
@@ -336,6 +342,14 @@ const handleEmailBlur = async () => {
 
 // ===================== 이메일 인증 코드 발송 =====================
 const handleSendCode = async () => {
+  // 1. 쿨다운 체크(발송 전)
+  const {canSend, remainingSeconds} = canSendVerificationCode(signupForm.email, VERIFICATION_TYPE)
+
+  if (!canSend) {
+    ElMessage.warning(`${formatRemainingTime(remainingSeconds)} 후에 재발송할 수 있습니다`)
+    return
+  }
+
   emailVerification.sending = true
 
   try {
@@ -343,13 +357,14 @@ const handleSendCode = async () => {
 
     ElMessage.success('인증 코드가 발송되었습니다. 이메일을 확인해주세요.')
 
+    recordVerificationCodeSent(signupForm.email, VERIFICATION_TYPE)
+
     // 상태 업데이트
     emailVerification.codeSent = true
-    emailVerification.timer = 180
-    emailVerification.canResend = false
+    emailVerification.cooldown = 180
 
     // 재발송 타이머 시작
-    startResendTimer()
+    startCooldownTimer()
   } catch (error: any) {
     console.error('인증 코드 발송 실패:', error)
     const errorMessage = error.response?.data?.message || '인증 코드 발송에 실패했습니다'
@@ -370,10 +385,12 @@ const handleVerifyCode = async () => {
       emailVerification.verified = true
 
       // 타이머 중지
-      if (resendTimerInterval) {
-        clearTimeout(resendTimerInterval)
-        resendTimerInterval = null
+      if (cooldownInterval) {
+        clearTimeout(cooldownInterval)
+        cooldownInterval = null
       }
+
+      emailVerification.cooldown = 0
     }
   } catch (error: any) {
     console.error('인증 코드 검증 실패:', error)
@@ -390,26 +407,24 @@ const handleVerifyCode = async () => {
  * - 3분(180초) 카운트다운
  * - 0초가 되면 재발송 가능
  */
-const startResendTimer = () => {
+const startCooldownTimer = () => {
   // 1. 기존 타이머 정리
-  if (resendTimerInterval) {
-    clearInterval(resendTimerInterval)
-    resendTimerInterval = null
+  if (cooldownInterval) {
+    clearInterval(cooldownInterval)
+    cooldownInterval = null
   }
 
   // 2. 새 타이머 시작
-  resendTimerInterval = window.setInterval(() => {
-    emailVerification.timer--
+  cooldownInterval = window.setInterval(() => {
+    emailVerification.cooldown--
 
-    if (emailVerification.timer <= 0) {
+    if (emailVerification.cooldown <= 0) {
       // 3. 타이머 종료
-      if (resendTimerInterval != null) {
-        clearInterval(resendTimerInterval)
-        resendTimerInterval = null
+      if (cooldownInterval != null) {
+        clearInterval(cooldownInterval)
+        cooldownInterval = null
       }
-
-      emailVerification.canResend = true
-      ElMessage.success('이제 인증 코드를 재발송할 수 있습니다')
+      emailVerification.codeSent = false
     }
   }, 1000)
 }
@@ -420,18 +435,10 @@ const getSendButtonText = (): string => {
     return '인증 코드 발송'
   }
 
-  if (emailVerification.timer > 0) {
-    return `재발송 (${formatTime(emailVerification.timer)})`
+  if (emailVerification.cooldown > 0) {
+    return `재발송 (${formatRemainingTime(emailVerification.cooldown)})`
   }
-
   return '재발송'
-}
-
-// 시간 포맷팅(160초 -> 03:00)
-const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
 // ===================== 회원가입 처리 =====================
@@ -481,6 +488,15 @@ const handleSignup = async () => {
   }
 }
 
+// 발송 가능 여부 계산
+const canSendCode = computed(() => {
+  if (validation.email.status !== 'success') return false
+  if (emailVerification.sending) return false
+
+  const {canSend} = canSendVerificationCode(signupForm.email, VERIFICATION_TYPE)
+  return canSend
+})
+
 // 로그인 페이지로 이동
 const goToLogin = () => {
   router.push('/login')
@@ -488,9 +504,16 @@ const goToLogin = () => {
 
 // 컴포넌트 언마운트 시 타이머 정리
 onMounted(() => {
-  if (resendTimerInterval) {
-    clearInterval(resendTimerInterval)
-    resendTimerInterval = null
+  if (cooldownInterval) {
+    clearInterval(cooldownInterval)
+    cooldownInterval = null
+  }
+})
+
+onUnmounted(() => {
+  if (cooldownInterval) {
+    clearInterval(cooldownInterval)
+    cooldownInterval = null
   }
 })
 </script>

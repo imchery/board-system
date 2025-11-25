@@ -86,7 +86,7 @@ import {ResetPasswordRequest} from "@/types/api.ts";
 import {
   canSendVerificationCode,
   formatRemainingTime,
-  recordVerificationCodeSent
+  recordVerificationCodeSent, VerificationCodeType
 } from "@/utils/verificationCodeUtils.ts";
 
 // Props & Emits
@@ -106,6 +106,9 @@ const isLoading = ref(false)
 const codeSent = ref(false)
 const isSendingCode = ref(false)
 const cooldown = ref(0)
+
+let cooldownInterval: number | null = null
+const VERIFICATION_TYPE: VerificationCodeType = 'resetPassword'
 
 // 폼 데이터
 const resetForm = reactive({
@@ -174,7 +177,7 @@ const handleSendCode = async () => {
   }
 
   // 3. 쿨다운 체크
-  const {canSend, remainingSeconds} = canSendVerificationCode(resetForm.email, 'resetPassword')
+  const {canSend, remainingSeconds} = canSendVerificationCode(resetForm.email, VERIFICATION_TYPE)
 
   if (!canSend) {
     const timeStr = formatRemainingTime(remainingSeconds)
@@ -190,10 +193,10 @@ const handleSendCode = async () => {
     codeSent.value = true
 
     // 발송 시간 기록
-    recordVerificationCodeSent(resetForm.email, 'resetPassword')
+    recordVerificationCodeSent(resetForm.email, VERIFICATION_TYPE)
 
     // 3분 쿨다운
-    startCooldown(180)
+    startCooldown()
   } catch (error: any) {
     const message = error.response?.data?.message || '인증 코드 발송에 실패했습니다'
     ElMessage.error(message)
@@ -202,20 +205,24 @@ const handleSendCode = async () => {
   }
 }
 
-/**
- * 쿨다운 타이머 시작
- * @param seconds
- */
-const startCooldown = (seconds: number) => {
-  cooldown.value = seconds
+// 타이머 시작
+const startCooldown = () => {
 
-  const timer = setInterval(() => {
+  if (cooldownInterval) {
+    clearInterval(cooldownInterval)
+    cooldownInterval = null
+  }
+
+  cooldownInterval = window.setInterval(() => {
     cooldown.value--
 
     if (cooldown.value <= 0) {
-      clearInterval(timer)
-      codeSent.value = false
+      if (cooldownInterval) {
+        clearInterval(cooldownInterval)
+        cooldownInterval = null
+      }
 
+      codeSent.value = false
       resetForm.verificationCode = ''
     }
   }, 1000)
